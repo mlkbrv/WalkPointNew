@@ -24,9 +24,10 @@
       },
       "package": "com.stride.app",
       "permissions": [
-        "ACTIVITY_RECOGNITION",
-        "CAMERA",
-        "android.permission.health.READ_STEPS"
+        "android.permission.ACTIVITY_RECOGNITION",
+        "android.permission.CAMERA",
+        "android.permission.health.READ_STEPS",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "sdkVersion": "57.0.0",
@@ -53,6 +54,12 @@
         }
       ],
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "af1ec9b2-8bfb-4f9d-8065-41caab14a50f"
+      }
+    },
+    "owner": "emil_a"
   }
 }

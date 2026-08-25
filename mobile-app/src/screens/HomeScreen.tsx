@@ -31,7 +31,7 @@ export function HomeScreen() {
   const health = useHealth();
   const { userStats, setSelectedBrand, notifications, triggerMockStepsBoost } = useStride();
   const { seenIds, reload: reloadSeen } = useSeenStories();
-  const { storyGroups, stores } = useServerData();
+  const { storyGroups, stores, wallet } = useServerData();
 
   useFocusEffect(
     React.useCallback(() => {
@@ -112,7 +112,7 @@ export function HomeScreen() {
           <View style={styles.devBar}>
             <Text style={styles.devTitle}>Developer Mock Mode</Text>
             <Text style={styles.devMeta}>
-              {userStats.totalTokens.toLocaleString()} tokens · {stepsToday.toLocaleString()} steps
+              {wallet.data.balance.toLocaleString()} coins · {stepsToday.toLocaleString()} steps
             </Text>
             <View style={styles.devRow}>
               <PressableScale style={styles.devBtn} onPress={() => triggerMockStepsBoost(1000)}>

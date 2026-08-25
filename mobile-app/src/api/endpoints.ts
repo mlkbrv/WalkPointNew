@@ -159,6 +159,50 @@ export interface ApiFaqEntry {
   sort_order: number;
 }
 
+
+export interface ApiLeaderboardEntry {
+  rank: number;
+  user_id: string;
+  name: string;
+  steps: number;
+  avatar_url: string | null;
+  is_self: boolean;
+}
+
+export interface ApiLeaderboard {
+  period: string;
+  items: ApiLeaderboardEntry[];
+  self: { rank: number | null; steps: number };
+}
+
+export interface ApiWorkout {
+  id: string;
+  kind: string;
+  started_at: string;
+  finished_at: string | null;
+  duration_seconds: number;
+  distance_km: number;
+  steps: number;
+  calories_kcal: number;
+  is_finished: boolean;
+  bonus_paid: number;
+  is_suspicious: boolean;
+}
+
+export interface ApiWorkoutFinished {
+  workout: ApiWorkout;
+  coins_awarded: number;
+  balance: number;
+}
+
+export interface ApiWeeklySummary {
+  sessions: number;
+  distance_km: number;
+  duration_seconds: number;
+  calories_kcal: number;
+  coins: number;
+}
+
 // --- endpoints ---------------------------------------------------------------
 
 export const authApi = {
@@ -234,4 +278,35 @@ export const supportApi = {
   send: (body: string) => api.post<ApiSupportMessage>("/v1/support/messages", { body }),
   badge: () => api.get<{ unread: number; has_open_thread: boolean }>("/v1/support/badge"),
   faq: () => api.get<ApiFaqEntry[]>("/v1/support/faq", undefined, { anonymous: true }),
+};
+
+export const leaderboardApi = {
+  get: (period: "daily" | "weekly" = "daily") =>
+    api.get<ApiLeaderboard>("/v1/leaderboard", { period }),
+};
+
+export const workoutsApi = {
+  start: (kind = "walk") => api.post<ApiWorkout>("/v1/workouts", { kind }),
+  active: () => api.get<ApiWorkout | null>("/v1/workouts/active"),
+  last: () => api.get<ApiWorkout | null>("/v1/workouts/last"),
+  history: (limit = 30) => api.get<ApiWorkout[]>("/v1/workouts", { limit }),
+  summary: () => api.get<ApiWeeklySummary>("/v1/workouts/summary"),
+  progress: (
+    id: string,
+    data: {
+      duration_seconds?: number;
+      distance_km?: number;
+      steps?: number;
+      calories_kcal?: number;
+    },
+  ) => api.patch<ApiWorkout>(`/v1/workouts/${id}`, data),
+  finish: (
+    id: string,
+    data: {
+      duration_seconds?: number;
+      distance_km?: number;
+      steps?: number;
+      calories_kcal?: number;
+    },
+  ) => api.post<ApiWorkoutFinished>(`/v1/workouts/${id}/finish`, data),
 };

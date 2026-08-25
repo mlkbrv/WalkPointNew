@@ -10,6 +10,7 @@ from app.models.partner import Branch, Partner
 from app.models.story import Story, StoryView
 from app.models.support import FAQTemplate, SupportChatMessage, SupportTicket
 from app.models.user import Device, RefreshToken, SMSVerification, User
+from app.models.workout import Workout
 
 __all__ = [
     "AdminActionLog",
@@ -34,4 +35,5 @@ __all__ = [
     "SupportTicket",
     "User",
     "UserCoupon",
+    "Workout",
 ]

@@ -2,9 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import {
-  ActiveWorkout,
   Coupon,
-  LeaderboardUser,
   MerchantCoupon,
   NotificationItem,
   PartnerBrand,
@@ -14,7 +12,6 @@ import {
   couponsList,
   initialNotifications,
   initialUserStats,
-  leaderboardUsers,
   partnerBrands,
 } from "../utils/mockData";
 import { useHealth } from "./HealthContext";
@@ -37,7 +34,6 @@ type Toast = { id: string; message: string; emoji?: string } | null;
 type StrideContextValue = {
   userStats: UserStats;
   setUserStats: React.Dispatch<React.SetStateAction<UserStats>>;
-  leaderboard: LeaderboardUser[];
   notifications: NotificationItem[];
   userCoupons: Coupon[];
   merchantCoupons: MerchantCoupon[];
@@ -45,14 +41,6 @@ type StrideContextValue = {
   setSelectedBrand: (b: PartnerBrand | null) => void;
   selectedCoupon: Coupon | null;
   setSelectedCoupon: (c: Coupon | null) => void;
-  lastWorkoutSummary: any;
-  workoutHistory: any[];
-  addWorkoutToHistory: (w: any) => void;
-  workout: ActiveWorkout;
-  setWorkout: React.Dispatch<React.SetStateAction<ActiveWorkout>>;
-  startWorkout: () => void;
-  togglePauseWorkout: () => void;
-  finishWorkout: () => void;
   togglePermissions: () => void;
   confirmPurchaseReward: (cost: number, couponItem: Coupon) => boolean;
   readNotification: (id: string) => void;
@@ -87,31 +75,17 @@ export function StrideProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [hydrated, setHydrated] = useState(false);
   const [userStats, setUserStats] = useState<UserStats>(initialUserStats);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>(leaderboardUsers);
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
   const [userCoupons, setUserCoupons] = useState<Coupon[]>([]);
   const [merchantCoupons, setMerchantCoupons] = useState<MerchantCoupon[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<PartnerBrand | null>(partnerBrands[0]);
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(couponsList[0]);
-  const [lastWorkoutSummary, setLastWorkoutSummary] = useState<any>(null);
-  const [workoutHistory, setWorkoutHistory] = useState<any[]>([]);
-  const [workout, setWorkout] = useState<ActiveWorkout>({
-    isActive: false,
-    isPaused: false,
-    durationSeconds: 0,
-    distanceKm: 0,
-    caloriesKcal: 0,
-    avgSpeedKmH: 0,
-    routeCoordinates: [],
-    mapView: "neon",
-  });
   const [toast, setToast] = useState<Toast>(null);
   const [devices, setDevices] = useState([
     { id: "apple", name: "Apple Health", connected: false, lastSync: undefined as string | undefined },
     { id: "health_connect", name: "Health Connect", connected: false, lastSync: undefined as string | undefined },
     { id: "fitbit", name: "Fitbit", connected: false, lastSync: undefined as string | undefined },
   ]);
-  const workoutTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const milestoneRef = useRef(false);
   const prevMockRef = useRef(health.mockMode);
 
@@ -133,7 +107,6 @@ export function StrideProvider({ children }: { children: React.ReactNode }) {
           }
           if (parsed.userCoupons) setUserCoupons(parsed.userCoupons);
           if (parsed.notifications) setNotifications(parsed.notifications);
-          if (parsed.workoutHistory) setWorkoutHistory(parsed.workoutHistory);
           if (parsed.merchantCoupons) setMerchantCoupons(parsed.merchantCoupons);
           if (parsed.devices) setDevices(parsed.devices);
         }
@@ -147,9 +120,9 @@ export function StrideProvider({ children }: { children: React.ReactNode }) {
     if (!hydrated) return;
     AsyncStorage.setItem(
       STATE_KEY,
-      JSON.stringify({ userStats, userCoupons, notifications, workoutHistory, merchantCoupons, devices })
+      JSON.stringify({ userStats, userCoupons, notifications, merchantCoupons, devices })
     ).catch(() => undefined);
-  }, [hydrated, userStats, userCoupons, notifications, workoutHistory, merchantCoupons, devices]);
+  }, [hydrated, userStats, userCoupons, notifications, merchantCoupons, devices]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -174,25 +147,6 @@ export function StrideProvider({ children }: { children: React.ReactNode }) {
   }, [health.stepsToday, hydrated]);
 
   useEffect(() => {
-    setLeaderboard((prev) =>
-      prev
-        .map((u) => {
-          if (u.isSelf) {
-            return {
-              ...u,
-              name: user ? `${user.name} (You)` : u.name,
-              avatar: user?.avatar || u.avatar,
-              steps: userStats.stepsToday,
-            };
-          }
-          return u;
-        })
-        .sort((a, b) => b.steps - a.steps)
-        .map((u, i) => ({ ...u, rank: i + 1 }))
-    );
-  }, [userStats.stepsToday, user]);
-
-  useEffect(() => {
     if (userStats.stepsToday >= userStats.stepsGoal && !milestoneRef.current) {
       milestoneRef.current = true;
       setToast({ id: String(Date.now()), message: "Daily goal smashed!", emoji: "🎉" });
@@ -212,130 +166,11 @@ export function StrideProvider({ children }: { children: React.ReactNode }) {
     if (userStats.stepsToday < userStats.stepsGoal) milestoneRef.current = false;
   }, [userStats.stepsToday, userStats.stepsGoal]);
 
-  useEffect(() => {
-    if (workout.isActive && !workout.isPaused) {
-      workoutTimerRef.current = setInterval(() => {
-        setWorkout((prev) => {
-          const nextSeconds = prev.durationSeconds + 1;
-          const lastCoord = prev.routeCoordinates[prev.routeCoordinates.length - 1] || { x: 150, y: 300 };
-          const nextCoords = [
-            ...prev.routeCoordinates,
-            { x: lastCoord.x + (Math.random() - 0.45) * 5, y: lastCoord.y + (Math.random() - 0.45) * 5 },
-          ];
-          if (nextCoords.length > 50) nextCoords.shift();
-          const nextDistance = prev.distanceKm + 0.002;
-          const nextCal = prev.caloriesKcal + 0.15;
-          const speedHz = Number((3.6 * (nextDistance / (nextSeconds / 3600))).toFixed(1)) || 5.2;
-          return {
-            ...prev,
-            durationSeconds: nextSeconds,
-            distanceKm: Number(nextDistance.toFixed(2)),
-            caloriesKcal: Math.floor(nextCal),
-            avgSpeedKmH: speedHz,
-            routeCoordinates: nextCoords,
-          };
-        });
-        if (health.mockMode) {
-          health.boostMockSteps(Math.floor(Math.random() * 3) + 2);
-        }
-      }, 1000);
-    } else if (workoutTimerRef.current) {
-      clearInterval(workoutTimerRef.current);
-    }
-    return () => {
-      if (workoutTimerRef.current) clearInterval(workoutTimerRef.current);
-    };
-  }, [workout.isActive, workout.isPaused, health.mockMode]);
-
   const showToast = useCallback((message: string, emoji?: string) => {
     setToast({ id: String(Date.now()), message, emoji });
   }, []);
 
   const dismissToast = useCallback(() => setToast(null), []);
-
-  const addWorkoutToHistory = useCallback((wData: any) => {
-    if (!wData) return;
-    setWorkoutHistory((prev) => {
-      if (prev.some((h) => h.id === wData.id)) return prev;
-      return [
-        {
-          id: wData.id || `hist_${Date.now()}`,
-          date: wData.date || "Just Now",
-          steps: wData.steps || Math.floor(wData.distanceKm * 1450) || 4500,
-          distanceKm: wData.distanceKm,
-          duration: wData.durationFormatted || wData.duration,
-          caloriesKcal: wData.caloriesKcal,
-          avgSpeed: wData.avgSpeed || 5.2,
-          tokensEarned: wData.tokensEarned,
-        },
-        ...prev,
-      ];
-    });
-  }, []);
-
-  const startWorkout = useCallback(() => {
-    setWorkout({
-      isActive: true,
-      isPaused: false,
-      durationSeconds: 0,
-      distanceKm: 0,
-      caloriesKcal: 0,
-      avgSpeedKmH: 0,
-      routeCoordinates: [{ x: 150, y: 300 }],
-      mapView: "neon",
-    });
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  }, []);
-
-  const togglePauseWorkout = useCallback(() => {
-    setWorkout((prev) => ({ ...prev, isPaused: !prev.isPaused }));
-    Haptics.selectionAsync();
-  }, []);
-
-  const finishWorkout = useCallback(() => {
-    const finalDistance = workout.distanceKm || 3.84;
-    const finalSeconds = workout.durationSeconds || 2535;
-    const finalCalories = workout.caloriesKcal || 312;
-    const finalSpeed = workout.avgSpeedKmH || 5.2;
-    const tokensEarned = Math.max(180, Math.floor(finalDistance * 65));
-    const finalSteps = Math.floor(finalDistance * 1480) || 5683;
-    const summary = {
-      id: `w_sum_${Date.now()}`,
-      distanceKm: finalDistance,
-      durationFormatted: formatDuration(finalSeconds),
-      caloriesKcal: finalCalories,
-      avgSpeed: finalSpeed,
-      tokensEarned,
-      steps: finalSteps,
-      date:
-        new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) +
-        " • " +
-        new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-    };
-    setLastWorkoutSummary(summary);
-    setUserStats((prev) => {
-      const bonusTokens = prev.bonusTokens + tokensEarned;
-      return {
-        ...prev,
-        bonusTokens,
-        totalTokens: balanceFromParts(prev.stepsToday, bonusTokens, prev.spentTokens),
-      };
-    });
-    setNotifications((prev) => [
-      {
-        id: `notify_workout_${Date.now()}`,
-        title: "Workout Summary Ready",
-        body: `You completed a ${finalDistance}km workout, earned ${tokensEarned} Step-Tokens!`,
-        timeAgo: "Just now",
-        category: "milestone",
-        read: false,
-      },
-      ...prev,
-    ]);
-    setWorkout((prev) => ({ ...prev, isActive: false }));
-    showToast(`+${tokensEarned} tokens earned`, "🏆");
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  }, [workout, showToast]);
 
   const togglePermissions = useCallback(() => {
     setUserStats((prev) => {
@@ -479,7 +314,6 @@ export function StrideProvider({ children }: { children: React.ReactNode }) {
     () => ({
       userStats,
       setUserStats,
-      leaderboard,
       notifications,
       userCoupons,
       merchantCoupons,
@@ -487,14 +321,6 @@ export function StrideProvider({ children }: { children: React.ReactNode }) {
       setSelectedBrand,
       selectedCoupon,
       setSelectedCoupon,
-      lastWorkoutSummary,
-      workoutHistory,
-      addWorkoutToHistory,
-      workout,
-      setWorkout,
-      startWorkout,
-      togglePauseWorkout,
-      finishWorkout,
       togglePermissions,
       confirmPurchaseReward,
       readNotification,
@@ -513,19 +339,11 @@ export function StrideProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       userStats,
-      leaderboard,
       notifications,
       userCoupons,
       merchantCoupons,
       selectedBrand,
       selectedCoupon,
-      lastWorkoutSummary,
-      workoutHistory,
-      addWorkoutToHistory,
-      workout,
-      startWorkout,
-      togglePauseWorkout,
-      finishWorkout,
       togglePermissions,
       confirmPurchaseReward,
       readNotification,

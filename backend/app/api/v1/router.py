@@ -3,6 +3,7 @@
 from fastapi import APIRouter
 
 from app.api.v1.routers import (
+    activity,
     admin,
     auth,
     coupons,
@@ -29,6 +30,8 @@ api_router.include_router(stories.public_router)
 api_router.include_router(redemptions.purchase_router)
 api_router.include_router(redemptions.wallet_router)
 api_router.include_router(notifications.router)
+api_router.include_router(activity.leaderboard_router)
+api_router.include_router(activity.workouts_router)
 api_router.include_router(support.router)
 
 # Partner console

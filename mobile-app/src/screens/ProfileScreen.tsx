@@ -305,7 +305,8 @@ export function ProfileScreen() {
                 </PressableScale>
               </View>
               <Text style={styles.mockHint}>
-                Tokens = floor(steps / 1000) × 10. Use this to test Store purchases.
+                Coins follow the server rule: nothing under 5,000 steps, 50 at 5,000,
+                then +10 per extra 1,000. Use this to test Store purchases.
               </Text>
             </GlassCard>
           </>

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import Depends, Query, Request
@@ -89,19 +90,31 @@ async def get_current_partner(db: DbSession, user: PartnerUser) -> Partner:
 CurrentPartner = Annotated[Partner, Depends(get_current_partner)]
 
 
+@dataclass(slots=True)
 class Pagination:
     """Cursor pagination as specified in docs/BACKEND_API.md section 1.4."""
 
-    def __init__(
-        self,
-        cursor: Annotated[str | None, Query()] = None,
-        limit: Annotated[int, Query(ge=1, le=50)] = 20,
-    ) -> None:
-        self.cursor = cursor
-        self.limit = limit
+    cursor: str | None = None
+    limit: int = 20
 
 
-PageParams = Annotated[Pagination, Depends()]
+def pagination(
+    cursor: Annotated[str | None, Query()] = None,
+    limit: Annotated[int, Query(ge=1, le=50)] = 20,
+) -> Pagination:
+    """Read the page window off the query string.
+
+    This is a function rather than ``Depends()`` straight onto the class on
+    purpose. This module uses ``from __future__ import annotations``, so every
+    annotation is a string; FastAPI resolves those against the callable's
+    ``__globals__``, and a class has none. Depending on the class therefore left
+    ``limit`` as an unevaluated forward reference and every paginated endpoint
+    failed at request time. A function carries the module globals with it.
+    """
+    return Pagination(cursor=cursor, limit=limit)
+
+
+PageParams = Annotated[Pagination, Depends(pagination)]
 
 
 def client_ip(request: Request) -> str:

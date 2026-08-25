@@ -1,5 +1,14 @@
-import React from "react";
+/**
+ * The step leaderboard.
+ *
+ * Ranking comes from the server, computed over the same `daily_steps` rows the
+ * economy pays out on — so the board and the wallet can never disagree about how
+ * far somebody walked. Days withheld for fraud review are excluded there, not here.
+ */
+
+import React, { useCallback, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   ImageStyle,
   ScrollView,
@@ -7,16 +16,48 @@ import {
   Text,
   View,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { describeError } from "../api/client";
+import { leaderboardApi, type ApiLeaderboard, type ApiLeaderboardEntry } from "../api/endpoints";
 import { colors, radii } from "../theme";
 import { GlassCard } from "../components/GlassCard";
-import { useStride } from "../contexts/StrideContext";
+import { PressableScale } from "../components/PressableScale";
+
+const AVATAR_FALLBACK =
+  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80";
+
+type Period = "daily" | "weekly";
 
 export function ScoreboardScreen() {
   const insets = useSafeAreaInsets();
-  const { leaderboard } = useStride();
-  const sorted = [...leaderboard].sort((a, b) => b.steps - a.steps);
+
+  const [period, setPeriod] = useState<Period>("daily");
+  const [board, setBoard] = useState<ApiLeaderboard | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async (which: Period) => {
+    setError(null);
+    try {
+      setBoard(await leaderboardApi.get(which));
+    } catch (caught) {
+      setError(describeError(caught));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Ranks move while the app is elsewhere, so re-read whenever the tab is shown.
+  useFocusEffect(
+    useCallback(() => {
+      void load(period);
+    }, [load, period]),
+  );
+
+  const sorted: ApiLeaderboardEntry[] = board?.items ?? [];
   const top1 = sorted[0];
   const top2 = sorted[1];
   const top3 = sorted[2];
@@ -41,7 +82,7 @@ export function ScoreboardScreen() {
     return (
       <View style={[styles.podiumSlot, place === 1 && styles.podiumFirst]}>
         <View style={styles.avatarRel}>
-          <Image source={{ uri: user.avatar }} style={avatarStyle} />
+          <Image source={{ uri: user.avatar_url ?? AVATAR_FALLBACK }} style={avatarStyle} />
           <View style={[styles.placeBadge, { backgroundColor: badgeBg }]}>
             <Text style={styles.placeText}>{place === 1 ? "1" : String(place)}</Text>
           </View>
@@ -60,44 +101,99 @@ export function ScoreboardScreen() {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>Global Scoreboard</Text>
-            <Text style={styles.sub}>Stride Masters Guild</Text>
+            <Text style={styles.title}>Scoreboard</Text>
+            <Text style={styles.sub}>
+              {period === "daily" ? "Today" : "This week"}
+            </Text>
           </View>
-          <View style={styles.season}>
-            <Ionicons name="trophy" size={12} color={colors.primary} />
-            <Text style={styles.seasonText}>SEASON 4</Text>
+          <View style={styles.periodSwitch}>
+            {(["daily", "weekly"] as Period[]).map((option) => (
+              <PressableScale
+                key={option}
+                style={period === option ? styles.periodOn : styles.periodOff}
+                onPress={() => {
+                  setPeriod(option);
+                  setLoading(true);
+                }}
+              >
+                <Text style={period === option ? styles.periodTextOn : styles.periodTextOff}>
+                  {option === "daily" ? "Day" : "Week"}
+                </Text>
+              </PressableScale>
+            ))}
           </View>
         </View>
 
+        {loading && !board ? (
+          <View style={styles.stateBox}>
+            <ActivityIndicator color={colors.primary} />
+          </View>
+        ) : error && !board ? (
+          <GlassCard style={styles.stateCard}>
+            <Ionicons name="cloud-offline-outline" size={32} color={colors.coral} />
+            <Text style={styles.stateTitle}>Could not load the board</Text>
+            <Text style={styles.stateBody}>{error}</Text>
+            <PressableScale style={styles.retry} onPress={() => void load(period)}>
+              <Text style={styles.retryText}>Try again</Text>
+            </PressableScale>
+          </GlassCard>
+        ) : sorted.length === 0 ? (
+          <GlassCard style={styles.stateCard}>
+            <Ionicons name="footsteps-outline" size={32} color={colors.muted} />
+            <Text style={styles.stateTitle}>Nobody has walked yet</Text>
+            <Text style={styles.stateBody}>
+              Be the first — your steps put you on the board.
+            </Text>
+          </GlassCard>
+        ) : (
+        <>
         <GlassCard style={styles.podium}>
           {renderPodiumPerson(top2, 2)}
           {renderPodiumPerson(top1, 1)}
           {renderPodiumPerson(top3, 3)}
         </GlassCard>
 
+        {/* Your own position, even when you are not in the listed top. */}
+        {board?.self ? (
+          <GlassCard style={styles.selfCard}>
+            <Text style={styles.selfLabel}>You</Text>
+            <Text style={styles.selfRank}>
+              {board.self.rank ? `#${board.self.rank}` : "—"}
+            </Text>
+            <Text style={styles.selfSteps}>
+              {board.self.steps.toLocaleString()} steps
+            </Text>
+          </GlassCard>
+        ) : null}
+
         <Text style={styles.listLabel}>Current Rankings</Text>
         <View style={styles.list}>
-          {sorted.map((user, index) => {
-            const rank = index + 1;
-            const isSelf = !!user.isSelf;
+          {sorted.map((user) => {
+            const rank = user.rank;
+            const isSelf = user.is_self;
             const rankColor =
               rank === 1 ? "#EAB308" : rank === 2 ? colors.muted : rank === 3 ? "#F97316" : colors.muted;
             return (
               <View
-                key={`${user.rank}-${user.name}`}
+                key={user.user_id}
                 style={[styles.row, isSelf && styles.rowSelf]}
               >
                 <View style={styles.rowLeft}>
                   <Text style={[styles.rank, { color: rankColor }]}>{rank}</Text>
                   <View style={styles.avatarRel}>
-                    <Image source={{ uri: user.avatar }} style={styles.listAvatar as ImageStyle} />
+                    <Image
+                      source={{ uri: user.avatar_url ?? AVATAR_FALLBACK }}
+                      style={styles.listAvatar as ImageStyle}
+                    />
                     {isSelf ? <View style={styles.selfDot} /> : null}
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.name, isSelf && styles.nameSelf]} numberOfLines={1}>
                       {user.name}
                     </Text>
-                    <Text style={styles.status}>{user.statusText || "On a streak!"}</Text>
+                    <Text style={styles.status}>
+                      {rank === 1 ? "Leading the pack" : isSelf ? "That\u2019s you" : "On the move"}
+                    </Text>
                   </View>
                 </View>
                 <View style={styles.rowRight}>
@@ -108,12 +204,52 @@ export function ScoreboardScreen() {
             );
           })}
         </View>
+        </>
+        )}
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  stateBox: { paddingVertical: 48, alignItems: "center" },
+  stateCard: { padding: 24, alignItems: "center", gap: 8 },
+  stateTitle: { fontSize: 16, fontWeight: "600", color: colors.text },
+  stateBody: { fontSize: 14, fontWeight: "500", color: colors.slate, textAlign: "center" },
+  retry: {
+    marginTop: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: radii.full,
+    backgroundColor: colors.primary,
+  },
+  retryText: { color: colors.white, fontWeight: "600", fontSize: 13 },
+
+  periodSwitch: { flexDirection: "row", gap: 6 },
+  periodOn: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: radii.full,
+    backgroundColor: colors.primary,
+  },
+  periodOff: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: radii.full,
+    backgroundColor: colors.border,
+  },
+  periodTextOn: { color: colors.white, fontSize: 12, fontWeight: "700" },
+  periodTextOff: { color: colors.slate, fontSize: 12, fontWeight: "700" },
+
+  selfCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+  },
+  selfLabel: { fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 1 },
+  selfRank: { fontSize: 22, fontWeight: "800", color: colors.primary },
+  selfSteps: { fontSize: 14, fontWeight: "600", color: colors.slate },
   root: { flex: 1, backgroundColor: colors.canvas },
   scroll: { paddingHorizontal: 20, paddingBottom: 120, gap: 20 },
   header: {

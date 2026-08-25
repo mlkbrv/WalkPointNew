@@ -28,6 +28,7 @@ class CoinSource(StrEnum):
 
     STEPS = "steps"
     DAILY_ROLLUP = "daily_rollup"
+    WORKOUT_BONUS = "workout_bonus"
     COUPON_PURCHASE = "coupon_purchase"
     REFERRAL = "referral"
     STORY_VIEW = "story_view"
