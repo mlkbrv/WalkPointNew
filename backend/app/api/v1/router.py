@@ -6,6 +6,7 @@ from app.api.v1.routers import (
     admin,
     auth,
     coupons,
+    jobs,
     media,
     notifications,
     partners,
@@ -39,4 +40,5 @@ api_router.include_router(media.router)
 
 # Staff
 api_router.include_router(admin.router)
+api_router.include_router(jobs.router)
 api_router.include_router(support.admin_router)

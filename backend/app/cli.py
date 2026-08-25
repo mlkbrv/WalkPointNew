@@ -2,6 +2,7 @@
 
     python -m app.cli seed
     python -m app.cli create-superadmin admin@example.com "a-strong-password"
+    python -m app.cli bootstrap      # unattended: seed + superadmin from the environment
 
 Run after ``alembic upgrade head``.
 """
@@ -14,6 +15,7 @@ import sys
 
 from sqlalchemy import select
 
+from app.core.config import settings
 from app.core.security import hash_password
 from app.db.session import SessionLocal
 from app.models.economy import EconomySettings
@@ -92,11 +94,40 @@ async def create_superadmin(email: str, password: str) -> None:
         print(f"superadmin created: {email}")
 
 
+async def bootstrap() -> None:
+    """Everything a fresh deployment needs, with no shell and no interaction.
+
+    Free managed tiers do not give you a shell, so the first staff account has to
+    come from the environment. Safe to run on every boot: seeding is idempotent
+    and an existing account is left exactly as it is — a redeploy must never
+    reset somebody's password back to whatever is in the environment.
+    """
+    await seed()
+
+    email = settings.bootstrap_superadmin_email.strip()
+    password = settings.bootstrap_superadmin_password
+
+    if not email or not password:
+        print("bootstrap: no BOOTSTRAP_SUPERADMIN_* set, skipping the staff account")
+        return
+
+    if len(password) < 12:
+        # A weak password here is a permanent superadmin on a public URL.
+        print("bootstrap: refusing to create a superadmin with a password under 12 characters")
+        return
+
+    await create_superadmin(email, password)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="app.cli")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    sub.add_parser("seed", help="Insert default economy settings")
+    sub.add_parser("seed", help="Insert default economy settings and the default FAQ")
+    sub.add_parser(
+        "bootstrap",
+        help="Seed, then create the superadmin named by BOOTSTRAP_SUPERADMIN_* if it is missing",
+    )
 
     admin = sub.add_parser("create-superadmin", help="Create a superadmin account")
     admin.add_argument("email")
@@ -106,6 +137,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "seed":
         asyncio.run(seed())
+    elif args.command == "bootstrap":
+        asyncio.run(bootstrap())
     elif args.command == "create-superadmin":
         asyncio.run(create_superadmin(args.email, args.password))
     return 0

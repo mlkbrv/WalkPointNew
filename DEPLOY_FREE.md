@@ -79,12 +79,19 @@ curl https://stride-api-xxxx.onrender.com/health
 # {"status":"ok","environment":"production"}
 ```
 
-**Seed it and make yourself a superadmin.** Render's dashboard has a Shell tab:
+**There is nothing else to run.** The free plan has no shell — Render's Shell tab
+is a paid feature — so the container bootstraps itself on start: migrations, the
+default economy settings, the FAQ, and a superadmin account.
 
-```bash
-python -m app.cli seed
-python -m app.cli create-superadmin you@example.com 'a-long-password'
-```
+The account is `admin@example.com`. Render **generates** the password — it is
+not in this repository, because a literal password here is a superadmin account
+handed to anyone who can read the repo.
+
+Read it once: Render dashboard → your service → **Environment** →
+`BOOTSTRAP_SUPERADMIN_PASSWORD` → *Reveal*.
+
+An existing account is never modified, so redeploys will not reset it. Change it
+from the panel once you are in.
 
 ### What the free tier costs you
 
@@ -94,11 +101,48 @@ python -m app.cli create-superadmin you@example.com 'a-long-password'
 * **Uploaded media disappears.** The disk is wiped on every deploy and restart.
   Coupon images and story media survive until then and no further. Fixing that
   means implementing `Storage` for S3/R2 — see the end of this file.
-* **Scheduled jobs run on the same instance.** `render.yaml` sets one worker and
-  enables the scheduler in-process, because the free plan allows only one
-  service. While the instance is asleep, nothing runs — including the nightly
-  coin roll-up. Coins still accrue on every step sync, so the visible effect is
-  that the end-of-day notification may not fire.
+* **Scheduled jobs stop while the instance sleeps.** `render.yaml` runs the
+  scheduler in-process with a single worker, since the free plan allows only one
+  service — but a sleeping instance runs nothing. Coins still accrue on every step
+  sync, so the visible effect is a missing end-of-day notification. Fix it with an
+  external cron, below.
+
+## 3b. Scheduled jobs — an external cron (optional)
+
+A sleeping instance runs no scheduler. The API exposes the jobs over HTTP so
+anything that can make a request can drive them — free cron services, GitHub
+Actions, or `crontab` on any machine you already have.
+
+`render.yaml` generates a `CRON_SECRET` for you; copy it from the Render
+dashboard (Environment tab). Without it these endpoints answer **404** — they are
+off by default, and they do not advertise that they exist.
+
+| Job | When |
+|---|---|
+| `POST /v1/jobs/daily-rollup/run` | once a day, after midnight in your timezone |
+| `POST /v1/jobs/story-expiry/run` | hourly (or skip it: the feed already hides expired stories) |
+| `POST /v1/jobs/voucher-expiry/run` | daily |
+
+With [cron-job.org](https://cron-job.org) (free): create a job, method POST, add
+the header `X-Cron-Key: <your secret>`. Or from any machine with cron:
+
+```bash
+0 1 * * * curl -fsS -X POST -H "X-Cron-Key: $STRIDE_CRON_KEY" \
+  https://stride-api-xxxx.onrender.com/v1/jobs/daily-rollup/run
+```
+
+Each call also wakes the instance, so a daily ping doubles as a keep-warm.
+
+The roll-up is idempotent and catches up: if a run is missed, pass the date and
+it settles that day.
+
+```bash
+curl -X POST -H "X-Cron-Key: $KEY" \
+  "https://stride-api-xxxx.onrender.com/v1/jobs/daily-rollup/run?day=2026-08-24"
+```
+
+On a real server none of this is needed — `docker-compose.yml` runs a `worker`
+service that owns the schedule, and `CRON_SECRET` can stay empty.
 
 ## 4. Admin panel — Cloudflare Pages
 
@@ -166,7 +210,8 @@ curl https://stride-api-xxxx.onrender.com/v1/coupons       # [] until step 3 bel
 
 **Admin panel**
 
-1. Open the Pages URL, sign in with the superadmin account.
+1. Open the Pages URL, sign in as `admin@example.com` with the password from
+   Render's Environment tab.
 2. Dashboard loads with all counters at zero. *If it shows a network error,
    `CORS_ORIGINS` is wrong.*
 3. Economy → change the step threshold, save, reload. It persists.
@@ -214,7 +259,8 @@ If all seventeen work, the whole system works.
 
 1. **Cold starts** — the first request after idle takes up to a minute. A cron
    ping every 10 minutes (cron-job.org, free) keeps it warm, at the cost of
-   burning the 750 free instance-hours faster.
+   burning the 750 free instance-hours faster. The job endpoints in step 3b work
+   as the ping.
 2. **Uploaded media vanishes on redeploy.** Cloudflare R2 gives 10 GB free and
    speaks S3. It needs an `S3Storage` implementing `app/storage/base.py` — the
    interface is there and nothing above it knows where bytes live, but the class
@@ -225,3 +271,7 @@ If all seventeen work, the whole system works.
    Firebase needs a service-account key.
 
 None of these block a demo. All of them block a launch.
+
+5. **Anyone with the API URL can register an account.** That is correct for a
+   consumer app, but it means the demo is open. Nothing in the repository grants
+   staff access — the superadmin password only exists in Render's environment.

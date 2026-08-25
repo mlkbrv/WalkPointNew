@@ -19,11 +19,16 @@ def normalise_database_url(url: str) -> str:
 
     * the driver is unspecified, so SQLAlchemy reaches for psycopg2, which is
       synchronous and not installed;
-    * ``sslmode`` is a libpq parameter. asyncpg does not know it and raises
-      ``TypeError: connect() got an unexpected keyword argument 'sslmode'``.
+    * SQLAlchemy hands unrecognised query parameters to ``asyncpg.connect`` as
+      keyword arguments, and asyncpg wants ``ssl``, not ``sslmode``.
 
-    So: force the asyncpg driver, and translate the libpq SSL parameters into
-    asyncpg's ``ssl``. Anything already addressed to ``+asyncpg`` is left alone.
+    So: force the asyncpg driver and rename ``sslmode`` to ``ssl``, **keeping its
+    value**. asyncpg parses a string ``ssl`` as an sslmode, so it only accepts
+    ``disable``/``allow``/``prefer``/``require``/``verify-ca``/``verify-full`` —
+    passing ``ssl=true`` fails with a message that names ``sslmode``, which is a
+    confusing way to be told the value was wrong.
+
+    Anything already addressed to ``+asyncpg`` is left alone.
     """
     if not url:
         return url
@@ -42,13 +47,24 @@ def normalise_database_url(url: str) -> str:
     if not question:
         return url
 
+    # The only values asyncpg will accept for a string `ssl`.
+    ssl_modes = {"disable", "allow", "prefer", "require", "verify-ca", "verify-full"}
+
     kept: list[str] = []
-    ssl_required = False
+    ssl_mode: str | None = None
+
     for parameter in query.split("&"):
         name, _, value = parameter.partition("=")
         if name in {"sslmode", "ssl"}:
-            # `disable` is the only libpq mode that means no TLS at all.
-            ssl_required = value not in {"disable", "false", "0"}
+            # Booleans are what a human writes and what asyncpg rejects.
+            if value in {"true", "1", "yes"}:
+                ssl_mode = "require"
+            elif value in {"false", "0", "no"}:
+                ssl_mode = "disable"
+            elif value in ssl_modes:
+                ssl_mode = value
+            else:
+                ssl_mode = "require"
             continue
         if name in {"channel_binding", "options", "target_session_attrs"}:
             # libpq-only knobs asyncpg does not accept.
@@ -56,8 +72,9 @@ def normalise_database_url(url: str) -> str:
         if parameter:
             kept.append(parameter)
 
-    if ssl_required:
-        kept.append("ssl=true")
+    # `disable` is the default anyway, so it is dropped rather than passed on.
+    if ssl_mode and ssl_mode != "disable":
+        kept.append(f"ssl={ssl_mode}")
 
     return f"{base}?{'&'.join(kept)}" if kept else base
 
@@ -104,6 +121,16 @@ class Settings(BaseSettings):
     storage_backend: str = "local"
     media_root: str = "./media"
     media_url_prefix: str = "/media"
+
+    # First-boot bootstrap. Managed free tiers have no shell, so the first staff
+    # account has to be creatable from the environment. Both must be set for
+    # anything to happen, and an existing account is never modified.
+    bootstrap_superadmin_email: str = ""
+    bootstrap_superadmin_password: str = ""
+
+    # Shared secret for the HTTP job trigger. Empty disables the endpoint, which
+    # is the right default: it must be opt-in, not something a deploy exposes.
+    cron_secret: str = ""
 
     # Scheduler
     scheduler_enabled: bool = True

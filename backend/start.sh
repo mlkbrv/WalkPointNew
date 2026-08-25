@@ -14,6 +14,11 @@ WEB_CONCURRENCY="${WEB_CONCURRENCY:-2}"
 echo "Applying migrations..."
 alembic upgrade head
 
+# Idempotent, and the only way to get a first staff account on a host with no
+# shell. Does nothing unless BOOTSTRAP_SUPERADMIN_* are set.
+echo "Bootstrapping..."
+python -m app.cli bootstrap
+
 echo "Starting gunicorn on :$PORT with $WEB_CONCURRENCY worker(s)"
 exec gunicorn app.main:app \
   --worker-class uvicorn.workers.UvicornWorker \
