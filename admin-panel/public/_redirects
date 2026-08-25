@@ -1,0 +1,3 @@
+# Netlify / Cloudflare Pages: client-side routing means every unknown path is an
+# app route, not a missing file. Without this, a refresh on /admin/coupons 404s.
+/*  /index.html  200

@@ -1,0 +1,19 @@
+node_modules/
+.expo/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# Python / backend
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+backend/media/
+*.db

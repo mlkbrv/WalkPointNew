@@ -1,0 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-space: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --color-primary: #8140f3;
+  --color-accent-coral: #ff6b52;
+  --color-accent-emerald: #00e194;
+  --color-canvas-bg: #f8f9fb;
+  --color-charcoal-dark: #121417;
+
+  --border-radius-xl: 1.5rem; /* 24px */
+  --border-radius-lg: 1rem;   /* 16px */
+  --border-radius-md: 0.75rem; /* 12px */
+}
+
+@layer utilities {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 12px 32px rgba(18, 20, 23, 0.04);
+  }
+
+  .glass-card-dark {
+    background: rgba(18, 20, 23, 0.85);
+    backdrop-filter: blur(24px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+  }
+
+  .glow-violet {
+    filter: drop-shadow(0 0 12px rgba(129, 64, 243, 0.4));
+  }
+
+  .glow-emerald {
+    filter: drop-shadow(0 0 12px rgba(0, 225, 148, 0.4));
+  }
+
+  .glow-coral {
+    filter: drop-shadow(0 0 12px rgba(255, 107, 82, 0.4));
+  }
+}
+
+/* Custom scrollbar and aesthetics */
+.custom-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.custom-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-canvas-bg);
+  color: var(--color-charcoal-dark);
+}

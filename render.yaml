@@ -1,0 +1,65 @@
+# Free-tier deployment blueprint for Render.
+#
+# Render's free plan gives one web service; the database comes from Neon, whose
+# free tier does not expire. Redis is absent because nothing in the code uses it
+# yet — it is declared in settings for future rate limiting only.
+#
+# Two free-tier facts worth knowing before you rely on this:
+#
+#   * The service sleeps after ~15 minutes with no traffic, and the next request
+#     waits 30–60 s for a cold start. Fine for a demo, not for a launch.
+#   * The disk is ephemeral. Uploaded media survives until the next deploy or
+#     restart, then it is gone. Point STORAGE_BACKEND at S3/R2 before that
+#     matters — see DEPLOY_FREE.md.
+#
+# Everything marked `sync: false` must be filled in from the Render dashboard;
+# they are secrets and do not belong in the repository.
+
+services:
+  - type: web
+    name: stride-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # One worker on purpose: the free instance has 512 MB, and with a single
+      # process the in-app scheduler can run here instead of needing its own
+      # service — which the free plan does not allow.
+      - key: WEB_CONCURRENCY
+        value: "1"
+      - key: SCHEDULER_ENABLED
+        value: "true"
+
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+
+      # Neon hands out a single connection string. `database_url_override` takes
+      # it whole, so the individual POSTGRES_* settings are not needed.
+      # Use the pooled host and append ?sslmode=require.
+      - key: DATABASE_URL_OVERRIDE
+        sync: false
+
+      - key: JWT_SECRET
+        generateValue: true
+
+      # The admin panel is served from another origin, so it has to be allowed
+      # explicitly. Set this to your Pages/Netlify URL, no trailing slash.
+      - key: CORS_ORIGINS
+        sync: false
+
+      - key: SMS_BACKEND
+        value: mock
+      - key: FCM_ENABLED
+        value: "false"
+      - key: STORAGE_BACKEND
+        value: local
+      - key: MEDIA_ROOT
+        value: /app/media
+      - key: SERVER_TIMEZONE
+        value: Asia/Baku

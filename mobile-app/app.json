@@ -1,0 +1,58 @@
+{
+  "expo": {
+    "name": "STRIDE",
+    "slug": "stride-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.stride.app",
+      "infoPlist": {
+        "UIStatusBarHidden": true,
+        "UIViewControllerBasedStatusBarAppearance": false,
+        "NSMotionUsageDescription": "STRIDE uses motion data to count your steps and award tokens.",
+        "NSCameraUsageDescription": "STRIDE uses the camera to scan coupon redemption codes.",
+        "NSPhotoLibraryUsageDescription": "STRIDE uses your photos for profile and merchant logos."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B0D10"
+      },
+      "package": "com.stride.app",
+      "permissions": [
+        "ACTIVITY_RECOGNITION",
+        "CAMERA",
+        "android.permission.health.READ_STEPS"
+      ]
+    },
+    "sdkVersion": "57.0.0",
+    "plugins": [
+      "expo-asset",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow STRIDE to scan coupon QR codes."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow STRIDE to update your profile photo."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#0B0D10"
+        }
+      ],
+      "expo-secure-store"
+    ]
+  }
+}

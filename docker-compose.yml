@@ -1,0 +1,128 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-stride}
+      POSTGRES_USER: ${POSTGRES_USER:-stride}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # Not published: only the backend needs it, and exposing 5432 to the internet
+    # is the single most common way one of these deployments gets breached.
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stride}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1", "--appendonly", "no"]
+    volumes:
+      - redisdata:/data
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_URL: redis://redis:6379/0
+      MEDIA_ROOT: /app/media
+      # Gunicorn forks several workers and each would start its own scheduler,
+      # so the jobs live in the `worker` service instead — exactly one copy.
+      SCHEDULER_ENABLED: "false"
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-3}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - media:/app/media
+    expose:
+      - "8000"
+    # The image's own entry point: migrations, then gunicorn. Same script the
+    # managed-platform deploy uses, so the two cannot drift apart.
+    command: ["/app/start.sh"]
+
+  # The only process running scheduled jobs: the nightly coin roll-up, the story
+  # sweeper, and voucher expiry. Runs a single process on purpose — two would
+  # duplicate every run.
+  worker:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_URL: redis://redis:6379/0
+      MEDIA_ROOT: /app/media
+      SCHEDULER_ENABLED: "true"
+    depends_on:
+      backend:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    volumes:
+      - media:/app/media
+    # Migrations are the API's job; the worker waits for the schema to exist.
+    command: ["python", "-m", "app.worker"]
+
+  admin:
+    build:
+      context: ./admin-panel
+      args:
+        # Same origin as the API in production: nginx routes /v1 to the backend.
+        VITE_API_BASE_URL: ""
+    restart: unless-stopped
+    expose:
+      - "80"
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - admin
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/proxy_headers.conf:/etc/nginx/conf.d/proxy_headers.conf:ro
+      - media:/var/www/media:ro
+      - certbot-www:/var/www/certbot:ro
+      - certbot-conf:/etc/letsencrypt:ro
+    ports:
+      - "80:80"
+      - "443:443"
+
+  # Renewal is a one-shot container on a loop rather than a daemon, so a failure
+  # is visible in `docker compose ps` instead of silently expiring a certificate.
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    volumes:
+      - certbot-www:/var/www/certbot
+      - certbot-conf:/etc/letsencrypt
+    entrypoint: >
+      sh -c "trap exit TERM;
+             while :; do certbot renew --webroot -w /var/www/certbot --quiet;
+             sleep 12h & wait $${!}; done"
+
+volumes:
+  pgdata:
+  redisdata:
+  media:
+  certbot-www:
+  certbot-conf:
