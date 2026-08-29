@@ -66,28 +66,53 @@ port_busy() {
 }
 
 log "Checking which ports are free"
-if port_busy 80 || port_busy 443; then
-  HTTP_PORT=8080
-  HTTPS_PORT=8443
-  warn "Ports 80/443 are in use by the other project on this box."
-  warn "STRIDE will listen on $HTTP_PORT/$HTTPS_PORT instead and leave it alone."
-  warn "Note: Let's Encrypt cannot validate on a non-standard port, so TLS will"
-  warn "be a self-signed certificate until you either free :80 or put the"
-  warn "existing web server in front of http://127.0.0.1:$HTTP_PORT."
-else
-  HTTP_PORT=80
+
+# Tested separately on purpose. A box whose neighbour owns :80 very often still
+# has :443 unused, and giving that up too would cost a real certificate for
+# nothing — see the TLS note below.
+HTTP_FREE=true;  port_busy 80  && HTTP_FREE=false
+HTTPS_FREE=true; port_busy 443 && HTTPS_FREE=false
+
+if $HTTPS_FREE; then
   HTTPS_PORT=443
-  echo "  :80 and :443 are free — using them, with a real Let's Encrypt certificate."
+else
+  HTTPS_PORT=8443
 fi
 
-# ACME's HTTP-01 challenge is always answered on :80. If the stack could not
-# take that port, a public certificate is unobtainable and Caddy would retry
-# forever — so it issues its own instead. Browsers will warn; the API still
-# speaks TLS, and the fix is to free :80 or front the stack with the existing
-# web server.
-if [[ "$HTTP_PORT" == "80" ]]; then
-  : > tls.conf
+if $HTTP_FREE; then
+  HTTP_PORT=80
 else
+  # Caddy still wants an HTTP listener; park it somewhere harmless rather than
+  # fighting whatever owns :80.
+  HTTP_PORT=8080
+fi
+
+# ACME has two ways to prove control of a name:
+#   * HTTP-01 is answered on :80 — unavailable when a neighbour owns it.
+#   * TLS-ALPN-01 is answered on :443 — and needs nothing else.
+# So the certificate depends on :443, not on :80.
+if $HTTPS_FREE && $HTTP_FREE; then
+  echo "  :80 and :443 are both free — using them."
+  : > tls.conf
+elif $HTTPS_FREE; then
+  warn ":80 is taken by the other project on this box; leaving it alone."
+  echo "  :443 is free, so a real certificate is still issued — over TLS-ALPN."
+  # One directive per line, no heredoc: this script is meant to be piped to
+  # bash, and a nested heredoc does not survive that reliably.
+  {
+    echo 'tls {'
+    echo '  issuer acme {'
+    echo '    # :80 belongs to something else here, so HTTP-01 cannot be answered.'
+    echo '    # TLS-ALPN-01 runs entirely on :443.'
+    echo '    disable_http_challenge'
+    echo '  }'
+    echo '}'
+  } > tls.conf
+else
+  HTTPS_PORT=8443
+  warn "Both :80 and :443 are taken. STRIDE moves to $HTTP_PORT/$HTTPS_PORT and"
+  warn "issues its own certificate — browsers will warn. To fix it properly, put"
+  warn "the existing web server in front of http://127.0.0.1:$HTTP_PORT."
   echo "tls internal" > tls.conf
 fi
 
@@ -197,6 +222,22 @@ STACKEOF
 chmod 600 "$STACK_ENV"
 
 # --- 6. Build and start ------------------------------------------------------
+# A bound port that the firewall drops looks exactly like a stack that failed to
+# start, so open them here rather than leaving it to be debugged later.
+if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q "Status: active"; then
+  log "Opening $HTTPS_PORT/tcp and $HTTP_PORT/tcp in ufw"
+  ufw allow "$HTTPS_PORT/tcp" >/dev/null 2>&1 || true
+  ufw allow "$HTTP_PORT/tcp" >/dev/null 2>&1 || true
+elif command -v firewall-cmd >/dev/null 2>&1 && firewall-cmd --state >/dev/null 2>&1; then
+  log "Opening $HTTPS_PORT/tcp and $HTTP_PORT/tcp in firewalld"
+  firewall-cmd --permanent --add-port="$HTTPS_PORT/tcp" >/dev/null 2>&1 || true
+  firewall-cmd --permanent --add-port="$HTTP_PORT/tcp" >/dev/null 2>&1 || true
+  firewall-cmd --reload >/dev/null 2>&1 || true
+else
+  warn "No ufw/firewalld detected. If the site is unreachable, open"
+  warn "$HTTPS_PORT/tcp at your provider's firewall as well."
+fi
+
 log "Building images (first run takes a few minutes)"
 docker compose -p "$PROJECT" -f docker-compose.vps.yml build
 
