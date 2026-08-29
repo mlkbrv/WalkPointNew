@@ -9,8 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit"
   },

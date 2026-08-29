@@ -45,8 +45,23 @@ docker compose version >/dev/null 2>&1 || die "docker compose v2 is required."
 # --- 2. The code -------------------------------------------------------------
 if [[ -d "$APP_DIR/.git" ]]; then
   log "Updating $APP_DIR"
+  before=$(git -C "$APP_DIR" rev-parse HEAD)
   git -C "$APP_DIR" fetch --quiet origin
   git -C "$APP_DIR" reset --hard --quiet origin/main
+  after=$(git -C "$APP_DIR" rev-parse HEAD)
+
+  # If this very file just changed under us, start over from the new copy.
+  #
+  # Bash reads a script from a file incrementally, by byte offset. Rewriting it
+  # mid-run leaves the shell reading the *new* file from the *old* offset, so it
+  # executes a splice of two versions — which is exactly how a run can update to
+  # a fixed script and still behave like the broken one. Piped from curl there is
+  # no file to rewrite, so this only guards the run-as-a-file case, and
+  # STRIDE_REEXECED stops it looping.
+  if [[ "$before" != "$after" && -f "${BASH_SOURCE[0]}" && -z "${STRIDE_REEXECED:-}" ]]; then
+    log "bootstrap.sh itself was updated — re-running the new version"
+    STRIDE_REEXECED=1 exec bash "$APP_DIR/deploy/vps/bootstrap.sh" "$@"
+  fi
 else
   log "Cloning into $APP_DIR"
   git clone --quiet "$REPO_URL" "$APP_DIR"
