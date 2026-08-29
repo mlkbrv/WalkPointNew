@@ -34,9 +34,10 @@ const STATUS_LABEL: Record<ModerationStatus, string> = {
 
 const STATUS_COLOR: Record<ModerationStatus, string> = {
   draft: colors.muted,
-  pending: "#F59E0B",
-  approved: colors.emerald,
-  rejected: colors.coral,
+  // Amber darkened to 4.5:1 on white; the usual #F59E0B is 2.15:1.
+  pending: "#8A5A00",
+  approved: colors.emeraldInk,
+  rejected: colors.coralInk,
 };
 
 function CouponCard({
@@ -267,7 +268,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     textTransform: "uppercase",
   },
-  error: { color: colors.coral, fontSize: 12, fontWeight: "600", marginBottom: spacing.md },
+  error: { color: colors.coralInk, fontSize: 12, fontWeight: "600", marginBottom: spacing.md },
   section: {
     marginBottom: spacing.md,
     color: colors.muted,
@@ -288,7 +289,7 @@ const styles = StyleSheet.create({
   badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: radii.full },
   badgeText: { fontSize: 10, fontWeight: "800", letterSpacing: 0.4 },
   reason: {
-    color: colors.coral,
+    color: colors.coralInk,
     fontSize: 11,
     fontWeight: "600",
     lineHeight: 16,

@@ -109,7 +109,7 @@ export function SupportChatScreen() {
 
           {!loading && error && messages.length === 0 && (
             <GlassCard style={styles.notice}>
-              <Ionicons name="cloud-offline-outline" size={22} color={colors.coral} />
+              <Ionicons name="cloud-offline-outline" size={22} color={colors.coralInk} />
               <Text style={styles.noticeTitle}>Could not load your messages</Text>
               <Text style={styles.noticeBody}>{error}</Text>
               <PressableScale onPress={() => void load()} style={styles.retry}>
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   inlineError: {
     fontSize: 12,
     fontWeight: "500",
-    color: colors.coral,
+    color: colors.coralInk,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
   },

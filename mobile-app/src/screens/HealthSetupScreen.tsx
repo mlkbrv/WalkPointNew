@@ -17,9 +17,9 @@ export function HealthSetupScreen() {
 
   const statusColor =
     health.status === "available"
-      ? colors.emerald
+      ? colors.emeraldInk
       : health.status === "denied"
-        ? colors.coral
+        ? colors.coralInk
         : colors.muted;
 
   const onRequest = async () => {

@@ -55,12 +55,12 @@ export function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   inner: { flex: 1, padding: 24, paddingTop: 56 },
-  sub: { color: colors.muted, marginBottom: 20, lineHeight: 20 },
+  sub: { color: colors.mutedDark, marginBottom: 20, lineHeight: 20 },
   card: { backgroundColor: colors.cardDark, borderRadius: radii.xl, padding: 20, borderWidth: 1, borderColor: colors.borderDark },
-  label: { color: colors.muted, fontSize: 11, fontWeight: "700", letterSpacing: 1, marginBottom: 6 },
+  label: { color: colors.mutedDark, fontSize: 11, fontWeight: "700", letterSpacing: 1, marginBottom: 6 },
   input: { backgroundColor: "#0F172A", borderRadius: radii.md, paddingHorizontal: 14, paddingVertical: 12, color: colors.textLight, borderWidth: 1, borderColor: colors.borderDark },
-  error: { color: colors.coral, marginTop: 12, fontWeight: "600" },
-  success: { color: colors.emerald, marginTop: 12, fontWeight: "600" },
+  error: { color: colors.coralInk, marginTop: 12, fontWeight: "600" },
+  success: { color: colors.emeraldInk, marginTop: 12, fontWeight: "600" },
   primaryBtn: { marginTop: 20, backgroundColor: colors.primary, borderRadius: radii.full, paddingVertical: 16, alignItems: "center" },
   primaryText: { color: "#fff", fontWeight: "800", letterSpacing: 1 },
 });

@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     letterSpacing: 4,
     textAlign: "center",
   },
-  sub: { color: colors.muted, textAlign: "center", marginTop: 8, marginBottom: 32, fontWeight: "500" },
+  sub: { color: colors.mutedDark, textAlign: "center", marginTop: 8, marginBottom: 32, fontWeight: "500" },
   card: {
     backgroundColor: colors.cardDark,
     borderRadius: radii.xl,
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderDark,
   },
-  label: { color: colors.muted, fontSize: 11, fontWeight: "700", letterSpacing: 1, marginBottom: 6, marginTop: 10 },
+  label: { color: colors.mutedDark, fontSize: 11, fontWeight: "700", letterSpacing: 1, marginBottom: 6, marginTop: 10 },
   input: {
     backgroundColor: "#0F172A",
     borderRadius: radii.md,
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderDark,
   },
-  error: { color: colors.coral, marginTop: 12, fontWeight: "600", fontSize: 13 },
+  error: { color: colors.coralInk, marginTop: 12, fontWeight: "600", fontSize: 13 },
   primaryBtn: {
     marginTop: 20,
     backgroundColor: colors.primary,
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   primaryText: { color: "#fff", fontWeight: "800", letterSpacing: 1 },
-  link: { color: colors.emerald, textAlign: "center", marginTop: 16, fontWeight: "600" },
+  link: { color: colors.emeraldInk, textAlign: "center", marginTop: 16, fontWeight: "600" },
   secondary: { marginTop: 24, alignItems: "center" },
   secondaryText: { color: colors.textLight, fontWeight: "700" },
 });

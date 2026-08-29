@@ -28,3 +28,8 @@ mobile-app/credentials.json
 mobile-app/credentials/
 *.keystore
 *.jks
+
+# Firebase config, per deployment. Not a secret, but not shared across installs.
+mobile-app/google-services.json
+mobile-app/GoogleService-Info.plist
+backend/firebase-credentials.json

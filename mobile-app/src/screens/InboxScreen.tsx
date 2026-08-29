@@ -50,9 +50,9 @@ export function InboxScreen() {
 
   const categoryIcon = (type: string) => {
     if (type === "steps_missed")
-      return { name: "warning" as const, bg: "rgba(255,107,82,0.12)", color: colors.coral };
+      return { name: "warning" as const, bg: "rgba(255,107,82,0.12)", color: colors.coralInk };
     if (type === "coins_awarded")
-      return { name: "sparkles" as const, bg: "rgba(0,225,148,0.12)", color: colors.emerald };
+      return { name: "sparkles" as const, bg: "rgba(0,225,148,0.12)", color: colors.emeraldInk };
     if (type === "new_coupon" || type === "moderation_result")
       return { name: "bag-handle" as const, bg: "rgba(129,64,243,0.12)", color: colors.primary };
     if (type === "support_reply")
@@ -133,7 +133,7 @@ export function InboxScreen() {
           </View>
         ) : inbox.error && notifications.length === 0 ? (
           <GlassCard style={styles.empty}>
-            <Ionicons name="cloud-offline-outline" size={36} color={colors.coral} />
+            <Ionicons name="cloud-offline-outline" size={36} color={colors.coralInk} />
             <Text style={styles.emptyText}>{inbox.error}</Text>
             <PressableScale style={styles.retry} onPress={() => void refreshInbox()}>
               <Text style={styles.retryText}>Try again</Text>

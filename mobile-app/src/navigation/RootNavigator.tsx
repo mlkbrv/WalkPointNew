@@ -1,11 +1,17 @@
-import React from "react";
+import React, { useRef } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { NavigationContainer, DarkTheme, DefaultTheme } from "@react-navigation/native";
+import {
+  NavigationContainer,
+  DarkTheme,
+  DefaultTheme,
+  type NavigationContainerRef,
+} from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../contexts/AuthContext";
 import { useServerData } from "../contexts/ServerDataContext";
+import { useNotificationHandlers } from "../hooks/useNotificationHandlers";
 import { colors } from "../theme";
 import { AuthStackParamList, MainTabParamList, RootStackParamList } from "../types";
 import { FeedbackToast } from "../components/FeedbackToast";
@@ -97,7 +103,7 @@ function MainTabs() {
         options={{
           title: "Inbox",
           tabBarBadge: unread > 0 ? unread : undefined,
-          tabBarBadgeStyle: { backgroundColor: colors.coral, fontSize: 10 },
+          tabBarBadgeStyle: { backgroundColor: colors.coralInk, fontSize: 10 },
         }}
       />
       <Tab.Screen name="ScoreboardTab" component={ScoreboardScreen} options={{ title: "Board" }} />
@@ -144,6 +150,11 @@ function AppStack() {
 export function RootNavigator() {
   const { user, loading } = useAuth();
   const health = useHealth();
+  // Notification taps arrive outside the React tree, so they need a handle on
+  // the navigator rather than a `useNavigation` inside some screen.
+  const navigationRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
+
+  useNotificationHandlers(navigationRef);
 
   if (loading || (user && !health.hydrated)) {
     return (
@@ -155,7 +166,7 @@ export function RootNavigator() {
 
   return (
     <View style={styles.flex}>
-      <NavigationContainer theme={user ? DefaultTheme : DarkTheme}>
+      <NavigationContainer ref={navigationRef} theme={user ? DefaultTheme : DarkTheme}>
         {user ? <AppStack /> : <AuthNavigator />}
       </NavigationContainer>
       {user ? <FeedbackToast /> : null}

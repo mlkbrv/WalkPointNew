@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
   idle: { alignItems: "center", gap: 12, paddingVertical: 8 },
   idleTitle: { color: colors.white, fontSize: 16, fontWeight: "900" },
   idleBody: {
-    color: colors.muted,
+    color: colors.mutedDark,
     fontSize: 11,
     textAlign: "center",
     maxWidth: 280,
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
   metrics: { flexDirection: "row", gap: 16 },
   metric: { flex: 1 },
   metricLabel: {
-    color: colors.muted,
+    color: colors.mutedDark,
     fontSize: 8,
     fontWeight: "700",
     letterSpacing: 1,
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 52,
     borderRadius: radii.lg,
-    backgroundColor: colors.coral,
+    backgroundColor: colors.coralInk,
     overflow: "hidden",
     flexDirection: "row",
     alignItems: "center",
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
   },
   finishText: { color: colors.white, fontWeight: "900", fontSize: 12, letterSpacing: 0.8 },
   errorText: {
-    color: colors.coral,
+    color: colors.coralInk,
     fontSize: 11,
     fontWeight: "600",
     textAlign: "center",

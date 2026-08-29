@@ -1,3 +1,5 @@
+import type { NavigatorScreenParams } from "@react-navigation/native";
+
 export enum ScreenId {
   Home = "Home",
   Track = "Track",
@@ -155,7 +157,8 @@ export interface DeviceConnection {
 
 export type RootStackParamList = {
   Auth: undefined;
-  Main: undefined;
+  /** Nested: the tab navigator, so callers can target a specific tab. */
+  Main: NavigatorScreenParams<MainTabParamList>;
   Profile: undefined;
   ConnectedDevices: undefined;
   HelpSupport: undefined;

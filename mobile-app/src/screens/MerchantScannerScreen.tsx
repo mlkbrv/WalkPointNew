@@ -73,8 +73,8 @@ function VoucherPreview({
         </PressableScale>
       ) : (
         <View style={[styles.result, styles.resultBad]}>
-          <Ionicons name="close-circle" size={18} color={colors.coral} />
-          <Text style={[styles.resultText, { color: colors.coral }]}>
+          <Ionicons name="close-circle" size={18} color={colors.coralInk} />
+          <Text style={[styles.resultText, { color: colors.coralInk }]}>
             {preview.status === "used"
               ? `Already redeemed${usedOn}.`
               : "This voucher has expired."}
@@ -229,10 +229,10 @@ export function MerchantScannerScreen() {
             <Ionicons
               name={outcome.ok ? "checkmark-circle" : "close-circle"}
               size={18}
-              color={outcome.ok ? colors.emerald : colors.coral}
+              color={outcome.ok ? colors.emeraldInk : colors.coralInk}
             />
             <Text
-              style={[styles.resultText, { color: outcome.ok ? colors.emerald : colors.coral }]}
+              style={[styles.resultText, { color: outcome.ok ? colors.emeraldInk : colors.coralInk }]}
             >
               {outcome.message}
             </Text>

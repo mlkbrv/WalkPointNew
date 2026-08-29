@@ -121,7 +121,7 @@ export function CouponDetailScreen() {
           </View>
           {isAffordable ? (
             <View style={styles.okRow}>
-              <Ionicons name="checkmark-circle" size={14} color={colors.emerald} />
+              <Ionicons name="checkmark-circle" size={14} color={colors.emeraldInk} />
               <Text style={styles.okText}>Requirement achieved! Exchanger available.</Text>
             </View>
           ) : (
@@ -155,7 +155,7 @@ export function CouponDetailScreen() {
             </View>
           </View>
           <View style={styles.gridItem}>
-            <Ionicons name="shield-checkmark-outline" size={16} color={colors.emerald} />
+            <Ionicons name="shield-checkmark-outline" size={16} color={colors.emeraldInk} />
             <View>
               <Text style={styles.gridLabel}>Assurance</Text>
               <Text style={styles.gridValue}>Guaranteed Sync</Text>
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   barTrack: { height: 10, backgroundColor: "#F1F5F9", borderRadius: radii.full, overflow: "hidden", marginTop: 12 },
   barFill: { height: "100%", backgroundColor: colors.primary, borderRadius: radii.full },
   okRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 10 },
-  okText: { color: colors.emerald, fontSize: 10, fontWeight: "700" },
+  okText: { color: colors.emeraldInk, fontSize: 10, fontWeight: "700" },
   needText: { color: colors.slate, fontSize: 10, marginTop: 10, lineHeight: 15 },
   errorBox: {
     backgroundColor: "rgba(255,107,82,0.1)",
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: spacing.md,
   },
-  errorTitle: { color: colors.coral, fontWeight: "700", fontSize: 12 },
+  errorTitle: { color: colors.coralInk, fontWeight: "700", fontSize: 12 },
   errorBody: { color: colors.slate, fontSize: 10, marginTop: 4, lineHeight: 14 },
   aboutTitle: { color: colors.charcoal, fontWeight: "800", fontSize: 14, marginTop: spacing.sm },
   aboutBody: { color: colors.slate, fontSize: 12, lineHeight: 18, marginTop: 6 },

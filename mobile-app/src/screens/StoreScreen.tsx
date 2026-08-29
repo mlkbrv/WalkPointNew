@@ -101,7 +101,7 @@ export function StoreScreen() {
           </View>
         ) : coupons.error && coupons.data.length === 0 ? (
           <GlassCard style={styles.stateCard}>
-            <Ionicons name="cloud-offline-outline" size={36} color={colors.coral} />
+            <Ionicons name="cloud-offline-outline" size={36} color={colors.coralInk} />
             <Text style={styles.stateTitle}>Could not load the store</Text>
             <Text style={styles.stateBody}>{coupons.error}</Text>
             <PressableScale style={styles.retry} onPress={() => void refreshCatalogue()}>

@@ -130,7 +130,7 @@ export function ScoreboardScreen() {
           </View>
         ) : error && !board ? (
           <GlassCard style={styles.stateCard}>
-            <Ionicons name="cloud-offline-outline" size={32} color={colors.coral} />
+            <Ionicons name="cloud-offline-outline" size={32} color={colors.coralInk} />
             <Text style={styles.stateTitle}>Could not load the board</Text>
             <Text style={styles.stateBody}>{error}</Text>
             <PressableScale style={styles.retry} onPress={() => void load(period)}>

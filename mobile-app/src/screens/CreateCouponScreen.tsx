@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   multiline: { minHeight: 76, textAlignVertical: "top" },
   hint: { color: colors.muted, fontSize: 10, marginTop: 6, lineHeight: 14 },
   error: {
-    color: colors.coral,
+    color: colors.coralInk,
     fontSize: 12,
     fontWeight: "600",
     marginTop: spacing.md,

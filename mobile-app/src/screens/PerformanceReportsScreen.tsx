@@ -147,7 +147,7 @@ export function PerformanceReportsScreen() {
           </View>
         ) : error && days.length === 0 ? (
           <GlassCard style={styles.errorCard}>
-            <Ionicons name="cloud-offline-outline" size={28} color={colors.coral} />
+            <Ionicons name="cloud-offline-outline" size={28} color={colors.coralInk} />
             <Text style={styles.errorTitle}>Could not load your reports</Text>
             <Text style={styles.errorBody}>{error}</Text>
             <PressableScale style={styles.retry} onPress={() => void load(activeTab)}>
@@ -192,12 +192,12 @@ export function PerformanceReportsScreen() {
                 <Text style={styles.metricLabel}>Steps</Text>
               </GlassCard>
               <GlassCard style={styles.metric}>
-                <Ionicons name="navigate-outline" size={16} color={colors.coral} />
+                <Ionicons name="navigate-outline" size={16} color={colors.coralInk} />
                 <Text style={styles.metricValue}>{summary?.distance_km.toFixed(1) ?? "0.0"}</Text>
                 <Text style={styles.metricLabel}>km</Text>
               </GlassCard>
               <GlassCard style={styles.metric}>
-                <Ionicons name="flame-outline" size={16} color={colors.emerald} />
+                <Ionicons name="flame-outline" size={16} color={colors.emeraldInk} />
                 <Text style={styles.metricValue}>{summary?.calories_kcal ?? 0}</Text>
                 <Text style={styles.metricLabel}>kcal</Text>
               </GlassCard>

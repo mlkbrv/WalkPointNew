@@ -29,9 +29,9 @@ import { ScreenHeader } from "../components/ScreenHeader";
 import type { RootStackParamList } from "../types";
 
 const STATUS_COPY = {
-  active: { icon: "shield-checkmark", tint: colors.emerald, label: "Ready to redeem" },
+  active: { icon: "shield-checkmark", tint: colors.emeraldInk, label: "Ready to redeem" },
   used: { icon: "checkmark-done", tint: colors.muted, label: "Already redeemed" },
-  expired: { icon: "time-outline", tint: colors.coral, label: "Expired" },
+  expired: { icon: "time-outline", tint: colors.coralInk, label: "Expired" },
 } as const;
 
 export function SecureVerificationScreen() {
@@ -92,7 +92,7 @@ export function SecureVerificationScreen() {
         <ScrollView contentContainerStyle={styles.content}>
           <ScreenHeader title="Secure Access" onBack={onDone} />
           <GlassCard style={styles.card}>
-            <Ionicons name="alert-circle-outline" size={32} color={colors.coral} />
+            <Ionicons name="alert-circle-outline" size={32} color={colors.coralInk} />
             <Text style={styles.title}>Could not open this voucher</Text>
             <Text style={styles.sub}>{error ?? "It is no longer in your wallet."}</Text>
           </GlassCard>

@@ -27,11 +27,19 @@
         "android.permission.ACTIVITY_RECOGNITION",
         "android.permission.CAMERA",
         "android.permission.health.READ_STEPS",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.POST_NOTIFICATIONS"
       ]
     },
     "sdkVersion": "57.0.0",
     "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#8140F3",
+          "defaultChannel": "stride-default"
+        }
+      ],
       "expo-asset",
       [
         "expo-camera",

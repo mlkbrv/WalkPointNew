@@ -107,12 +107,12 @@ export function HomeScreen() {
             style={styles.healthBanner}
             onPress={() => navigation.navigate("HealthSetup")}
           >
-            <Ionicons name="fitness-outline" size={18} color={colors.coral} />
+            <Ionicons name="fitness-outline" size={18} color={colors.coralInk} />
             <View style={styles.healthTextWrap}>
               <Text style={styles.healthTitle}>Health access needed</Text>
               <Text style={styles.healthBody}>Connect sensors to track real steps — metrics stay at 0 until then</Text>
             </View>
-            <Ionicons name="chevron-forward" size={16} color={colors.coral} />
+            <Ionicons name="chevron-forward" size={16} color={colors.coralInk} />
           </PressableScale>
         ) : null}
 
@@ -153,7 +153,7 @@ export function HomeScreen() {
               else navigation.navigate("TrackTab");
             }}
           >
-            <Ionicons name="sparkles" size={16} color={colors.emerald} />
+            <Ionicons name="sparkles" size={16} color={colors.emeraldInk} />
             <Text style={styles.trackCtaText}>START TRACKING WORKOUT</Text>
           </PressableScale>
         </GlassCard>
@@ -161,7 +161,7 @@ export function HomeScreen() {
         <View style={styles.statsRow}>
           <GlassCard style={styles.statCard}>
             <View style={[styles.statIcon, { backgroundColor: "rgba(255,107,82,0.12)" }]}>
-              <Ionicons name="flame" size={16} color={colors.coral} />
+              <Ionicons name="flame" size={16} color={colors.coralInk} />
             </View>
             <Text style={styles.statValue}>{caloriesKcal}</Text>
             <Text style={styles.statLabel}>kcal</Text>
@@ -175,7 +175,7 @@ export function HomeScreen() {
           </GlassCard>
           <GlassCard style={styles.statCard}>
             <View style={[styles.statIcon, { backgroundColor: "rgba(0,225,148,0.12)" }]}>
-              <Ionicons name="timer-outline" size={16} color={colors.emerald} />
+              <Ionicons name="timer-outline" size={16} color={colors.emeraldInk} />
             </View>
             <Text style={styles.statValue}>{durationMins}</Text>
             <Text style={styles.statLabel}>mins</Text>
@@ -232,7 +232,7 @@ export function HomeScreen() {
                   ) : (
                     <>
                       You&apos;re{" "}
-                      <Text style={{ color: week.changePercent >= 0 ? colors.primary : colors.coral }}>
+                      <Text style={{ color: week.changePercent >= 0 ? colors.primary : colors.coralInk }}>
                         {Math.abs(week.changePercent)}% {week.changePercent >= 0 ? "more" : "less"} active
                       </Text>{" "}
                       than last week
@@ -342,26 +342,8 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   healthTextWrap: { flex: 1 },
-  healthTitle: { fontSize: 12, fontWeight: "800", color: colors.coral },
+  healthTitle: { fontSize: 12, fontWeight: "800", color: colors.coralInk },
   healthBody: { fontSize: 10, color: colors.slate, marginTop: 2 },
-  devBar: {
-    backgroundColor: colors.charcoal,
-    borderRadius: radii.lg,
-    padding: 14,
-    gap: 8,
-  },
-  devTitle: { color: colors.emerald, fontWeight: "800", fontSize: 12, letterSpacing: 0.5 },
-  devMeta: { color: colors.muted, fontSize: 11, fontWeight: "600" },
-  devRow: { flexDirection: "row", gap: 8, marginTop: 4 },
-  devBtn: {
-    flex: 1,
-    backgroundColor: colors.primary,
-    borderRadius: radii.md,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  devOff: { backgroundColor: colors.coral },
-  devBtnText: { color: colors.white, fontWeight: "800", fontSize: 10 },
   ringCard: { padding: 24, alignItems: "center" },
   ringWrap: { width: RING_SIZE, height: RING_SIZE, alignItems: "center", justifyContent: "center" },
   ringSvg: { transform: [{ rotate: "-90deg" }], position: "absolute" },

@@ -11,6 +11,7 @@
  */
 
 import Constants from "expo-constants";
+import * as Notifications from "expo-notifications";
 import { useEffect, useRef } from "react";
 import { Platform } from "react-native";
 
@@ -31,9 +32,6 @@ async function obtainPushToken(): Promise<string | null> {
   if (Platform.OS === "web") return null;
 
   try {
-    // Required lazily: the module is only present in a native build.
-    const Notifications = require("expo-notifications");
-
     const existing = await Notifications.getPermissionsAsync();
     let granted = existing.granted;
     if (!granted && existing.canAskAgain) {
@@ -44,7 +42,7 @@ async function obtainPushToken(): Promise<string | null> {
     const token = await Notifications.getDevicePushTokenAsync();
     return typeof token?.data === "string" ? token.data : null;
   } catch {
-    // expo-notifications is not installed yet, or the device cannot register.
+    // A simulator, or a device that cannot register with FCM/APNs.
     return null;
   }
 }

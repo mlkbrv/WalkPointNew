@@ -95,7 +95,7 @@ export function ProfileScreen() {
       <Switch
         value={value}
         onValueChange={onValueChange}
-        trackColor={{ false: colors.border, true: colors.emerald }}
+        trackColor={{ false: colors.border, true: colors.emeraldInk }}
         thumbColor={colors.white}
       />
     </View>
@@ -178,7 +178,7 @@ export function ProfileScreen() {
           <View style={styles.divider} />
           <Row
             icon="help-circle-outline"
-            iconColor={colors.emerald}
+            iconColor={colors.emeraldInk}
             iconBg="rgba(0,225,148,0.12)"
             title="Help & Support"
             subtitle="FAQs and member helpdesk"
@@ -187,7 +187,7 @@ export function ProfileScreen() {
           <View style={styles.divider} />
           <Row
             icon="wallet-outline"
-            iconColor={colors.coral}
+            iconColor={colors.coralInk}
             iconBg="rgba(255,107,82,0.12)"
             title="Wallet"
             subtitle="Your redeemed coupons"
@@ -239,7 +239,7 @@ export function ProfileScreen() {
               <View style={styles.divider} />
               <Row
                 icon="storefront-outline"
-                iconColor={colors.emerald}
+                iconColor={colors.emeraldInk}
                 iconBg="rgba(0,225,148,0.12)"
                 title="Merchant Manager"
                 subtitle="Manage listings and redemptions"
@@ -263,7 +263,7 @@ export function ProfileScreen() {
           <View style={styles.divider} />
           <ToggleRow
             icon="eye-outline"
-            iconColor={colors.coral}
+            iconColor={colors.coralInk}
             iconBg="rgba(255,107,82,0.12)"
             title="Privacy Visible"
             subtitle="Show profile on scoreboard"
@@ -273,7 +273,7 @@ export function ProfileScreen() {
           <View style={styles.divider} />
           <ToggleRow
             icon="walk-outline"
-            iconColor={colors.emerald}
+            iconColor={colors.emeraldInk}
             iconBg="rgba(0,225,148,0.12)"
             title="Pedometer Active"
             subtitle="Live step tracking"

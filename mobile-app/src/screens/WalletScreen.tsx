@@ -58,7 +58,7 @@ export function WalletScreen() {
           </View>
         ) : vouchers.error && items.length === 0 ? (
           <GlassCard style={styles.empty}>
-            <Ionicons name="cloud-offline-outline" size={40} color={colors.coral} />
+            <Ionicons name="cloud-offline-outline" size={40} color={colors.coralInk} />
             <Text style={styles.emptyTitle}>Could not load your coupons</Text>
             <Text style={styles.emptyBody}>{vouchers.error}</Text>
             <PressableScale style={styles.retry} onPress={() => void refreshWallet()}>

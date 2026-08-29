@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   stepNumText: { color: colors.primary, fontWeight: "800", fontSize: 11 },
   stepText: { flex: 1, color: colors.charcoal, fontSize: 13, lineHeight: 18 },
   error: {
-    color: colors.coral,
+    color: colors.coralInk,
     fontSize: 12,
     fontWeight: "700",
     marginTop: spacing.sm,

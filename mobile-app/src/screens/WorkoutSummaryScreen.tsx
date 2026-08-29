@@ -84,7 +84,7 @@ export function WorkoutSummaryScreen() {
         <ScrollView contentContainerStyle={styles.content}>
           <ScreenHeader title="Workout Summary" onBack={() => navigation.goBack()} light />
           <GlassCard dark style={styles.savedBox}>
-            <Ionicons name="cloud-offline-outline" size={20} color={colors.coral} />
+            <Ionicons name="cloud-offline-outline" size={20} color={colors.coralInk} />
             <View style={{ flex: 1 }}>
               <Text style={styles.savedTitle}>
                 {error ? "Could not load the workout" : "No finished workouts yet"}
@@ -112,7 +112,7 @@ export function WorkoutSummaryScreen() {
             <Ionicons
               name={underReview ? "search" : "sparkles"}
               size={28}
-              color={underReview ? colors.muted : "#FDE68A"}
+              color={underReview ? colors.mutedDark : "#FDE68A"}
             />
             <Text style={styles.coinValue}>+{coinsEarned}</Text>
             <Text style={styles.coinLabel}>Coins</Text>
@@ -124,7 +124,7 @@ export function WorkoutSummaryScreen() {
 
         {underReview ? (
           <GlassCard dark style={styles.reviewBox}>
-            <Ionicons name="information-circle-outline" size={18} color={colors.muted} />
+            <Ionicons name="information-circle-outline" size={18} color={colors.mutedDark} />
             <Text style={styles.reviewText}>
               This session moved faster than a person walks or runs, so the bonus is
               held while a moderator looks at it. Your account is unaffected.
@@ -170,7 +170,7 @@ export function WorkoutSummaryScreen() {
         </PressableScale>
 
         <PressableScale style={styles.shareBtn} onPress={handleShare}>
-          <Ionicons name="share-social-outline" size={16} color={colors.muted} />
+          <Ionicons name="share-social-outline" size={16} color={colors.mutedDark} />
           <Text style={styles.shareText}>Share to Socials</Text>
         </PressableScale>
       </ScrollView>
@@ -188,10 +188,10 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: spacing.lg,
   },
-  reviewText: { flex: 1, color: colors.muted, fontSize: 10, lineHeight: 15 },
+  reviewText: { flex: 1, color: colors.mutedDark, fontSize: 10, lineHeight: 15 },
   content: { padding: spacing.xl, paddingTop: 56, paddingBottom: 40 },
   hero: { color: colors.textLight, fontWeight: "800", fontSize: 24, textAlign: "center", marginTop: 8 },
-  date: { color: colors.muted, fontSize: 10, fontWeight: "700", letterSpacing: 1, textAlign: "center", marginTop: 8, textTransform: "uppercase" },
+  date: { color: colors.mutedDark, fontSize: 10, fontWeight: "700", letterSpacing: 1, textAlign: "center", marginTop: 8, textTransform: "uppercase" },
   coinOuter: {
     width: 176,
     height: 176,
@@ -216,10 +216,10 @@ const styles = StyleSheet.create({
   },
   coinValue: { color: "#FDE68A", fontWeight: "900", fontSize: 28, marginTop: 4 },
   coinLabel: { color: "#A78BFA", fontSize: 9, fontWeight: "900", letterSpacing: 1.5, textTransform: "uppercase", marginTop: 4 },
-  coinSub: { color: colors.muted, fontSize: 7, fontWeight: "700", letterSpacing: 1, textTransform: "uppercase", marginTop: 2 },
+  coinSub: { color: colors.mutedDark, fontSize: 7, fontWeight: "700", letterSpacing: 1, textTransform: "uppercase", marginTop: 2 },
   statsRow: { flexDirection: "row", gap: 8 },
   statCard: { flex: 1, padding: 10, alignItems: "center" },
-  statLabel: { color: colors.muted, fontSize: 8, fontWeight: "700", textTransform: "uppercase" },
+  statLabel: { color: colors.mutedDark, fontSize: 8, fontWeight: "700", textTransform: "uppercase" },
   statValue: { color: colors.primary, fontWeight: "900", fontSize: 12, marginTop: 6 },
   statUnit: { color: colors.slate, fontSize: 8, fontWeight: "700", marginTop: 2, textTransform: "uppercase" },
   routeCard: { height: 112, marginTop: spacing.lg, padding: 14, justifyContent: "flex-end", overflow: "hidden" },
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   routeText: { color: "#CBD5E1", fontSize: 9, fontWeight: "800", letterSpacing: 0.8, textTransform: "uppercase" },
   savedBox: { marginTop: spacing.lg, padding: 16, flexDirection: "row", gap: 12, alignItems: "flex-start" },
   savedTitle: { color: colors.textLight, fontWeight: "900", fontSize: 12 },
-  savedBody: { color: colors.muted, fontSize: 10, marginTop: 4, lineHeight: 15 },
+  savedBody: { color: colors.mutedDark, fontSize: 10, marginTop: 4, lineHeight: 15 },
   primaryBtn: {
     marginTop: spacing.xl,
     backgroundColor: colors.primary,
@@ -257,5 +257,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
   },
-  shareText: { color: colors.muted, fontWeight: "700", fontSize: 12 },
+  shareText: { color: colors.mutedDark, fontWeight: "700", fontSize: 12 },
 });
