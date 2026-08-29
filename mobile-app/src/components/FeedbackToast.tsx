@@ -1,27 +1,62 @@
-import React, { useEffect } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
+/**
+ * The transient message that drops in from the top.
+ *
+ * On React Native's own `Animated` — see `PressableScale` for why Reanimated is
+ * gone. The exit animation is the reason this keeps its own `visible` state:
+ * unmounting on `toast === null` would cut the fade off, so the component
+ * outlives the toast by exactly the length of the fade.
+ */
+
+import { useEffect, useRef, useState } from "react";
+import { Animated, Text, View } from "react-native";
+
 import { radii } from "../theme";
 import { useStride } from "../contexts/StrideContext";
-import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { makeStyles } from "../contexts/ThemeContext";
+
+const FADE_MS = 220;
+const VISIBLE_MS = 2200;
 
 export function FeedbackToast() {
   const styles = useStyles();
   const { toast, dismissToast } = useStride();
 
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(dismissToast, 2200);
-    return () => clearTimeout(t);
-  }, [toast, dismissToast]);
+  const opacity = useRef(new Animated.Value(0)).current;
+  const offset = useRef(new Animated.Value(-16)).current;
+  /** Held one frame longer than `toast` so the exit animation can play out. */
+  const [shown, setShown] = useState(toast);
 
-  if (!toast) return null;
+  useEffect(() => {
+    if (toast) {
+      setShown(toast);
+      Animated.parallel([
+        Animated.timing(opacity, { toValue: 1, duration: FADE_MS, useNativeDriver: true }),
+        Animated.timing(offset, { toValue: 0, duration: FADE_MS, useNativeDriver: true }),
+      ]).start();
+
+      const timer = setTimeout(dismissToast, VISIBLE_MS);
+      return () => clearTimeout(timer);
+    }
+
+    if (!shown) return;
+    Animated.parallel([
+      Animated.timing(opacity, { toValue: 0, duration: FADE_MS, useNativeDriver: true }),
+      Animated.timing(offset, { toValue: -16, duration: FADE_MS, useNativeDriver: true }),
+    ]).start(({ finished }) => {
+      if (finished) setShown(null);
+    });
+    // `shown` is deliberately not a dependency: reacting to it would restart the
+    // exit animation it just finished.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toast, dismissToast, opacity, offset]);
+
+  if (!shown) return null;
 
   return (
-    <Animated.View entering={FadeInUp} exiting={FadeOutUp} style={styles.wrap}>
+    <Animated.View style={[styles.wrap, { opacity, transform: [{ translateY: offset }] }]}>
       <View style={styles.card}>
-        {toast.emoji ? <Text style={styles.emoji}>{toast.emoji}</Text> : null}
-        <Text style={styles.text}>{toast.message}</Text>
+        {shown.emoji ? <Text style={styles.emoji}>{shown.emoji}</Text> : null}
+        <Text style={styles.text}>{shown.message}</Text>
       </View>
     </Animated.View>
   );

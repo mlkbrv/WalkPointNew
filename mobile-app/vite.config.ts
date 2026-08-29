@@ -47,13 +47,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       jsxInNodeModules(),
-      react({
-        babel: {
-          // Reanimated's worklets are created by its Babel plugin. Without it
-          // every useAnimatedStyle throws at runtime on the web.
-          plugins: ['react-native-reanimated/plugin'],
-        },
-      }),
+      react(),
       tailwindcss(),
     ],
     resolve: {

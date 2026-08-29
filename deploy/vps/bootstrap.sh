@@ -108,7 +108,15 @@ fi
 # So the certificate depends on :443, not on :80.
 if $HTTPS_FREE && $HTTP_FREE; then
   echo "  :80 and :443 are both free — using them."
-  : > tls.conf
+  {
+    echo 'tls {'
+    echo '  # RSA rather than the default ECDSA. Let'"'"'s Encrypt signs ECDSA'
+    echo '  # certificates under ISRG Root X2, which most Android trust stores do'
+    echo '  # not carry: the handshake fails on a phone while curl on a desktop'
+    echo '  # succeeds, because the desktop has that root and the phone does not.'
+    echo '  key_type rsa2048'
+  }
+  echo '}' >> tls.conf
 elif $HTTPS_FREE; then
   warn ":80 is taken by the other project on this box; leaving it alone."
   echo "  :443 is free, so a real certificate is still issued — over TLS-ALPN."
@@ -116,6 +124,11 @@ elif $HTTPS_FREE; then
   # bash, and a nested heredoc does not survive that reliably.
   {
     echo 'tls {'
+    echo '  # RSA rather than the default ECDSA. Let'"'"'s Encrypt signs ECDSA'
+    echo '  # certificates under ISRG Root X2, which most Android trust stores do'
+    echo '  # not carry: the handshake fails on a phone while curl on a desktop'
+    echo '  # succeeds, because the desktop has that root and the phone does not.'
+    echo '  key_type rsa2048'
     echo '  issuer acme {'
     echo '    # :80 belongs to something else here, so HTTP-01 cannot be answered.'
     echo '    # TLS-ALPN-01 runs entirely on :443.'
