@@ -1,7 +1,7 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import {defineConfig, transformWithEsbuild} from 'vite';
+import {defineConfig, loadEnv, transformWithEsbuild} from 'vite';
 import type {Plugin} from 'vite';
 
 /**
@@ -37,7 +37,13 @@ function jsxInNodeModules(): Plugin {
   };
 }
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+  // The dev proxy points at a local backend by default, but follows
+  // EXPO_PUBLIC_API_BASE_URL when one is set — so `npm run dev` can be checked
+  // against the deployed API without running Postgres locally.
+  const env = loadEnv(mode, process.cwd(), '');
+  const apiTarget = env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+
   return {
     plugins: [
       jsxInNodeModules(),
@@ -132,9 +138,12 @@ export default defineConfig(() => {
     server: {
       // The API runs on its own port; proxying keeps the web build same-origin,
       // so the relative base URL in src/api/client.ts works without CORS setup.
+      // Defaults to a backend on :8000, but follows EXPO_PUBLIC_API_BASE_URL when
+      // one is set — so `npm run dev` works against the deployed API without a
+      // local Postgres, which is how the web build is usually checked.
       proxy: {
-        '/v1': {target: 'http://localhost:8000', changeOrigin: true},
-        '/media': {target: 'http://localhost:8000', changeOrigin: true},
+        '/v1': {target: apiTarget, changeOrigin: true, secure: true},
+        '/media': {target: apiTarget, changeOrigin: true, secure: true},
       },
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modify—file watching is disabled to prevent flickering during agent edits.

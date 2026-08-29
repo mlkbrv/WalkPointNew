@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  Image,
   ScrollView,
   StyleSheet,
   Switch,
@@ -12,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, radii } from "../theme";
 import { PressableScale } from "../components/PressableScale";
+import { Avatar } from "../components/Avatar";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { useStride } from "../contexts/StrideContext";
@@ -108,14 +108,7 @@ export function ProfileScreen() {
 
         <View style={styles.hero}>
           <View style={styles.avatarWrap}>
-            <Image
-              source={{
-                uri:
-                  user?.avatar ||
-                  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80",
-              }}
-              style={styles.avatar}
-            />
+            <Avatar uri={user?.avatar} name={user?.name} size={96} />
             <PressableScale style={styles.editBtn} onPress={() => navigation.navigate("EditProfile")}>
               <Ionicons name="create-outline" size={14} color={colors.white} />
             </PressableScale>

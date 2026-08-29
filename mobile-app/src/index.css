@@ -54,8 +54,33 @@
   scrollbar-width: none;
 }
 
+/*
+ * React Native's layout is flexbox all the way down, and every container in the
+ * app is `flex: 1`. On the web that resolves against the parent's height — and
+ * html/body default to `height: auto`, which for a flex child with no intrinsic
+ * content is zero. The whole tree then computes to 0px tall and the page paints
+ * nothing, even though the DOM is fully populated.
+ *
+ * These three rules are what give the chain something to be 1 of. Without them
+ * the web build renders a blank canvas.
+ */
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
+  margin: 0;
+  /* The app draws its own scrolling regions; a second scrollbar on the document
+     fights with them. */
+  overflow: hidden;
   font-family: var(--font-sans);
   background-color: var(--color-canvas-bg);
   color: var(--color-charcoal-dark);
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
 }

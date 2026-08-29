@@ -22,6 +22,7 @@ import {
 } from "../api/endpoints";
 import { colors, radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
+import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
 
@@ -199,13 +200,13 @@ export function MerchantManagerScreen() {
         {loading && coupons.length === 0 ? (
           <ActivityIndicator color={colors.primary} style={styles.spinner} />
         ) : coupons.length === 0 ? (
-          <GlassCard style={styles.empty}>
-            <Ionicons name="storefront-outline" size={36} color={colors.muted} />
-            <Text style={styles.emptyTitle}>No coupons yet</Text>
-            <Text style={styles.emptyBody}>
-              Create your first offer and submit it for review.
-            </Text>
-          </GlassCard>
+          <EmptyState
+            art="store"
+            title="No coupons yet"
+            body="Create your first offer, then submit it for review."
+            actionLabel="Create Coupon"
+            onAction={() => navigation.navigate("CreateCoupon")}
+          />
         ) : (
           coupons.map((coupon) => (
             <CouponCard

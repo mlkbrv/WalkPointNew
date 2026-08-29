@@ -12,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, radii, shadows } from "../theme";
 import { PressableScale } from "../components/PressableScale";
+import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
 import { useServerData } from "../contexts/ServerDataContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -100,22 +101,19 @@ export function StoreScreen() {
             <ActivityIndicator color={colors.primary} />
           </View>
         ) : coupons.error && coupons.data.length === 0 ? (
-          <GlassCard style={styles.stateCard}>
-            <Ionicons name="cloud-offline-outline" size={36} color={colors.coralInk} />
-            <Text style={styles.stateTitle}>Could not load the store</Text>
-            <Text style={styles.stateBody}>{coupons.error}</Text>
-            <PressableScale style={styles.retry} onPress={() => void refreshCatalogue()}>
-              <Text style={styles.retryText}>Try again</Text>
-            </PressableScale>
-          </GlassCard>
+          <EmptyState
+            art="offline"
+            title="Could not load the store"
+            body={coupons.error ?? undefined}
+            actionLabel="Try again"
+            onAction={() => void refreshCatalogue()}
+          />
         ) : filtered.length === 0 ? (
-          <GlassCard style={styles.stateCard}>
-            <Ionicons name="pricetags-outline" size={36} color={colors.muted} />
-            <Text style={styles.stateTitle}>Nothing here yet</Text>
-            <Text style={styles.stateBody}>
-              New offers appear as soon as partners publish them.
-            </Text>
-          </GlassCard>
+          <EmptyState
+            art="store"
+            title="No offers yet"
+            body="Partner coupons appear here once a moderator approves them."
+          />
         ) : (
           <View style={styles.grid}>
             {filtered.map((perk) => {

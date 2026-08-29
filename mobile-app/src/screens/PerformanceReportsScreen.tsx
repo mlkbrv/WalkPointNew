@@ -23,6 +23,7 @@ import {
 import { useStride, formatDuration } from "../contexts/StrideContext";
 import { colors, radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
+import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
 
@@ -146,14 +147,13 @@ export function PerformanceReportsScreen() {
             <ActivityIndicator color={colors.primary} />
           </View>
         ) : error && days.length === 0 ? (
-          <GlassCard style={styles.errorCard}>
-            <Ionicons name="cloud-offline-outline" size={28} color={colors.coralInk} />
-            <Text style={styles.errorTitle}>Could not load your reports</Text>
-            <Text style={styles.errorBody}>{error}</Text>
-            <PressableScale style={styles.retry} onPress={() => void load(activeTab)}>
-              <Text style={styles.retryText}>Try again</Text>
-            </PressableScale>
-          </GlassCard>
+          <EmptyState
+            art="offline"
+            title="Could not load your reports"
+            body={error ?? undefined}
+            actionLabel="Try again"
+            onAction={() => void load(activeTab)}
+          />
         ) : (
           <>
             <GlassCard style={styles.chartCard}>
@@ -205,7 +205,11 @@ export function PerformanceReportsScreen() {
 
             <Text style={styles.section}>Workout History</Text>
             {sessions.length === 0 ? (
-              <Text style={styles.empty}>No workouts saved yet.</Text>
+              <EmptyState
+                art="steps"
+                title="No workouts yet"
+                body="Start a session on the Track tab and it will appear here."
+              />
             ) : (
               sessions.map((w) => (
                 <GlassCard key={w.id} style={styles.histItem}>

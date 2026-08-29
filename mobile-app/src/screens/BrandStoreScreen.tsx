@@ -16,6 +16,7 @@ import { RootStackParamList } from "../types";
 import { useServerData } from "../contexts/ServerDataContext";
 import { colors, radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
+import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
 
@@ -59,13 +60,11 @@ export function BrandStoreScreen() {
     return (
       <View style={styles.root}>
         <ScreenHeader title="Store" onBack={() => navigation.goBack()} />
-        <GlassCard style={styles.stateCard}>
-          <Ionicons name="storefront-outline" size={36} color={colors.muted} />
-          <Text style={styles.stateTitle}>This store is not available</Text>
-          <Text style={styles.stateBody}>
-            It may have been taken offline. Try the store list for what is live now.
-          </Text>
-        </GlassCard>
+        <EmptyState
+          art="store"
+          title="This store is not available"
+          body="It may have been taken offline. Try the store list for what is live now."
+        />
       </View>
     );
   }
@@ -97,11 +96,11 @@ export function BrandStoreScreen() {
         </View>
 
         {brandCoupons.length === 0 ? (
-          <GlassCard style={styles.stateCard}>
-            <Ionicons name="pricetags-outline" size={32} color={colors.muted} />
-            <Text style={styles.stateTitle}>No live offers</Text>
-            <Text style={styles.stateBody}>Check back when this partner publishes something.</Text>
-          </GlassCard>
+          <EmptyState
+            art="store"
+            title="No live offers"
+            body="Check back when this partner publishes something."
+          />
         ) : (
           brandCoupons.map((coupon) => {
             const affordable = wallet.data.balance >= coupon.cost_coins;

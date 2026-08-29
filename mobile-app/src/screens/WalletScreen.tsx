@@ -7,6 +7,8 @@ import { useServerData } from "../contexts/ServerDataContext";
 import { useAuth } from "../contexts/AuthContext";
 import { colors, radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
+import { Avatar } from "../components/Avatar";
+import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
 
@@ -37,10 +39,7 @@ export function WalletScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.topRow}>
           <View style={styles.brandRow}>
-            <Image
-              source={{ uri: user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80" }}
-              style={styles.avatar}
-            />
+            <Avatar uri={user?.avatar} name={user?.name} size={36} />
             <Text style={styles.brand}>STRIDE</Text>
           </View>
           <View style={styles.tokenChip}>
@@ -57,20 +56,19 @@ export function WalletScreen() {
             <ActivityIndicator color={colors.primary} />
           </View>
         ) : vouchers.error && items.length === 0 ? (
-          <GlassCard style={styles.empty}>
-            <Ionicons name="cloud-offline-outline" size={40} color={colors.coralInk} />
-            <Text style={styles.emptyTitle}>Could not load your coupons</Text>
-            <Text style={styles.emptyBody}>{vouchers.error}</Text>
-            <PressableScale style={styles.retry} onPress={() => void refreshWallet()}>
-              <Text style={styles.retryText}>Try again</Text>
-            </PressableScale>
-          </GlassCard>
+          <EmptyState
+            art="offline"
+            title="Could not load your coupons"
+            body={vouchers.error ?? undefined}
+            actionLabel="Try again"
+            onAction={() => void refreshWallet()}
+          />
         ) : items.length === 0 ? (
-          <GlassCard style={styles.empty}>
-            <Ionicons name="ticket-outline" size={40} color={colors.muted} />
-            <Text style={styles.emptyTitle}>No active coupons</Text>
-            <Text style={styles.emptyBody}>Head to the Rewards Store and purchase perks with your step tokens.</Text>
-          </GlassCard>
+          <EmptyState
+            art="wallet"
+            title="No coupons yet"
+            body="Walk to earn coins, then spend them on partner offers in the Store."
+          />
         ) : (
           items.map((voucher) => (
             <PressableScale

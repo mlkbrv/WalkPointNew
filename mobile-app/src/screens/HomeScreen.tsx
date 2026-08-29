@@ -12,6 +12,7 @@ import Svg, { Circle } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, radii } from "../theme";
 import { PressableScale } from "../components/PressableScale";
+import { Avatar } from "../components/Avatar";
 import { GlassCard } from "../components/GlassCard";
 import { useStride } from "../contexts/StrideContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -73,10 +74,7 @@ export function HomeScreen() {
         <View style={styles.header}>
           <PressableScale style={styles.greeting} onPress={() => navigation.navigate("Profile")}>
             <View style={styles.avatarWrap}>
-              <Image
-                source={{ uri: user?.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80" }}
-                style={styles.avatar}
-              />
+              <Avatar uri={user?.avatar} name={user?.name} size={44} />
               <View style={styles.onlineDot} />
             </View>
             <View>
@@ -394,7 +392,10 @@ const styles = StyleSheet.create({
   todayTagText: { color: colors.white, fontSize: 8, fontWeight: "900", textTransform: "uppercase" },
   todaySpacer: { height: 16 },
   barTrack: {
-    width: "100%",
+    // Fixed width, not "100%". The column count varies with how many days the
+    // server has (a new account has fewer than seven), and a stretched track
+    // with a 999px radius stops being a pill and becomes an ellipse.
+    width: 22,
     height: 80,
     backgroundColor: colors.border,
     borderRadius: radii.full,

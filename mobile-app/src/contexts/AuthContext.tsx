@@ -29,16 +29,14 @@ const defaultPrefs: UserPreferences = {
   marketingPush: false,
 };
 
-const FALLBACK_AVATAR =
-  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80";
-
 /** The API's user shape is not the app's; this is the single translation point. */
 function toAuthUser(apiUser: ApiUser): AuthUser {
   return {
     id: apiUser.id,
     name: apiUser.full_name || apiUser.email?.split("@")[0] || "Walker",
     email: apiUser.email ?? apiUser.phone ?? "",
-    avatar: apiUser.avatar_path ?? FALLBACK_AVATAR,
+    // No stock photo stand-in: `Avatar` draws initials when this is empty.
+    avatar: apiUser.avatar_path ?? "",
     // The API's "partner" is the app's "merchant"; everything else is a consumer.
     role: apiUser.role === "partner" ? "merchant" : "consumer",
     memberSince: String(new Date().getFullYear()),

@@ -9,7 +9,6 @@
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
   ImageStyle,
   ScrollView,
   StyleSheet,
@@ -17,17 +16,15 @@ import {
   View,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { describeError } from "../api/client";
 import { leaderboardApi, type ApiLeaderboard, type ApiLeaderboardEntry } from "../api/endpoints";
 import { colors, radii } from "../theme";
+import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
+import { Avatar } from "../components/Avatar";
 import { PressableScale } from "../components/PressableScale";
-
-const AVATAR_FALLBACK =
-  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80";
 
 type Period = "daily" | "weekly";
 
@@ -82,7 +79,7 @@ export function ScoreboardScreen() {
     return (
       <View style={[styles.podiumSlot, place === 1 && styles.podiumFirst]}>
         <View style={styles.avatarRel}>
-          <Image source={{ uri: user.avatar_url ?? AVATAR_FALLBACK }} style={avatarStyle} />
+          <Avatar uri={user.avatar_url} name={user.name} size={size} style={avatarStyle} />
           <View style={[styles.placeBadge, { backgroundColor: badgeBg }]}>
             <Text style={styles.placeText}>{place === 1 ? "1" : String(place)}</Text>
           </View>
@@ -129,22 +126,19 @@ export function ScoreboardScreen() {
             <ActivityIndicator color={colors.primary} />
           </View>
         ) : error && !board ? (
-          <GlassCard style={styles.stateCard}>
-            <Ionicons name="cloud-offline-outline" size={32} color={colors.coralInk} />
-            <Text style={styles.stateTitle}>Could not load the board</Text>
-            <Text style={styles.stateBody}>{error}</Text>
-            <PressableScale style={styles.retry} onPress={() => void load(period)}>
-              <Text style={styles.retryText}>Try again</Text>
-            </PressableScale>
-          </GlassCard>
+          <EmptyState
+            art="offline"
+            title="Could not load the board"
+            body={error ?? undefined}
+            actionLabel="Try again"
+            onAction={() => void load(period)}
+          />
         ) : sorted.length === 0 ? (
-          <GlassCard style={styles.stateCard}>
-            <Ionicons name="footsteps-outline" size={32} color={colors.muted} />
-            <Text style={styles.stateTitle}>Nobody has walked yet</Text>
-            <Text style={styles.stateBody}>
-              Be the first — your steps put you on the board.
-            </Text>
-          </GlassCard>
+          <EmptyState
+            art="board"
+            title="Nobody has walked yet"
+            body="Be the first — today's steps put you straight on the board."
+          />
         ) : (
         <>
         <GlassCard style={styles.podium}>
@@ -181,8 +175,10 @@ export function ScoreboardScreen() {
                 <View style={styles.rowLeft}>
                   <Text style={[styles.rank, { color: rankColor }]}>{rank}</Text>
                   <View style={styles.avatarRel}>
-                    <Image
-                      source={{ uri: user.avatar_url ?? AVATAR_FALLBACK }}
+                    <Avatar
+                      uri={user.avatar_url}
+                      name={user.name}
+                      size={40}
                       style={styles.listAvatar as ImageStyle}
                     />
                     {isSelf ? <View style={styles.selfDot} /> : null}

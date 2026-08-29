@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, radii } from "../theme";
 import { PressableScale } from "../components/PressableScale";
+import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
 import { useServerData } from "../contexts/ServerDataContext";
 import type { ApiNotification } from "../api/endpoints";
@@ -132,18 +133,19 @@ export function InboxScreen() {
             <ActivityIndicator color={colors.primary} />
           </View>
         ) : inbox.error && notifications.length === 0 ? (
-          <GlassCard style={styles.empty}>
-            <Ionicons name="cloud-offline-outline" size={36} color={colors.coralInk} />
-            <Text style={styles.emptyText}>{inbox.error}</Text>
-            <PressableScale style={styles.retry} onPress={() => void refreshInbox()}>
-              <Text style={styles.retryText}>Try again</Text>
-            </PressableScale>
-          </GlassCard>
+          <EmptyState
+            art="offline"
+            title="Could not load your inbox"
+            body={inbox.error ?? undefined}
+            actionLabel="Try again"
+            onAction={() => void refreshInbox()}
+          />
         ) : notifications.length === 0 ? (
-          <GlassCard style={styles.empty}>
-            <Ionicons name="mail-open-outline" size={36} color={colors.muted} />
-            <Text style={styles.emptyText}>No notifications yet</Text>
-          </GlassCard>
+          <EmptyState
+            art="inbox"
+            title="Nothing here yet"
+            body="Coins you earn and news from partners will land here."
+          />
         ) : null}
       </ScrollView>
     </View>
