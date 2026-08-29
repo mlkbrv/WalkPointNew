@@ -17,10 +17,11 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { describeError } from "../api/client";
 import { redemptionsApi, type ApiScanPreview } from "../api/endpoints";
 import { useStride } from "../contexts/StrideContext";
-import { colors, radii, spacing } from "../theme";
+import { radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 /** Vouchers are identified by a UUID the server generates; anything else is not a code. */
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -42,6 +43,8 @@ function VoucherPreview({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const usedOn = preview.used_at
     ? ` on ${new Date(preview.used_at).toLocaleDateString()}`
     : "";
@@ -90,6 +93,8 @@ function VoucherPreview({
 }
 
 export function MerchantScannerScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation();
   const { showToast } = useStride();
   const [permission, requestPermission] = useCameraPermissions();
@@ -243,7 +248,7 @@ export function MerchantScannerScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.canvas },
   content: { flex: 1, padding: spacing.xl, paddingTop: 56 },
   cameraWrap: {
@@ -300,7 +305,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   input: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: colors.inputSurface,
     borderRadius: radii.md,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -333,4 +338,4 @@ const styles = StyleSheet.create({
   resultOk: { backgroundColor: "rgba(0,225,148,0.1)", borderColor: "rgba(0,225,148,0.3)" },
   resultBad: { backgroundColor: "rgba(255,107,82,0.1)", borderColor: "rgba(255,107,82,0.3)" },
   resultText: { flex: 1, fontWeight: "700", fontSize: 12 },
-});
+}));

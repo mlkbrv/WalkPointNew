@@ -9,14 +9,17 @@ import {
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors, radii } from "../theme";
+import { radii } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
 import { useServerData } from "../contexts/ServerDataContext";
 import type { ApiNotification } from "../api/endpoints";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 export function InboxScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const {
@@ -152,7 +155,7 @@ export function InboxScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   loading: { paddingVertical: 48, alignItems: "center" },
   retry: {
     marginTop: 12,
@@ -257,4 +260,4 @@ const styles = StyleSheet.create({
   },
   empty: { padding: 32, alignItems: "center", gap: 10 },
   emptyText: { fontSize: 13, fontWeight: "600", color: colors.muted },
-});
+}));

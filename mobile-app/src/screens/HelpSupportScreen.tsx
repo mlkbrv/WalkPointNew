@@ -5,12 +5,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { useStride } from "../contexts/StrideContext";
 import { describeError } from "../api/client";
 import { supportApi, type ApiFaqEntry } from "../api/endpoints";
-import { colors, radii, spacing } from "../theme";
+import { radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 export function HelpSupportScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<any>();
   const { showToast } = useStride();
   const [openIds, setOpenIds] = useState<string[]>([]);
@@ -110,7 +113,7 @@ export function HelpSupportScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   loading: { paddingVertical: spacing.xxl, alignItems: "center" },
   retry: {
     marginTop: spacing.md,
@@ -138,7 +141,7 @@ const styles = StyleSheet.create({
   faqQ: { flex: 1, color: colors.charcoal, fontWeight: "700", fontSize: 13 },
   faqA: { color: colors.slate, fontSize: 12, lineHeight: 18, marginTop: 10 },
   action: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
@@ -158,4 +161,4 @@ const styles = StyleSheet.create({
   actionMeta: { flex: 1 },
   actionTitle: { color: colors.charcoal, fontWeight: "800", fontSize: 13 },
   actionSub: { color: colors.muted, fontSize: 11, marginTop: 2 },
-});
+}));

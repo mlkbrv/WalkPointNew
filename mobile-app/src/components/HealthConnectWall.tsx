@@ -10,7 +10,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHealth } from "../contexts/HealthContext";
-import { colors, radii, spacing } from "../theme";
+import { radii, spacing } from "../theme";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 import { PressableScale } from "./PressableScale";
 
 const HC_PLAY =
@@ -25,6 +26,8 @@ const STEPS = [
 ];
 
 export function HealthConnectWall() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const health = useHealth();
   const [busy, setBusy] = useState(false);
@@ -105,7 +108,7 @@ export function HealthConnectWall() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     ...StyleSheet.absoluteFill,
     backgroundColor: colors.canvas,
@@ -187,4 +190,4 @@ const styles = StyleSheet.create({
   linkText: { color: colors.slate, fontWeight: "700", fontSize: 12, textDecorationLine: "underline" },
   devBtn: { marginTop: spacing.lg, alignItems: "center" },
   devText: { color: colors.muted, fontSize: 11, fontWeight: "700" },
-});
+}));

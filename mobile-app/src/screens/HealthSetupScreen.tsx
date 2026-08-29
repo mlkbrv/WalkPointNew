@@ -4,12 +4,15 @@ import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useHealth } from "../contexts/HealthContext";
 import { useStride } from "../contexts/StrideContext";
-import { colors, radii, spacing } from "../theme";
+import { radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 export function HealthSetupScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<any>();
   const health = useHealth();
   const { showToast } = useStride();
@@ -83,7 +86,7 @@ export function HealthSetupScreen() {
         </GlassCard>
 
         <PressableScale style={styles.primaryBtn} onPress={onRequest} disabled={busy}>
-          {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryText}>REQUEST PERMISSIONS</Text>}
+          {busy ? <ActivityIndicator color={colors.onPrimary} /> : <Text style={styles.primaryText}>REQUEST PERMISSIONS</Text>}
         </PressableScale>
 
         <PressableScale style={styles.secondaryBtn} onPress={onStart} disabled={busy}>
@@ -95,7 +98,7 @@ export function HealthSetupScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.canvas },
   content: { padding: spacing.xl, paddingTop: 56, paddingBottom: 40 },
   badge: {
@@ -147,4 +150,4 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   secondaryText: { color: colors.primary, fontWeight: "800", fontSize: 13 },
-});
+}));

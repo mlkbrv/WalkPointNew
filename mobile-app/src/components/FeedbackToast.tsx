@@ -1,10 +1,12 @@
 import React, { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
-import { colors, radii } from "../theme";
+import { radii } from "../theme";
 import { useStride } from "../contexts/StrideContext";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 export function FeedbackToast() {
+  const styles = useStyles();
   const { toast, dismissToast } = useStride();
 
   useEffect(() => {
@@ -25,7 +27,7 @@ export function FeedbackToast() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   wrap: {
     position: "absolute",
     top: 56,
@@ -45,4 +47,4 @@ const styles = StyleSheet.create({
   },
   emoji: { fontSize: 16 },
   text: { color: colors.textLight, fontWeight: "700", fontSize: 13 },
-});
+}));

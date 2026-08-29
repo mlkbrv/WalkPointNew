@@ -9,7 +9,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors, radii } from "../theme";
+import { radii } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { Avatar } from "../components/Avatar";
 import { GlassCard } from "../components/GlassCard";
@@ -17,8 +17,11 @@ import { ScreenHeader } from "../components/ScreenHeader";
 import { useStride } from "../contexts/StrideContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useHealth } from "../contexts/HealthContext";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 export function ProfileScreen() {
+  const { colors, preference, setPreference, scheme } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const { user, prefs, updatePrefs, switchRole, logout } = useAuth();
@@ -242,6 +245,49 @@ export function ProfileScreen() {
           </>
         ) : null}
 
+        <Text style={styles.sectionLabel}>Appearance</Text>
+        <GlassCard style={styles.group}>
+          <View style={styles.appearanceRow}>
+            {(
+              [
+                ["system", "Auto", "phone-portrait-outline"],
+                ["light", "Light", "sunny-outline"],
+                ["dark", "Dark", "moon-outline"],
+              ] as const
+            ).map(([value, label, icon]) => {
+              const active = preference === value;
+              return (
+                <PressableScale
+                  key={value}
+                  style={[styles.appearanceOption, active && styles.appearanceOptionActive]}
+                  onPress={() => setPreference(value)}
+                >
+                  <Ionicons
+                    name={icon}
+                    size={18}
+                    color={active ? colors.primary : colors.muted}
+                  />
+                  <Text
+                    style={[
+                      styles.appearanceLabel,
+                      active && styles.appearanceLabelActive,
+                    ]}
+                  >
+                    {label}
+                  </Text>
+                </PressableScale>
+              );
+            })}
+          </View>
+          {/* "Auto" is the default and what most people want; naming what it
+              currently resolves to saves them opening the app twice to find out. */}
+          <Text style={styles.appearanceHint}>
+            {preference === "system"
+              ? `Following your device — currently ${scheme}.`
+              : `Always ${preference}, whatever your device is set to.`}
+          </Text>
+        </GlassCard>
+
         <Text style={styles.sectionLabel}>Preferences</Text>
         <GlassCard style={styles.group}>
           <ToggleRow
@@ -288,7 +334,7 @@ export function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.canvas },
   scroll: { paddingHorizontal: 20, paddingBottom: 40, gap: 16 },
   hero: { alignItems: "center", gap: 10, marginBottom: 8 },
@@ -332,6 +378,30 @@ const styles = StyleSheet.create({
   },
   statEdit: { flexDirection: "row", alignItems: "center", gap: 4 },
   statValue: { fontSize: 13, fontWeight: "900", color: colors.primary, minWidth: 48, textAlign: "center" },
+  appearanceRow: { flexDirection: "row", gap: 8, padding: 12 },
+  appearanceOption: {
+    flex: 1,
+    alignItems: "center",
+    gap: 6,
+    // Comfortably over the 44pt minimum touch target.
+    paddingVertical: 14,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  appearanceOptionActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryTint,
+  },
+  appearanceLabel: { fontSize: 12, fontWeight: "700", color: colors.muted },
+  appearanceLabelActive: { color: colors.primary },
+  appearanceHint: {
+    paddingHorizontal: 12,
+    paddingBottom: 14,
+    fontSize: 11,
+    lineHeight: 16,
+    color: colors.muted,
+  },
   sectionLabel: {
     fontSize: 10,
     fontWeight: "700",
@@ -385,4 +455,4 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 1,
   },
-});
+}));

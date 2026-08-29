@@ -52,6 +52,9 @@ services:
         condition: service_healthy
     volumes:
       - media:/app/media
+      # Read-only: the container needs to read the service-account key,
+      # never to change it.
+      - ./backend/secrets:/app/secrets:ro
     expose:
       - "8000"
     # The image's own entry point: migrations, then gunicorn. Same script the
@@ -78,6 +81,9 @@ services:
         condition: service_healthy
     volumes:
       - media:/app/media
+      # Read-only: the container needs to read the service-account key,
+      # never to change it.
+      - ./backend/secrets:/app/secrets:ro
     # Migrations are the API's job; the worker waits for the schema to exist.
     command: ["python", "-m", "app.worker"]
 

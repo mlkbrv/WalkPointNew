@@ -243,7 +243,9 @@ async def test_push_goes_to_the_registered_device(client, db, sent):
     assert len(sent) == 1
     assert sent[0]["tokens"] == ["target-token"]
     assert sent[0]["title"] == "Ping"
-    assert sent[0]["data"]["type"] == NotificationType.GENERIC
+    # `notification_type`, not `type`: this is the key the app routes a tap on,
+    # and it has to match what `routeForNotification` reads on the client.
+    assert sent[0]["data"]["notification_type"] == NotificationType.GENERIC
 
 
 async def test_a_user_without_a_device_still_gets_the_inbox_row(client, db, sent):

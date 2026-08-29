@@ -20,11 +20,13 @@ import {
   type ApiPartnerStats,
   type ModerationStatus,
 } from "../api/endpoints";
-import { colors, radii, spacing } from "../theme";
+import { radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import type { Palette } from "../theme";
 
 const STATUS_LABEL: Record<ModerationStatus, string> = {
   draft: "Draft",
@@ -33,13 +35,17 @@ const STATUS_LABEL: Record<ModerationStatus, string> = {
   rejected: "Rejected",
 };
 
-const STATUS_COLOR: Record<ModerationStatus, string> = {
-  draft: colors.muted,
-  // Amber darkened to 4.5:1 on white; the usual #F59E0B is 2.15:1.
-  pending: "#8A5A00",
-  approved: colors.emeraldInk,
-  rejected: colors.coralInk,
-};
+/** Built per palette: the amber has to move between themes like the rest. */
+function statusColors(colors: Palette, isDark: boolean): Record<ModerationStatus, string> {
+  return {
+    draft: colors.muted,
+    // On white the usual #F59E0B is 2.15:1, so it is darkened; on a dark card it
+    // is already legible and darkening it would bury it.
+    pending: isDark ? "#F0B429" : "#8A5A00",
+    approved: colors.emeraldInk,
+    rejected: colors.coralInk,
+  };
+}
 
 function CouponCard({
   coupon,
@@ -52,6 +58,9 @@ function CouponCard({
   onSubmit: () => void;
   onWithdraw: () => void;
 }) {
+  const { colors, isDark } = useTheme();
+  const styles = useStyles();
+  const statusColor = statusColors(colors, isDark);
   const sold = coupon.quantity_total - coupon.quantity_remaining;
   // Draft and rejected both go forward via submit; the other two come back.
   const canSubmit = coupon.status === "draft" || coupon.status === "rejected";
@@ -63,8 +72,8 @@ function CouponCard({
           <Text style={styles.title}>{coupon.title}</Text>
           <Text style={styles.sub}>{coupon.cost_coins.toLocaleString()} coins</Text>
         </View>
-        <View style={[styles.badge, { backgroundColor: `${STATUS_COLOR[coupon.status]}22` }]}>
-          <Text style={[styles.badgeText, { color: STATUS_COLOR[coupon.status] }]}>
+        <View style={[styles.badge, { backgroundColor: `${statusColor[coupon.status]}22` }]}>
+          <Text style={[styles.badgeText, { color: statusColor[coupon.status] }]}>
             {STATUS_LABEL[coupon.status]}
           </Text>
         </View>
@@ -103,6 +112,8 @@ function CouponCard({
 }
 
 export function MerchantManagerScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<{ navigate: (screen: string) => void; goBack: () => void }>();
 
   const [coupons, setCoupons] = useState<ApiOwnCoupon[]>([]);
@@ -223,7 +234,7 @@ export function MerchantManagerScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.canvas },
   content: { padding: spacing.xl, paddingTop: 56, paddingBottom: 40 },
   actions: { flexDirection: "row", gap: 10, marginBottom: spacing.lg },
@@ -248,12 +259,12 @@ const styles = StyleSheet.create({
     gap: 8,
     borderWidth: 1,
     borderColor: colors.primary,
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
   },
   secondaryText: { color: colors.primary, fontWeight: "800", fontSize: 13 },
   summary: {
     flexDirection: "row",
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
@@ -320,4 +331,4 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   withdrawText: { color: colors.slate, fontWeight: "800", fontSize: 12 },
-});
+}));

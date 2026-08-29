@@ -5,14 +5,17 @@ import { Ionicons } from "@expo/vector-icons";
 import type { ApiVoucher } from "../api/endpoints";
 import { useServerData } from "../contexts/ServerDataContext";
 import { useAuth } from "../contexts/AuthContext";
-import { colors, radii, spacing } from "../theme";
+import { radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { Avatar } from "../components/Avatar";
 import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 export function WalletScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<any>();
   const { user } = useAuth();
   const { wallet, vouchers, refreshWallet } = useServerData();
@@ -122,7 +125,7 @@ export function WalletScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   loading: { paddingVertical: spacing.xxxl, alignItems: "center" },
   retry: {
     marginTop: spacing.md,
@@ -155,7 +158,7 @@ const styles = StyleSheet.create({
   emptyBody: { color: colors.muted, fontSize: 12, textAlign: "center", maxWidth: 220 },
   ticket: {
     flexDirection: "row",
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: radii.xl,
     borderWidth: 1,
     borderColor: colors.border,
@@ -192,4 +195,4 @@ const styles = StyleSheet.create({
   usedText: { color: colors.muted, fontWeight: "800", fontSize: 10, letterSpacing: 1 },
   nudge: { padding: 20, alignItems: "center", gap: 10, marginTop: spacing.sm },
   nudgeText: { color: colors.slate, fontSize: 12, textAlign: "center", lineHeight: 18 },
-});
+}));

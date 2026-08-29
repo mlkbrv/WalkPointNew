@@ -15,12 +15,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { RootStackParamList } from "../types";
 import { useServerData } from "../contexts/ServerDataContext";
 import { useStride } from "../contexts/StrideContext";
-import { colors, radii, spacing } from "../theme";
+import { radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 export function CouponDetailScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<RootStackParamList, "CouponDetail">>();
   const { coupons, stores, wallet, purchaseCoupon } = useServerData();
@@ -191,7 +194,7 @@ export function CouponDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   missingCard: { margin: spacing.lg, padding: spacing.xl, alignItems: "center", gap: spacing.sm },
   missingTitle: { fontSize: 16, fontWeight: "600", color: colors.text, textAlign: "center" },
   missingBody: { fontSize: 14, fontWeight: "500", color: colors.slate },
@@ -259,7 +262,7 @@ const styles = StyleSheet.create({
   grid: { flexDirection: "row", gap: 12, marginTop: spacing.lg },
   gridItem: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: colors.inputSurface,
     borderRadius: radii.lg,
     padding: 12,
     flexDirection: "row",
@@ -286,4 +289,4 @@ const styles = StyleSheet.create({
   buyDisabled: { backgroundColor: "#F1F5F9", borderWidth: 1, borderColor: colors.border },
   buyText: { color: colors.white, fontWeight: "800", fontSize: 12, letterSpacing: 1 },
   buyTextDisabled: { color: colors.muted },
-});
+}));

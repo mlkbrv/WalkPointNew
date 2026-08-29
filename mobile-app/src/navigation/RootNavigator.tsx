@@ -12,7 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../contexts/AuthContext";
 import { useServerData } from "../contexts/ServerDataContext";
 import { useNotificationHandlers } from "../hooks/useNotificationHandlers";
-import { colors } from "../theme";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 import { AuthStackParamList, MainTabParamList, RootStackParamList } from "../types";
 import { FeedbackToast } from "../components/FeedbackToast";
 import { HealthConnectWall } from "../components/HealthConnectWall";
@@ -68,13 +68,14 @@ function MainTabs() {
   // The badge counts what the server says is unread, so it matches the inbox
   // even when a notification was read on another device.
   const { unreadCount: unread } = useServerData();
+  const { colors, isDark } = useTheme();
 
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "rgba(255,255,255,0.96)",
+          backgroundColor: isDark ? "rgba(22,26,33,0.97)" : "rgba(255,255,255,0.96)",
           borderTopColor: colors.border,
           height: 64,
           paddingBottom: 8,
@@ -153,6 +154,8 @@ export function RootNavigator() {
   // Notification taps arrive outside the React tree, so they need a handle on
   // the navigator rather than a `useNavigation` inside some screen.
   const navigationRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
+  const { colors, isDark } = useTheme();
+  const styles = useStyles();
 
   useNotificationHandlers(navigationRef);
 
@@ -164,9 +167,21 @@ export function RootNavigator() {
     );
   }
 
+  const navigationTheme = {
+    ...(isDark ? DarkTheme : DefaultTheme),
+    colors: {
+      ...(isDark ? DarkTheme : DefaultTheme).colors,
+      background: colors.canvas,
+      card: colors.card,
+      text: colors.text,
+      border: colors.border,
+      primary: colors.primary,
+    },
+  };
+
   return (
     <View style={styles.flex}>
-      <NavigationContainer ref={navigationRef} theme={user ? DefaultTheme : DarkTheme}>
+      <NavigationContainer ref={navigationRef} theme={navigationTheme}>
         {user ? <AppStack /> : <AuthNavigator />}
       </NavigationContainer>
       {user ? <FeedbackToast /> : null}
@@ -175,12 +190,12 @@ export function RootNavigator() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   flex: { flex: 1 },
   boot: {
     flex: 1,
-    backgroundColor: colors.dark,
+    backgroundColor: colors.canvas,
     alignItems: "center",
     justifyContent: "center",
   },
-});
+}));

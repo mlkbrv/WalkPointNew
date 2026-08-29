@@ -471,6 +471,7 @@ async def broadcast(
         title=payload.title,
         body=payload.body,
         role=payload.role,
+        notification_type=payload.notification_type,
         data=payload.data,
     )
     _log(

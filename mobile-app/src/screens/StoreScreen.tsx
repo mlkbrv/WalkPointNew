@@ -10,15 +10,18 @@ import {
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors, radii, shadows } from "../theme";
+import { radii, shadows } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
 import { useServerData } from "../contexts/ServerDataContext";
 import { useAuth } from "../contexts/AuthContext";
 import type { ApiCoupon } from "../api/endpoints";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 export function StoreScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
@@ -173,7 +176,7 @@ export function StoreScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   stateBox: { paddingVertical: 48, alignItems: "center" },
   stateCard: { padding: 24, alignItems: "center", gap: 8 },
   stateTitle: { fontSize: 16, fontWeight: "600", color: colors.text },
@@ -227,7 +230,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: radii.full,
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -288,4 +291,4 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     ...shadows.glow,
   },
-});
+}));

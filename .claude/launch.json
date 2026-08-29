@@ -4,8 +4,24 @@
     {
       "name": "stride-web",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "mobile-app"],
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--prefix",
+        "mobile-app"
+      ],
       "port": 3000
+    },
+    {
+      "name": "stride-admin",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--prefix",
+        "admin-panel"
+      ],
+      "port": 5173
     }
   ]
 }

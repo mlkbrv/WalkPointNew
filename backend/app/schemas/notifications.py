@@ -64,6 +64,13 @@ class BroadcastRequest(BaseModel):
     role: UserRole | None = Field(
         default=None, description="Limit to one role. Omit to reach everyone active."
     )
+    notification_type: NotificationType = Field(
+        default=NotificationType.GENERIC,
+        description=(
+            "Where tapping the notification takes the user. The app routes on "
+            "this; an unknown value opens the inbox rather than failing."
+        ),
+    )
     data: dict = Field(default_factory=dict)
 
 

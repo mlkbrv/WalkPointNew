@@ -1,3 +1,4 @@
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Animated, {
@@ -21,6 +22,7 @@ type Props = {
 };
 
 function FootprintIcon({ pulse }: { pulse: SharedValue<number> }) {
+  const styles = useStyles();
   const style = useAnimatedStyle(() => ({
     transform: [{ scale: interpolate(pulse.value, [0, 1], [0.92, 1.12]) }],
     opacity: interpolate(pulse.value, [0, 1], [0.75, 1]),
@@ -75,6 +77,7 @@ function StepCoin() {
 }
 
 function CouponTicket() {
+  const styles = useStyles();
   return (
     <View style={styles.ticket}>
       <View style={styles.ticketNotchLeft} />
@@ -98,6 +101,7 @@ function Particle({
   index: number;
   progress: SharedValue<number>;
 }) {
+  const styles = useStyles();
   const angle = (index / 10) * Math.PI * 2;
   const style = useAnimatedStyle(() => {
     const t = progress.value;
@@ -115,6 +119,7 @@ function Particle({
 }
 
 function ParticleBurst({ progress }: { progress: SharedValue<number> }) {
+  const styles = useStyles();
   return (
     <View style={styles.particleLayer} pointerEvents="none">
       {Array.from({ length: 10 }, (_, i) => (
@@ -125,6 +130,7 @@ function ParticleBurst({ progress }: { progress: SharedValue<number> }) {
 }
 
 export function AnimatedSplashScreen({ onFinish }: Props) {
+  const styles = useStyles();
   const [stepsDisplay, setStepsDisplay] = useState(0);
   const pulse = useSharedValue(0);
   const stepsSV = useSharedValue(0);
@@ -268,7 +274,7 @@ export function AnimatedSplashScreen({ onFinish }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     ...StyleSheet.absoluteFill,
     backgroundColor: "#12131A",
@@ -415,4 +421,4 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: "#8140F3",
   },
-});
+}));

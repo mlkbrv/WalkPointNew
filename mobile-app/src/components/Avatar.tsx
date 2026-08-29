@@ -1,3 +1,4 @@
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 /**
  * A person's avatar.
  *
@@ -14,7 +15,7 @@
 import { useState } from "react";
 import { Image, StyleSheet, Text, View, type ImageStyle } from "react-native";
 
-import { colors } from "../theme";
+
 
 /**
  * Background tints, all dark enough to carry white text at 4.5:1 or better.
@@ -58,6 +59,7 @@ export function Avatar({
   size?: number;
   style?: ImageStyle;
 }) {
+  const styles = useStyles();
   // A broken image URL would otherwise leave a blank square with no fallback.
   const [failed, setFailed] = useState(false);
   const label = name?.trim() || "";
@@ -83,7 +85,7 @@ export function Avatar({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   fallback: { alignItems: "center", justifyContent: "center", overflow: "hidden" },
   initials: { color: colors.white, fontWeight: "800", letterSpacing: 0.5 },
-});
+}));

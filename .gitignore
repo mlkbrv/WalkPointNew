@@ -33,3 +33,9 @@ mobile-app/credentials/
 mobile-app/google-services.json
 mobile-app/GoogleService-Info.plist
 backend/firebase-credentials.json
+
+# Firebase service-account keys. These carry a private key that can send push
+# to every user and read the project's data — never in a repo, public or not.
+backend/secrets/
+backend/firebase-credentials.json
+*firebase-adminsdk*.json

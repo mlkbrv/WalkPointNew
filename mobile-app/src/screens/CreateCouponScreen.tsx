@@ -26,10 +26,11 @@ import { useNavigation } from "@react-navigation/native";
 import { describeError } from "../api/client";
 import { businessApi } from "../api/endpoints";
 import { useStride } from "../contexts/StrideContext";
-import { colors, radii, spacing } from "../theme";
+import { radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 /** Mirrors the server's own bounds so a bad value is caught before the round trip. */
 const LIMITS = { cost: [1, 1_000_000], quantity: [1, 1_000_000], days: [1, 3650] };
@@ -54,6 +55,8 @@ function invalidField(
 }
 
 export function CreateCouponScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<{ goBack: () => void }>();
   const { showToast } = useStride();
 
@@ -190,7 +193,7 @@ export function CreateCouponScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.canvas },
   content: { padding: spacing.xl, paddingTop: 56, paddingBottom: 40 },
   form: { padding: 18 },
@@ -204,7 +207,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   input: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: colors.inputSurface,
     borderRadius: radii.md,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -237,4 +240,4 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     lineHeight: 16,
   },
-});
+}));

@@ -3,12 +3,15 @@ import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, View } from "r
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useStride } from "../contexts/StrideContext";
-import { colors, radii, spacing } from "../theme";
+import { radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 export function ConnectedDevicesScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<any>();
   const { devices, toggleDevice, syncDevice } = useStride();
   const [syncingId, setSyncingId] = useState<string | null>(null);
@@ -76,7 +79,7 @@ export function ConnectedDevicesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.canvas },
   content: { padding: spacing.xl, paddingTop: 56, paddingBottom: 40 },
   sub: { color: colors.slate, fontSize: 12, lineHeight: 18, marginBottom: spacing.lg, marginTop: -4 },
@@ -117,4 +120,4 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   guideText: { color: colors.white, fontWeight: "800", fontSize: 13 },
-});
+}));

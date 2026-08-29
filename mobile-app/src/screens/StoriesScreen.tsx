@@ -25,12 +25,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { RootStackParamList } from "../types";
 import { useServerData } from "../contexts/ServerDataContext";
-import { colors, radii } from "../theme";
+import { radii } from "../theme";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 const { width, height } = Dimensions.get("window");
 const DURATION = 5000;
 
 export function StoriesScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<RootStackParamList, "Stories">>();
   const insets = useSafeAreaInsets();
@@ -187,7 +190,7 @@ export function StoriesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: "#000", width, height },
   media: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
 
@@ -227,4 +230,4 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.16)",
   },
   emptyCloseText: { color: colors.white, fontWeight: "600" },
-});
+}));

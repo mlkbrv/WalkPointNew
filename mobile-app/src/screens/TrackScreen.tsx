@@ -20,13 +20,14 @@ import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors, radii } from "../theme";
+import { radii } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { GlassCard } from "../components/GlassCard";
 import { useStride, formatDuration } from "../contexts/StrideContext";
 import { useServerData } from "../contexts/ServerDataContext";
 import { useWorkoutSession } from "../hooks/useWorkoutSession";
 import { ActiveWorkout } from "../types";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 
@@ -37,6 +38,8 @@ const MAP_COLORS: Record<ActiveWorkout["mapView"], string> = {
 };
 
 export function TrackScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const { showToast } = useStride();
@@ -257,7 +260,7 @@ export function TrackScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1 },
   mapLayer: { ...StyleSheet.absoluteFill },
   gridLineV: {
@@ -459,4 +462,4 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 4,
   },
-});
+}));

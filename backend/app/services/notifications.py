@@ -79,6 +79,26 @@ async def notify(
     return notification
 
 
+def push_payload(
+    notification_type: str,
+    data: dict | None = None,
+    notification_id: uuid.UUID | None = None,
+) -> dict:
+    """The data every push carries.
+
+    `notification_type` is the key the app routes a tap on, so it has to be
+    present on every push regardless of which sender produced it. Building it
+    here rather than at each call site is why it now is.
+    """
+    payload: dict = {key: value for key, value in (data or {}).items()}
+    # Written last on purpose: a caller's `data` must not be able to overwrite
+    # the key the app routes on, or a stray field silently breaks every tap.
+    payload["notification_type"] = str(notification_type)
+    if notification_id is not None:
+        payload["notification_id"] = str(notification_id)
+    return payload
+
+
 async def deliver(db: AsyncSession, notification: Notification) -> push.PushResult:
     """Push one already-persisted notification to the owner's devices."""
     tokens = await _tokens_for(db, [notification.user_id])
@@ -86,11 +106,11 @@ async def deliver(db: AsyncSession, notification: Notification) -> push.PushResu
         tokens,
         title=notification.title,
         body=notification.body,
-        data={
-            "notification_id": str(notification.id),
-            "type": notification.notification_type,
-            **{key: value for key, value in (notification.data or {}).items()},
-        },
+        data=push_payload(
+            notification.notification_type,
+            notification.data,
+            notification.id,
+        ),
     )
     await _prune(db, result.invalid_tokens)
     return result
@@ -105,14 +125,21 @@ async def deliver_many(db: AsyncSession, notifications: list[Notification]) -> p
     if not notifications:
         return push.PushResult()
 
-    grouped: dict[tuple[str, str], list[uuid.UUID]] = {}
+    grouped: dict[tuple[str, str, str], list[uuid.UUID]] = {}
     for item in notifications:
-        grouped.setdefault((item.title, item.body), []).append(item.user_id)
+        # Grouped by type as well as copy: two rows with identical wording but
+        # different destinations must not be collapsed into one push.
+        key = (item.title, item.body, str(item.notification_type))
+        grouped.setdefault(key, []).append(item.user_id)
 
     total = push.PushResult()
-    for (title, body), user_ids in grouped.items():
+    for (title, body, notification_type), user_ids in grouped.items():
         tokens = await _tokens_for(db, user_ids)
-        total = total.merge(await push.safe_send(tokens, title=title, body=body))
+        total = total.merge(
+            await push.safe_send(
+                tokens, title=title, body=body, data=push_payload(notification_type)
+            )
+        )
 
     await _prune(db, total.invalid_tokens)
     return total
@@ -145,7 +172,9 @@ async def broadcast(
     await db.commit()
 
     tokens = await _tokens_for(db, user_ids)
-    result = await push.safe_send(tokens, title=title, body=body, data=data)
+    result = await push.safe_send(
+        tokens, title=title, body=body, data=push_payload(notification_type, data)
+    )
     await _prune(db, result.invalid_tokens)
     return len(user_ids)
 

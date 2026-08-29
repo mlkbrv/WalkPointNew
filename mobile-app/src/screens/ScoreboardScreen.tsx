@@ -20,15 +20,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { describeError } from "../api/client";
 import { leaderboardApi, type ApiLeaderboard, type ApiLeaderboardEntry } from "../api/endpoints";
-import { colors, radii } from "../theme";
+import { radii } from "../theme";
 import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
 import { Avatar } from "../components/Avatar";
 import { PressableScale } from "../components/PressableScale";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 type Period = "daily" | "weekly";
 
 export function ScoreboardScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
 
   const [period, setPeriod] = useState<Period>("daily");
@@ -207,7 +210,7 @@ export function ScoreboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   stateBox: { paddingVertical: 48, alignItems: "center" },
   stateCard: { padding: 24, alignItems: "center", gap: 8 },
   stateTitle: { fontSize: 16, fontWeight: "600", color: colors.text },
@@ -324,12 +327,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 16,
     borderRadius: radii.lg,
-    backgroundColor: "rgba(255,255,255,0.92)",
+    backgroundColor: colors.cardTranslucent,
     borderWidth: 1,
     borderColor: colors.border,
   },
   rowSelf: {
-    backgroundColor: "rgba(129,64,243,0.06)",
+    backgroundColor: colors.primaryTint,
     borderColor: "rgba(129,64,243,0.4)",
   },
   rowLeft: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1 },
@@ -364,4 +367,4 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 1,
   },
-});
+}));

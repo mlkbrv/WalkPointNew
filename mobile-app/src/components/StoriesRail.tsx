@@ -2,7 +2,8 @@ import React from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import type { StoryGroup } from "../contexts/ServerDataContext";
-import { colors } from "../theme";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
+
 import { PressableScale } from "./PressableScale";
 
 type Props = {
@@ -13,6 +14,8 @@ type Props = {
 };
 
 export function StoriesRail({ stories, seenIds, onOpen }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   return (
     <View>
       <Text style={styles.title}>Nearby stories</Text>
@@ -46,7 +49,7 @@ export function StoriesRail({ stories, seenIds, onOpen }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   title: {
     fontSize: 11,
     fontWeight: "800",
@@ -75,4 +78,4 @@ const styles = StyleSheet.create({
   },
   logo: { width: 60, height: 60 },
   name: { fontSize: 10, fontWeight: "700", color: colors.charcoal, width: 72, textAlign: "center" },
-});
+}));

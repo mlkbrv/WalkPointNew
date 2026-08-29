@@ -70,11 +70,17 @@ export const adminApi = {
       note,
     }),
 
-  broadcast: (title: string, body: string, role?: string) =>
+  broadcast: (payload: {
+    title: string;
+    body: string;
+    role?: string;
+    notification_type?: string;
+  }) =>
     api.post<{ recipients: number }>('/v1/admin/notifications/broadcast', {
-      title,
-      body,
-      role: role || null,
+      title: payload.title,
+      body: payload.body,
+      role: payload.role || null,
+      notification_type: payload.notification_type ?? 'generic',
     }),
 };
 

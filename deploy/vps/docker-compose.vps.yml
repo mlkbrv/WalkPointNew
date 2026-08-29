@@ -64,6 +64,9 @@ services:
       redis: { condition: service_healthy }
     volumes:
       - media:/app/media
+      # Read-only: the container needs to read the service-account key,
+      # never to change it.
+      - ../../backend/secrets:/app/secrets:ro
     expose:
       - "8000"
     # Migrations then gunicorn — the same script the managed-platform deploy
@@ -85,6 +88,9 @@ services:
       postgres: { condition: service_healthy }
     volumes:
       - media:/app/media
+      # Read-only: the container needs to read the service-account key,
+      # never to change it.
+      - ../../backend/secrets:/app/secrets:ro
     # Exactly one process. Two would duplicate every scheduled run.
     command: ["python", "-m", "app.worker"]
 

@@ -14,12 +14,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { useStride, formatDuration } from "../contexts/StrideContext";
 import { describeError } from "../api/client";
 import { workoutsApi, type ApiWorkout } from "../api/endpoints";
-import { colors, radii, spacing } from "../theme";
+import { radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 export function WorkoutSummaryScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<any>();
   const { showToast } = useStride();
 
@@ -178,7 +181,7 @@ export function WorkoutSummaryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.dark },
   centred: { alignItems: "center", justifyContent: "center" },
   reviewBox: {
@@ -258,4 +261,4 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   shareText: { color: colors.mutedDark, fontWeight: "700", fontSize: 12 },
-});
+}));

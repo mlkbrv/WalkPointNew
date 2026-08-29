@@ -1,18 +1,24 @@
 import React from "react";
 import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
-import { colors, radii, shadows } from "../theme";
+import { radii } from "../theme";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 export function GlassCard({ children, style, dark }: { children: React.ReactNode; style?: StyleProp<ViewStyle>; dark?: boolean }) {
-  return <View style={[dark ? styles.dark : styles.light, style]}>{children}</View>;
+  const styles = useStyles();
+  const { shadows } = useTheme();
+  return (
+    <View style={[dark ? styles.dark : [styles.light, shadows.glass], style]}>
+      {children}
+    </View>
+  );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   light: {
-    backgroundColor: "rgba(255,255,255,0.92)",
+    backgroundColor: colors.cardTranslucent,
     borderRadius: radii.xl,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.7)",
-    ...shadows.glass,
+    borderColor: colors.cardTranslucentBorder,
   },
   dark: {
     backgroundColor: "rgba(18,20,23,0.92)",
@@ -20,4 +26,4 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
   },
-});
+}));

@@ -10,7 +10,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import Svg, { Circle } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors, radii } from "../theme";
+import { radii } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { Avatar } from "../components/Avatar";
 import { GlassCard } from "../components/GlassCard";
@@ -21,6 +21,7 @@ import { StoriesRail } from "../components/StoriesRail";
 import { useSeenStories } from "../hooks/useSeenStories";
 import { useStepHistory } from "../hooks/useStepHistory";
 import { useServerData } from "../contexts/ServerDataContext";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 const RING = 90;
 const RING_SIZE = 192;
@@ -33,6 +34,8 @@ function weekdayInitial(iso: string): string {
 }
 
 export function HomeScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
@@ -282,7 +285,7 @@ export function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   brandLogoFallback: { alignItems: "center", justifyContent: "center", backgroundColor: colors.border },
   root: { flex: 1, backgroundColor: colors.canvas },
   weekEmpty: { color: colors.muted, fontSize: 12, paddingVertical: 20 },
@@ -314,7 +317,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: "center",
@@ -405,4 +408,4 @@ const styles = StyleSheet.create({
   barFill: { width: "100%", borderRadius: radii.full },
   barDay: { fontSize: 10, fontWeight: "700", color: colors.muted },
   barDayActive: { color: colors.primary, fontSize: 12, fontWeight: "900" },
-});
+}));

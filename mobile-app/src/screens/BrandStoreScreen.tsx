@@ -14,13 +14,16 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { RootStackParamList } from "../types";
 import { useServerData } from "../contexts/ServerDataContext";
-import { colors, radii, spacing } from "../theme";
+import { radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 export function BrandStoreScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<RootStackParamList, "BrandStore">>();
   const partnerId = route.params?.partnerId;
@@ -131,7 +134,7 @@ export function BrandStoreScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.canvas },
   content: { padding: spacing.lg, paddingBottom: spacing.xxxl * 3 },
 
@@ -176,4 +179,4 @@ const styles = StyleSheet.create({
   priceMuted: { backgroundColor: colors.border },
   priceText: { fontSize: 13, fontWeight: "700", color: colors.white },
   priceTextMuted: { color: colors.muted },
-});
+}));

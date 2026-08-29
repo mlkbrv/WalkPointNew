@@ -1,7 +1,8 @@
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "../theme";
+
 import { PressableScale } from "./PressableScale";
 
 type Props = {
@@ -12,6 +13,8 @@ type Props = {
 };
 
 export function ScreenHeader({ title, onBack, right, light }: Props) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   return (
     <View style={styles.row}>
       {onBack ? (
@@ -27,7 +30,7 @@ export function ScreenHeader({ title, onBack, right, light }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -38,7 +41,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: "center",
@@ -55,4 +58,4 @@ const styles = StyleSheet.create({
     color: colors.charcoal,
   },
   titleLight: { color: colors.textLight },
-});
+}));

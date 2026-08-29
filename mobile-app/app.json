@@ -8,7 +8,7 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.stride.app",
+      "bundleIdentifier": "com.walkpoint.app",
       "infoPlist": {
         "UIStatusBarHidden": true,
         "UIViewControllerBasedStatusBarAppearance": false,
@@ -22,7 +22,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0B0D10"
       },
-      "package": "com.stride.app",
+      "package": "com.walkpoint.app",
       "permissions": [
         "android.permission.ACTIVITY_RECOGNITION",
         "android.permission.CAMERA",

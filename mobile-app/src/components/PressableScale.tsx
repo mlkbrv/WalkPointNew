@@ -1,3 +1,4 @@
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 import React from "react";
 import { Pressable, StyleProp, StyleSheet, ViewStyle } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export function PressableScale({ children, onPress, style, disabled, haptic = true }: Props) {
+  const styles = useStyles();
   const scale = useSharedValue(1);
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
@@ -37,6 +39,6 @@ export function PressableScale({ children, onPress, style, disabled, haptic = tr
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   base: {},
-});
+}));

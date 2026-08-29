@@ -15,15 +15,19 @@ import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 
-import { colors, radii, spacing } from "../theme";
+import { radii, spacing } from "../theme";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 import { PressableScale } from "./PressableScale";
 
-const TINT = colors.primary;
-const FAINT = "rgba(129,64,243,0.16)";
 
 export type EmptyArt = "steps" | "wallet" | "inbox" | "store" | "board" | "offline";
 
 function Art({ kind, size = 132 }: { kind: EmptyArt; size?: number }) {
+  const { colors, isDark } = useTheme();
+  const TINT = colors.primary;
+  // A tint of the brand colour, lightened in dark mode so the disc reads as a
+  // raised surface rather than a hole.
+  const FAINT = isDark ? "rgba(169,124,255,0.14)" : "rgba(129,64,243,0.16)";
   const common = {
     stroke: TINT,
     strokeWidth: 5,
@@ -109,6 +113,7 @@ export function EmptyState({
   onAction?: () => void;
   children?: ReactNode;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.root}>
       <Art kind={art} />
@@ -124,7 +129,7 @@ export function EmptyState({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { alignItems: "center", paddingVertical: spacing.xxl, paddingHorizontal: spacing.xl },
   title: {
     marginTop: spacing.md,
@@ -150,4 +155,4 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
   },
   actionText: { color: colors.white, fontWeight: "800", fontSize: 13 },
-});
+}));

@@ -18,9 +18,11 @@ import { supportApi, type ApiSupportMessage, type ApiSupportThread } from "../ap
 import { GlassCard } from "../components/GlassCard";
 import { PressableScale } from "../components/PressableScale";
 import { ScreenHeader } from "../components/ScreenHeader";
-import { colors, radii, spacing } from "../theme";
+import { radii, spacing } from "../theme";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 function Bubble({ message }: { message: ApiSupportMessage }) {
+  const styles = useStyles();
   const mine = message.sender === "user";
   return (
     <View style={[styles.bubbleRow, mine ? styles.bubbleRowMine : styles.bubbleRowTheirs]}>
@@ -38,6 +40,8 @@ function Bubble({ message }: { message: ApiSupportMessage }) {
 }
 
 export function SupportChatScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<any>(null);
@@ -165,7 +169,7 @@ export function SupportChatScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   screen: { flex: 1, backgroundColor: colors.canvas },
   flex: { flex: 1 },
   list: { padding: spacing.lg, paddingBottom: spacing.xxl },
@@ -245,4 +249,4 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   sendDisabled: { backgroundColor: colors.muted },
-});
+}));

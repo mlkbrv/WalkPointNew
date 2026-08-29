@@ -22,19 +22,25 @@ import QRCode from "react-native-qrcode-svg";
 import { describeError } from "../api/client";
 import { walletApi, type ApiVoucher } from "../api/endpoints";
 import { useStride } from "../contexts/StrideContext";
-import { colors, radii, spacing } from "../theme";
+import { radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
 import type { RootStackParamList } from "../types";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import type { Palette } from "../theme";
 
-const STATUS_COPY = {
-  active: { icon: "shield-checkmark", tint: colors.emeraldInk, label: "Ready to redeem" },
-  used: { icon: "checkmark-done", tint: colors.muted, label: "Already redeemed" },
-  expired: { icon: "time-outline", tint: colors.coralInk, label: "Expired" },
-} as const;
+function statusCopy(colors: Palette) {
+  return {
+    active: { icon: "shield-checkmark", tint: colors.emeraldInk, label: "Ready to redeem" },
+    used: { icon: "checkmark-done", tint: colors.muted, label: "Already redeemed" },
+    expired: { icon: "time-outline", tint: colors.coralInk, label: "Expired" },
+  } as const;
+}
 
 export function SecureVerificationScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<{ canGoBack: () => boolean; goBack: () => void; navigate: (s: string) => void }>();
   const route = useRoute<RouteProp<RootStackParamList, "SecureVerification">>();
   const { showToast } = useStride();
@@ -101,7 +107,7 @@ export function SecureVerificationScreen() {
     );
   }
 
-  const status = STATUS_COPY[voucher.status];
+  const status = statusCopy(colors)[voucher.status];
 
   return (
     <View style={styles.root}>
@@ -163,7 +169,7 @@ export function SecureVerificationScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.canvas },
   centred: { alignItems: "center", justifyContent: "center" },
   content: { padding: spacing.xl, paddingTop: 56, paddingBottom: 40 },
@@ -183,6 +189,8 @@ const styles = StyleSheet.create({
   qrBox: {
     marginTop: 10,
     padding: 16,
+    // Stays white in both themes on purpose: a QR scanner needs the light quiet
+    // zone around the code, and an inverted one often will not read at all.
     backgroundColor: colors.white,
     borderRadius: radii.lg,
     borderWidth: 1,
@@ -231,4 +239,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   doneText: { color: colors.white, fontWeight: "900", fontSize: 12, letterSpacing: 1 },
-});
+}));

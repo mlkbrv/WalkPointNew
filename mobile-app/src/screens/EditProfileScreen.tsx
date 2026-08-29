@@ -14,12 +14,15 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../contexts/AuthContext";
 import { useStride } from "../contexts/StrideContext";
-import { colors, radii, spacing } from "../theme";
+import { radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 export function EditProfileScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<any>();
   const { user, updateProfile } = useAuth();
   const { userStats, setUserStats, showToast } = useStride();
@@ -137,7 +140,7 @@ export function EditProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.canvas },
   content: { padding: spacing.xl, paddingTop: 56, paddingBottom: 40 },
   avatarWrap: { alignSelf: "center", marginBottom: spacing.xl },
@@ -166,7 +169,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   input: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: colors.inputSurface,
     borderRadius: radii.md,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -183,4 +186,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveText: { color: colors.white, fontWeight: "900", fontSize: 12, letterSpacing: 1 },
-});
+}));

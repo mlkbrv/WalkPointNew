@@ -3,11 +3,14 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, Text, Te
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../contexts/AuthContext";
-import { colors, radii } from "../theme";
+import { radii } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { ScreenHeader } from "../components/ScreenHeader";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 export function ForgotPasswordScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation();
   const { resetPassword } = useAuth();
   const [email, setEmail] = useState("");
@@ -44,7 +47,7 @@ export function ForgotPasswordScreen() {
           {error ? <Text style={styles.error}>{error}</Text> : null}
           {message ? <Text style={styles.success}>{message}</Text> : null}
           <PressableScale style={styles.primaryBtn} onPress={onSubmit} disabled={loading}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryText}>SEND RESET LINK</Text>}
+            {loading ? <ActivityIndicator color={colors.onPrimary} /> : <Text style={styles.primaryText}>SEND RESET LINK</Text>}
           </PressableScale>
         </View>
       </KeyboardAvoidingView>
@@ -52,7 +55,7 @@ export function ForgotPasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1 },
   inner: { flex: 1, padding: 24, paddingTop: 56 },
   sub: { color: colors.mutedDark, marginBottom: 20, lineHeight: 20 },
@@ -62,5 +65,5 @@ const styles = StyleSheet.create({
   error: { color: colors.coralInk, marginTop: 12, fontWeight: "600" },
   success: { color: colors.emeraldInk, marginTop: 12, fontWeight: "600" },
   primaryBtn: { marginTop: 20, backgroundColor: colors.primary, borderRadius: radii.full, paddingVertical: 16, alignItems: "center" },
-  primaryText: { color: "#fff", fontWeight: "800", letterSpacing: 1 },
-});
+  primaryText: { color: colors.onPrimary, fontWeight: "800", letterSpacing: 1 },
+}));

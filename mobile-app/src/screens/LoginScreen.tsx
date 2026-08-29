@@ -14,12 +14,15 @@ import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { AuthStackParamList } from "../types";
 import { useAuth } from "../contexts/AuthContext";
-import { colors, radii } from "../theme";
+import { radii } from "../theme";
 import { PressableScale } from "../components/PressableScale";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 type Nav = NativeStackNavigationProp<AuthStackParamList, "Login">;
 
 export function LoginScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<Nav>();
   const { login } = useAuth();
   const [email, setEmail] = useState("xaliq@stride.app");
@@ -65,7 +68,7 @@ export function LoginScreen() {
             {error ? <Text style={styles.error}>{error}</Text> : null}
 
             <PressableScale style={styles.primaryBtn} onPress={onSubmit} disabled={loading}>
-              {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryText}>LOG IN</Text>}
+              {loading ? <ActivityIndicator color={colors.onPrimary} /> : <Text style={styles.primaryText}>LOG IN</Text>}
             </PressableScale>
 
             <PressableScale onPress={() => navigation.navigate("ForgotPassword")}>
@@ -82,7 +85,7 @@ export function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1 },
   content: { flexGrow: 1, justifyContent: "center", padding: 24 },
   brand: {
@@ -118,8 +121,8 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: "center",
   },
-  primaryText: { color: "#fff", fontWeight: "800", letterSpacing: 1 },
+  primaryText: { color: colors.onPrimary, fontWeight: "800", letterSpacing: 1 },
   link: { color: colors.emeraldInk, textAlign: "center", marginTop: 16, fontWeight: "600" },
   secondary: { marginTop: 24, alignItems: "center" },
   secondaryText: { color: colors.textLight, fontWeight: "700" },
-});
+}));

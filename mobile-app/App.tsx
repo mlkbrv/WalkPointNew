@@ -1,17 +1,18 @@
 import "react-native-gesture-handler";
-import React, { useState } from "react";
-import { StatusBar, StyleSheet, View } from "react-native";
+import { useState } from "react";
+import { StatusBar, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+
 import { AuthProvider } from "./src/contexts/AuthContext";
 import { HealthProvider } from "./src/contexts/HealthContext";
 import { ServerDataProvider } from "./src/contexts/ServerDataContext";
 import { StrideProvider } from "./src/contexts/StrideContext";
+import { ThemeProvider, makeStyles, useTheme } from "./src/contexts/ThemeContext";
 import { RootNavigator } from "./src/navigation/RootNavigator";
 import { AnimatedSplashScreen } from "./src/components/AnimatedSplashScreen";
 import { usePushRegistration } from "./src/hooks/usePushRegistration";
 import { useStepSync } from "./src/hooks/useStepSync";
-import { colors } from "./src/theme";
 
 /**
  * Device-level side effects that need every provider above them: keeping the
@@ -24,33 +25,53 @@ function DeviceSync() {
   return null;
 }
 
-export default function App() {
+/**
+ * Split from `App` because it reads the theme, and a component cannot consume a
+ * provider it renders itself. `ThemeProvider` is therefore the outermost thing
+ * in `App`, and everything that reads a colour lives below it.
+ */
+function AppShell() {
+  const styles = useStyles();
+  const { isDark } = useTheme();
   const [isSplashFinished, setIsSplashFinished] = useState(false);
 
   return (
-    <GestureHandlerRootView style={styles.root}>
+    <AuthProvider>
+      <HealthProvider>
+        <ServerDataProvider>
+          <StrideProvider>
+            <DeviceSync />
+            {/* Hidden, but the style still governs the icons if it is ever shown. */}
+            <StatusBar
+              hidden
+              translucent
+              barStyle={isDark ? "light-content" : "dark-content"}
+            />
+            <View style={styles.root}>
+              <RootNavigator />
+              {!isSplashFinished ? (
+                <AnimatedSplashScreen onFinish={() => setIsSplashFinished(true)} />
+              ) : null}
+            </View>
+          </StrideProvider>
+        </ServerDataProvider>
+      </HealthProvider>
+    </AuthProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <AuthProvider>
-          <HealthProvider>
-            <ServerDataProvider>
-              <StrideProvider>
-                <DeviceSync />
-                <StatusBar hidden translucent />
-                <View style={styles.root}>
-                  <RootNavigator />
-                  {!isSplashFinished ? (
-                    <AnimatedSplashScreen onFinish={() => setIsSplashFinished(true)} />
-                  ) : null}
-                </View>
-              </StrideProvider>
-            </ServerDataProvider>
-          </HealthProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <AppShell />
+        </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.canvas },
-});
+}));

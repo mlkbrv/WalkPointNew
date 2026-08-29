@@ -21,11 +21,12 @@ import {
   type ApiWorkout,
 } from "../api/endpoints";
 import { useStride, formatDuration } from "../contexts/StrideContext";
-import { colors, radii, spacing } from "../theme";
+import { radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
+import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 type Tab = "Week" | "Month";
 
@@ -38,6 +39,8 @@ function dayLabel(iso: string): string {
 }
 
 export function PerformanceReportsScreen() {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const navigation = useNavigation<any>();
   const { showToast } = useStride();
 
@@ -240,14 +243,14 @@ export function PerformanceReportsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.canvas },
   content: { padding: spacing.xl, paddingTop: 56, paddingBottom: 40 },
   calBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: "center",
@@ -255,7 +258,7 @@ const styles = StyleSheet.create({
   },
   tabs: {
     flexDirection: "row",
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: radii.full,
     padding: 4,
     borderWidth: 1,
@@ -306,4 +309,4 @@ const styles = StyleSheet.create({
   histHeld: { color: colors.muted, fontWeight: "700", fontSize: 11, fontStyle: "italic" },
   histRow: { flexDirection: "row", gap: 12 },
   histStat: { color: colors.slate, fontSize: 11, fontWeight: "600" },
-});
+}));

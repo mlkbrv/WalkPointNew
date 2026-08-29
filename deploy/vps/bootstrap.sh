@@ -99,6 +99,18 @@ PUBLIC_IP="${PUBLIC_IP:-$(curl -fsS --max-time 10 https://api.ipify.org || true)
 HOST="${STRIDE_HOST:-${PUBLIC_IP//./-}.sslip.io}"
 log "Public hostname: $HOST  (IP $PUBLIC_IP)"
 
+# Push works only with a Firebase service account, and there is no sensible
+# default for one. Rather than shipping `FCM_ENABLED=true` and having every
+# notification fail at send time, the flag follows whether the key is actually
+# on disk — copy it to backend/secrets/firebase-admin.json and re-run.
+if [[ -f "$APP_DIR/backend/secrets/firebase-admin.json" ]]; then
+  FCM_ENABLED=true
+  log "Firebase service account found — push enabled"
+else
+  FCM_ENABLED=false
+  warn "No backend/secrets/firebase-admin.json — push disabled, inbox still works"
+fi
+
 # --- 5. Secrets --------------------------------------------------------------
 ENV_FILE="$APP_DIR/backend/.env"
 STACK_ENV="$APP_DIR/deploy/vps/.env"
@@ -151,10 +163,9 @@ REFRESH_TOKEN_TTL_DAYS=30
 SMS_BACKEND=mock
 SMS_CODE_TTL_MINUTES=5
 
-# Push needs a Firebase service account. Drop the JSON at
-# backend/firebase-credentials.json and flip this to true.
-FCM_ENABLED=false
-FIREBASE_CREDENTIALS_FILE=/app/firebase-credentials.json
+# Turned on automatically when the service-account key is present; see above.
+FCM_ENABLED=$FCM_ENABLED
+FIREBASE_CREDENTIALS_FILE=/app/secrets/firebase-admin.json
 
 STORAGE_BACKEND=local
 MEDIA_ROOT=/app/media
