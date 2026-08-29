@@ -101,17 +101,6 @@ export function HealthConnectWall() {
       <PressableScale style={styles.linkBtn} onPress={openStore} disabled={busy}>
         <Text style={styles.linkText}>Install from Google Play</Text>
       </PressableScale>
-
-      {typeof __DEV__ !== "undefined" && __DEV__ ? (
-        <PressableScale
-          style={styles.devBtn}
-          onPress={async () => {
-            await health.setMockMode(true);
-          }}
-        >
-          <Text style={styles.devText}>Dev only: Mock Mode</Text>
-        </PressableScale>
-      ) : null}
     </View>
   );
 }

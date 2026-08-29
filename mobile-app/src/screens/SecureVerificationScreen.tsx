@@ -1,73 +1,107 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+/**
+ * The code a customer shows at the counter.
+ *
+ * This screen used to draw a decorative grid of squares and a "rolling code"
+ * derived from `Math.sin(tick)` — neither was scannable and neither meant
+ * anything. What a voucher actually is, is the `qr_token` UUID the server
+ * generated at purchase, so that is what the QR encodes and what the partner's
+ * scanner reads back.
+ *
+ * There is no expiry countdown either: the token does not rotate. The voucher
+ * is valid until it is redeemed or its coupon's window closes, and the screen
+ * shows that real date instead of inventing a 30-second timer.
+ */
+
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
+import QRCode from "react-native-qrcode-svg";
+
+import { describeError } from "../api/client";
+import { walletApi, type ApiVoucher } from "../api/endpoints";
 import { useStride } from "../contexts/StrideContext";
 import { colors, radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
+import type { RootStackParamList } from "../types";
 
-function buildCode(base: string, tick: number) {
-  const suffix = Math.abs(Math.sin(tick) * 1e6)
-    .toString(36)
-    .slice(0, 4)
-    .toUpperCase();
-  return `${base}-${suffix}`;
-}
-
-function FakeQr({ seed }: { seed: string }) {
-  const cells = useMemo(() => {
-    const arr: boolean[] = [];
-    let h = 0;
-    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-    for (let i = 0; i < 100; i++) {
-      h = (h * 1664525 + 1013904223) >>> 0;
-      arr.push(h % 3 !== 0);
-    }
-    return arr;
-  }, [seed]);
-
-  return (
-    <View style={styles.qrGrid}>
-      {cells.map((on, i) => (
-        <View key={i} style={[styles.qrCell, on ? styles.qrOn : styles.qrOff]} />
-      ))}
-    </View>
-  );
-}
+const STATUS_COPY = {
+  active: { icon: "shield-checkmark", tint: colors.emerald, label: "Ready to redeem" },
+  used: { icon: "checkmark-done", tint: colors.muted, label: "Already redeemed" },
+  expired: { icon: "time-outline", tint: colors.coral, label: "Expired" },
+} as const;
 
 export function SecureVerificationScreen() {
-  const navigation = useNavigation<any>();
-  const { selectedCoupon, showToast } = useStride();
-  const baseCode = selectedCoupon?.redemptionCode || "STRD-X9F3-88LK";
-  const [tick, setTick] = useState(0);
-  const [secondsLeft, setSecondsLeft] = useState(30);
-  const rollingCode = buildCode(baseCode, tick);
+  const navigation = useNavigation<{ canGoBack: () => boolean; goBack: () => void; navigate: (s: string) => void }>();
+  const route = useRoute<RouteProp<RootStackParamList, "SecureVerification">>();
+  const { showToast } = useStride();
+
+  const [voucher, setVoucher] = useState<ApiVoucher | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const voucherId = route.params?.voucherId;
 
   useEffect(() => {
-    const id = setInterval(() => {
-      setSecondsLeft((s) => {
-        if (s <= 1) {
-          setTick((t) => t + 1);
-          return 30;
-        }
-        return s - 1;
-      });
-    }, 1000);
-    return () => clearInterval(id);
-  }, []);
+    if (!voucherId) {
+      setError("No voucher was selected.");
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const found = await walletApi.voucher(voucherId);
+        if (!cancelled) setVoucher(found);
+      } catch (caught) {
+        if (!cancelled) setError(describeError(caught));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [voucherId]);
 
-  const copyCode = async () => {
-    await Clipboard.setStringAsync(rollingCode);
+  const copyCode = useCallback(async () => {
+    if (!voucher) return;
+    await Clipboard.setStringAsync(voucher.qr_token);
     showToast("Code copied", "📋");
-  };
+  }, [voucher, showToast]);
 
-  const onDone = () => {
+  const onDone = useCallback(() => {
     if (navigation.canGoBack()) navigation.goBack();
     else navigation.navigate("Main");
-  };
+  }, [navigation]);
+
+  if (loading) {
+    return (
+      <View style={[styles.root, styles.centred]}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (error || !voucher) {
+    return (
+      <View style={styles.root}>
+        <ScrollView contentContainerStyle={styles.content}>
+          <ScreenHeader title="Secure Access" onBack={onDone} />
+          <GlassCard style={styles.card}>
+            <Ionicons name="alert-circle-outline" size={32} color={colors.coral} />
+            <Text style={styles.title}>Could not open this voucher</Text>
+            <Text style={styles.sub}>{error ?? "It is no longer in your wallet."}</Text>
+          </GlassCard>
+        </ScrollView>
+      </View>
+    );
+  }
+
+  const status = STATUS_COPY[voucher.status];
 
   return (
     <View style={styles.root}>
@@ -75,42 +109,55 @@ export function SecureVerificationScreen() {
         <ScreenHeader title="Secure Access" onBack={onDone} />
 
         <GlassCard style={styles.card}>
-          <View style={styles.securePill}>
-            <Ionicons name="shield-checkmark" size={14} color={colors.coral} />
-            <Text style={styles.secureText}>Secure Redemption</Text>
+          <View style={[styles.securePill, { borderColor: `${status.tint}55` }]}>
+            <Ionicons name={status.icon} size={14} color={status.tint} />
+            <Text style={[styles.secureText, { color: status.tint }]}>{status.label}</Text>
           </View>
 
-          <Text style={styles.title}>Verify Reward</Text>
-          <Text style={styles.sub}>
-            {selectedCoupon?.brandName || "Partner"} • Store Partner Access
+          <Text style={styles.title}>{voucher.coupon.title}</Text>
+          <Text style={styles.sub}>Show this to the partner at the counter</Text>
+
+          {/* Dimmed once spent, so a used voucher cannot be passed off as live. */}
+          <View style={[styles.qrBox, voucher.status !== "active" && styles.qrSpent]}>
+            <QRCode
+              value={voucher.qr_token}
+              size={200}
+              backgroundColor="white"
+              color={colors.charcoal}
+            />
+          </View>
+
+          <Text style={styles.code} selectable>
+            {voucher.qr_token}
           </Text>
 
-          <View style={styles.qrBox}>
-            <FakeQr seed={rollingCode} />
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Paid</Text>
+            <Text style={styles.metaValue}>{voucher.cost_paid.toLocaleString()} coins</Text>
+          </View>
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>
+              {voucher.used_at ? "Redeemed" : "Valid until"}
+            </Text>
+            <Text style={styles.metaValue}>
+              {new Date(voucher.used_at ?? voucher.coupon.ends_at).toLocaleDateString()}
+            </Text>
           </View>
 
-          <View style={styles.timerPill}>
-            <View style={styles.dot} />
-            <Text style={styles.timerText}>00:{String(secondsLeft).padStart(2, "0")}</Text>
-          </View>
-
-          <Text style={styles.code}>{rollingCode}</Text>
-          <Text style={styles.hint}>Present this code at the store register to validate your ticket.</Text>
-
-          <PressableScale style={styles.copyBtn} onPress={copyCode}>
+          <PressableScale style={styles.copyBtn} onPress={() => void copyCode()}>
             <Ionicons name="copy-outline" size={16} color={colors.primary} />
-            <Text style={styles.copyText}>Copy Code</Text>
+            <Text style={styles.copyText}>Copy code</Text>
           </PressableScale>
         </GlassCard>
+
+        <Text style={styles.footnote}>
+          The partner scans this once. After that the voucher is spent and the code stops
+          working — it is not a password, so there is no harm in it being visible.
+        </Text>
 
         <PressableScale style={styles.doneBtn} onPress={onDone}>
           <Text style={styles.doneText}>DONE</Text>
         </PressableScale>
-
-        <View style={styles.footer}>
-          <Text style={styles.footerItem}>Encrypted Transfer</Text>
-          <Text style={styles.footerItem}>Dynamic Rolling Code</Text>
-        </View>
       </ScrollView>
     </View>
   );
@@ -118,75 +165,70 @@ export function SecureVerificationScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.canvas },
+  centred: { alignItems: "center", justifyContent: "center" },
   content: { padding: spacing.xl, paddingTop: 56, paddingBottom: 40 },
-  card: { padding: 24, alignItems: "center" },
+  card: { padding: 24, alignItems: "center", gap: 10 },
   securePill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "rgba(255,107,82,0.1)",
-    borderWidth: 1,
-    borderColor: "rgba(255,107,82,0.3)",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: radii.full,
-  },
-  secureText: { color: colors.coral, fontSize: 9, fontWeight: "900", letterSpacing: 1, textTransform: "uppercase" },
-  title: { color: colors.charcoal, fontWeight: "900", fontSize: 18, marginTop: 16 },
-  sub: { color: colors.muted, fontSize: 10, fontWeight: "700", letterSpacing: 1, textTransform: "uppercase", marginTop: 4 },
-  qrBox: {
-    width: 208,
-    height: 208,
-    backgroundColor: colors.dark,
-    borderRadius: radii.xl,
-    marginTop: 24,
-    alignItems: "center",
-    justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#1E293B",
   },
-  qrGrid: {
-    width: 160,
-    height: 160,
+  secureText: { fontSize: 10, fontWeight: "800", letterSpacing: 0.8, textTransform: "uppercase" },
+  title: { color: colors.charcoal, fontWeight: "800", fontSize: 20, textAlign: "center" },
+  sub: { color: colors.slate, fontSize: 12, textAlign: "center" },
+  qrBox: {
+    marginTop: 10,
+    padding: 16,
+    backgroundColor: colors.white,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  qrSpent: { opacity: 0.25 },
+  code: {
+    color: colors.muted,
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.4,
+    marginTop: 4,
+  },
+  metaRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    justifyContent: "space-between",
+    alignSelf: "stretch",
+    marginTop: 4,
   },
-  qrCell: { width: "10%", height: "10%" },
-  qrOn: { backgroundColor: colors.primary },
-  qrOff: { backgroundColor: "transparent" },
-  timerPill: {
-    marginTop: 18,
-    backgroundColor: colors.dark,
-    borderRadius: radii.full,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.emerald },
-  timerText: { color: colors.white, fontWeight: "800", fontSize: 12, letterSpacing: 1 },
-  code: { marginTop: 12, color: colors.slate, fontWeight: "700", fontSize: 11, letterSpacing: 2 },
-  hint: { marginTop: 16, color: colors.slate, fontSize: 10, textAlign: "center", lineHeight: 15, maxWidth: 240 },
+  metaLabel: { color: colors.muted, fontSize: 12, fontWeight: "600" },
+  metaValue: { color: colors.charcoal, fontSize: 12, fontWeight: "800" },
   copyBtn: {
-    marginTop: 18,
+    marginTop: 12,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 18,
+    paddingVertical: 11,
     borderRadius: radii.full,
-    backgroundColor: "rgba(129,64,243,0.1)",
+    borderWidth: 1,
+    borderColor: colors.primary,
   },
-  copyText: { color: colors.primary, fontWeight: "700", fontSize: 12 },
+  copyText: { color: colors.primary, fontWeight: "800", fontSize: 12 },
+  footnote: {
+    color: colors.muted,
+    fontSize: 11,
+    lineHeight: 16,
+    textAlign: "center",
+    marginTop: spacing.lg,
+  },
   doneBtn: {
-    marginTop: spacing.xl,
+    marginTop: spacing.lg,
     backgroundColor: colors.primary,
     borderRadius: radii.lg,
-    paddingVertical: 18,
+    paddingVertical: 16,
     alignItems: "center",
   },
   doneText: { color: colors.white, fontWeight: "900", fontSize: 12, letterSpacing: 1 },
-  footer: { marginTop: spacing.lg, flexDirection: "row", justifyContent: "center", gap: 16 },
-  footerItem: { color: colors.muted, fontSize: 10, fontWeight: "600" },
 });

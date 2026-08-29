@@ -22,7 +22,7 @@ export function ProfileScreen() {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const { user, prefs, updatePrefs, switchRole, logout } = useAuth();
-  const { userStats, setUserStats, togglePermissions, triggerMockStepsBoost } = useStride();
+  const { userStats, setUserStats, togglePermissions } = useStride();
   const health = useHealth();
 
   const goBack = () => {
@@ -199,7 +199,7 @@ export function ProfileScreen() {
             iconColor={colors.primary}
             iconBg="rgba(129,64,243,0.12)"
             title="Health Setup"
-            subtitle="Pedometer permissions and mock mode"
+            subtitle="Pedometer and Health Connect permissions"
             onPress={() => navigation.navigate("HealthSetup")}
           />
         </GlassCard>
@@ -280,37 +280,7 @@ export function ProfileScreen() {
             value={userStats.pedometerActive}
             onValueChange={() => togglePermissions()}
           />
-          <View style={styles.divider} />
-          <ToggleRow
-            icon="code-slash-outline"
-            iconColor={colors.primary}
-            iconBg="rgba(129,64,243,0.12)"
-            title="Developer Mock Mode"
-            subtitle={health.mockMode ? "Simulated steps & balance ON" : "Real Health Sync only"}
-            value={health.mockMode}
-            onValueChange={(v) => health.setMockMode(v)}
-          />
         </GlassCard>
-
-        {health.mockMode ? (
-          <>
-            <Text style={styles.sectionLabel}>Mock Tools</Text>
-            <GlassCard style={styles.group}>
-              <View style={styles.mockRow}>
-                <PressableScale style={styles.mockBtn} onPress={() => triggerMockStepsBoost(1000)}>
-                  <Text style={styles.mockBtnText}>+1,000 Steps</Text>
-                </PressableScale>
-                <PressableScale style={styles.mockBtn} onPress={() => triggerMockStepsBoost(5000)}>
-                  <Text style={styles.mockBtnText}>+5,000 Steps</Text>
-                </PressableScale>
-              </View>
-              <Text style={styles.mockHint}>
-                Coins follow the server rule: nothing under 5,000 steps, 50 at 5,000,
-                then +10 per extra 1,000. Use this to test Store purchases.
-              </Text>
-            </GlassCard>
-          </>
-        ) : null}
 
         <PressableScale
           style={styles.logout}
@@ -421,21 +391,5 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 1,
-  },
-  mockRow: { flexDirection: "row", gap: 10, padding: 12 },
-  mockBtn: {
-    flex: 1,
-    backgroundColor: colors.primary,
-    borderRadius: radii.md,
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  mockBtnText: { color: colors.white, fontWeight: "800", fontSize: 12 },
-  mockHint: {
-    paddingHorizontal: 14,
-    paddingBottom: 14,
-    color: colors.muted,
-    fontSize: 11,
-    lineHeight: 16,
   },
 });

@@ -1,38 +1,161 @@
-import React, { useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+/**
+ * Voucher redemption for a partner.
+ *
+ * Scanning is deliberately two steps. `preview` reads the code without
+ * consuming it, so a mis-scan, an expired voucher, or one already used costs
+ * nothing; only the explicit confirm calls `scan`, which burns it. That call is
+ * not idempotent on purpose — a second scan of the same voucher must fail, and
+ * the server is what enforces it.
+ */
+
+import { useCallback, useRef, useState } from "react";
+import { ActivityIndicator, StyleSheet, Text, TextInput, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { CameraView, useCameraPermissions } from "expo-camera";
+
+import { describeError } from "../api/client";
+import { redemptionsApi, type ApiScanPreview } from "../api/endpoints";
 import { useStride } from "../contexts/StrideContext";
 import { colors, radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
 
-export function MerchantScannerScreen() {
-  const navigation = useNavigation<any>();
-  const { redeemMerchantCode, showToast } = useStride();
-  const [permission, requestPermission] = useCameraPermissions();
-  const [code, setCode] = useState("");
-  const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
-  const [scanned, setScanned] = useState(false);
+/** Vouchers are identified by a UUID the server generates; anything else is not a code. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-  const validate = (raw?: string) => {
-    const value = (raw ?? code).trim();
-    if (!value) {
-      showToast("Enter a code", "⚠️");
-      return;
+type Outcome = { ok: boolean; message: string };
+
+/**
+ * What a scanned code turns out to be, and the one button that consumes it.
+ * Rendered only between a successful `preview` and the merchant's decision.
+ */
+function VoucherPreview({
+  preview,
+  busy,
+  onConfirm,
+  onCancel,
+}: {
+  preview: ApiScanPreview;
+  busy: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const usedOn = preview.used_at
+    ? ` on ${new Date(preview.used_at).toLocaleDateString()}`
+    : "";
+
+  return (
+    <GlassCard style={styles.preview}>
+      <Text style={styles.previewTitle}>{preview.coupon_title}</Text>
+      <View style={styles.previewRow}>
+        <Text style={styles.previewLabel}>Paid</Text>
+        <Text style={styles.previewValue}>{preview.cost_paid} coins</Text>
+      </View>
+      <View style={styles.previewRow}>
+        <Text style={styles.previewLabel}>Valid until</Text>
+        <Text style={styles.previewValue}>
+          {new Date(preview.valid_until).toLocaleDateString()}
+        </Text>
+      </View>
+
+      {preview.is_redeemable ? (
+        <PressableScale style={styles.validateBtn} disabled={busy} onPress={onConfirm}>
+          {busy ? (
+            <ActivityIndicator color={colors.white} size="small" />
+          ) : (
+            <>
+              <Ionicons name="checkmark-circle-outline" size={18} color={colors.white} />
+              <Text style={styles.validateText}>Redeem</Text>
+            </>
+          )}
+        </PressableScale>
+      ) : (
+        <View style={[styles.result, styles.resultBad]}>
+          <Ionicons name="close-circle" size={18} color={colors.coral} />
+          <Text style={[styles.resultText, { color: colors.coral }]}>
+            {preview.status === "used"
+              ? `Already redeemed${usedOn}.`
+              : "This voucher has expired."}
+          </Text>
+        </View>
+      )}
+
+      <PressableScale style={styles.cancel} onPress={onCancel}>
+        <Text style={styles.cancelText}>Cancel</Text>
+      </PressableScale>
+    </GlassCard>
+  );
+}
+
+export function MerchantScannerScreen() {
+  const navigation = useNavigation();
+  const { showToast } = useStride();
+  const [permission, requestPermission] = useCameraPermissions();
+
+  const [code, setCode] = useState("");
+  const [preview, setPreview] = useState<ApiScanPreview | null>(null);
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [busy, setBusy] = useState(false);
+  /** Guards the camera, which fires continuously while a code is in frame. */
+  const scanningRef = useRef(false);
+
+  const lookUp = useCallback(
+    async (raw: string) => {
+      const token = raw.trim();
+      if (!token) {
+        showToast("Enter a code", "⚠️");
+        return;
+      }
+      if (!UUID.test(token)) {
+        setPreview(null);
+        setOutcome({ ok: false, message: "That is not a STRIDE voucher code." });
+        return;
+      }
+
+      setBusy(true);
+      setOutcome(null);
+      try {
+        setPreview(await redemptionsApi.preview(token));
+      } catch (caught) {
+        setPreview(null);
+        setOutcome({ ok: false, message: describeError(caught) });
+      } finally {
+        setBusy(false);
+      }
+    },
+    [showToast],
+  );
+
+  const confirm = useCallback(async () => {
+    if (!preview) return;
+    setBusy(true);
+    try {
+      const result = await redemptionsApi.scan(preview.voucher_id);
+      setPreview(null);
+      setCode("");
+      setOutcome({
+        ok: true,
+        message: `${result.coupon_title} redeemed for ${result.customer_label}.`,
+      });
+    } catch (caught) {
+      // The usual failure is a race: someone else redeemed it a moment ago.
+      setOutcome({ ok: false, message: describeError(caught) });
+      setPreview(null);
+    } finally {
+      setBusy(false);
     }
-    const res = redeemMerchantCode(value);
-    setResult(res);
-    setCode("");
-  };
+  }, [preview]);
 
   const onBarcode = ({ data }: { data: string }) => {
-    if (scanned) return;
-    setScanned(true);
-    validate(data);
-    setTimeout(() => setScanned(false), 2000);
+    if (scanningRef.current || preview || busy) return;
+    scanningRef.current = true;
+    void lookUp(data).finally(() => {
+      setTimeout(() => {
+        scanningRef.current = false;
+      }, 2000);
+    });
   };
 
   return (
@@ -45,48 +168,73 @@ export function MerchantScannerScreen() {
             <CameraView
               style={styles.camera}
               facing="back"
-              barcodeScannerSettings={{ barcodeTypes: ["qr", "code128", "code39"] }}
+              barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
               onBarcodeScanned={onBarcode}
             />
             <View style={styles.scanFrame} />
-            <Text style={styles.scanHint}>Align QR / barcode inside the frame</Text>
+            <Text style={styles.scanHint}>Align the customer&apos;s QR inside the frame</Text>
           </View>
         ) : (
           <GlassCard style={styles.permCard}>
             <Ionicons name="camera-outline" size={36} color={colors.primary} />
             <Text style={styles.permTitle}>Camera access needed</Text>
-            <Text style={styles.permBody}>Allow camera permission to scan customer codes, or enter codes manually below.</Text>
+            <Text style={styles.permBody}>
+              Allow camera permission to scan customer codes, or enter codes manually below.
+            </Text>
             <PressableScale style={styles.permBtn} onPress={requestPermission}>
               <Text style={styles.permBtnText}>Grant Camera Permission</Text>
             </PressableScale>
           </GlassCard>
         )}
 
-        <GlassCard style={styles.manual}>
-          <Text style={styles.label}>Manual Code</Text>
-          <TextInput
-            style={styles.input}
-            value={code}
-            onChangeText={setCode}
-            autoCapitalize="characters"
-            placeholder="SBX-LATTE-50"
-            placeholderTextColor={colors.muted}
+        {/* The confirm step. Nothing is consumed until this button is pressed. */}
+        {preview ? (
+          <VoucherPreview
+            preview={preview}
+            busy={busy}
+            onConfirm={() => void confirm()}
+            onCancel={() => setPreview(null)}
           />
-          <PressableScale style={styles.validateBtn} onPress={() => validate()}>
-            <Ionicons name="checkmark-circle-outline" size={18} color={colors.white} />
-            <Text style={styles.validateText}>Validate</Text>
-          </PressableScale>
-        </GlassCard>
-
-        {result ? (
-          <View style={[styles.result, result.ok ? styles.resultOk : styles.resultBad]}>
-            <Ionicons
-              name={result.ok ? "checkmark-circle" : "close-circle"}
-              size={18}
-              color={result.ok ? colors.emerald : colors.coral}
+        ) : (
+          <GlassCard style={styles.manual}>
+            <Text style={styles.label}>Manual Code</Text>
+            <TextInput
+              style={styles.input}
+              value={code}
+              onChangeText={setCode}
+              autoCapitalize="none"
+              autoCorrect={false}
+              placeholder="0000aaaa-0000-4000-8000-000000000000"
+              placeholderTextColor={colors.muted}
             />
-            <Text style={[styles.resultText, { color: result.ok ? colors.emerald : colors.coral }]}>
-              {result.message}
+            <PressableScale
+              style={styles.validateBtn}
+              disabled={busy}
+              onPress={() => void lookUp(code)}
+            >
+              {busy ? (
+                <ActivityIndicator color={colors.white} size="small" />
+              ) : (
+                <>
+                  <Ionicons name="search-outline" size={18} color={colors.white} />
+                  <Text style={styles.validateText}>Look up</Text>
+                </>
+              )}
+            </PressableScale>
+          </GlassCard>
+        )}
+
+        {outcome ? (
+          <View style={[styles.result, outcome.ok ? styles.resultOk : styles.resultBad]}>
+            <Ionicons
+              name={outcome.ok ? "checkmark-circle" : "close-circle"}
+              size={18}
+              color={outcome.ok ? colors.emerald : colors.coral}
+            />
+            <Text
+              style={[styles.resultText, { color: outcome.ok ? colors.emerald : colors.coral }]}
+            >
+              {outcome.message}
             </Text>
           </View>
         ) : null}
@@ -136,6 +284,13 @@ const styles = StyleSheet.create({
   },
   permBtnText: { color: colors.white, fontWeight: "800", fontSize: 12 },
   manual: { padding: 16 },
+  preview: { padding: 18, gap: 10 },
+  previewTitle: { color: colors.charcoal, fontWeight: "800", fontSize: 16 },
+  previewRow: { flexDirection: "row", justifyContent: "space-between" },
+  previewLabel: { color: colors.muted, fontSize: 12, fontWeight: "600" },
+  previewValue: { color: colors.charcoal, fontSize: 12, fontWeight: "800" },
+  cancel: { alignSelf: "center", paddingVertical: 8 },
+  cancelText: { color: colors.slate, fontSize: 12, fontWeight: "700" },
   label: {
     color: colors.muted,
     fontSize: 11,
@@ -153,7 +308,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     fontWeight: "700",
-    letterSpacing: 1,
+    fontSize: 12,
   },
   validateBtn: {
     marginTop: 14,

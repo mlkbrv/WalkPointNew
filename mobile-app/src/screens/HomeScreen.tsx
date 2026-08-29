@@ -18,20 +18,28 @@ import { useAuth } from "../contexts/AuthContext";
 import { useHealth } from "../contexts/HealthContext";
 import { StoriesRail } from "../components/StoriesRail";
 import { useSeenStories } from "../hooks/useSeenStories";
+import { useStepHistory } from "../hooks/useStepHistory";
 import { useServerData } from "../contexts/ServerDataContext";
 
 const RING = 90;
 const RING_SIZE = 192;
 const CIRC = 2 * Math.PI * RING;
 
+/** Weekday initial for a `YYYY-MM-DD` date, read as local time rather than UTC. */
+function weekdayInitial(iso: string): string {
+  const [year, month, day] = iso.split("-").map(Number);
+  return ["S", "M", "T", "W", "T", "F", "S"][new Date(year, month - 1, day).getDay()];
+}
+
 export function HomeScreen() {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const health = useHealth();
-  const { userStats, setSelectedBrand, notifications, triggerMockStepsBoost } = useStride();
+  const { userStats } = useStride();
   const { seenIds, reload: reloadSeen } = useSeenStories();
-  const { storyGroups, stores, wallet } = useServerData();
+  const { storyGroups, stores, wallet, unreadCount } = useServerData();
+  const week = useStepHistory();
 
   useFocusEffect(
     React.useCallback(() => {
@@ -46,7 +54,7 @@ export function HomeScreen() {
   const distanceKm = (stepsToday * 0.00075).toFixed(2);
   const caloriesKcal = Math.floor(stepsToday * 0.04);
   const durationMins = Math.floor(stepsToday * 0.0045);
-  const unread = notifications.some((n) => !n.read);
+  const unread = unreadCount > 0;
   const firstName = (user?.name || "Walker").split(" ")[0];
   const showHealthBanner = health.needsPermission;
 
@@ -106,29 +114,6 @@ export function HomeScreen() {
             </View>
             <Ionicons name="chevron-forward" size={16} color={colors.coral} />
           </PressableScale>
-        ) : null}
-
-        {health.mockMode ? (
-          <View style={styles.devBar}>
-            <Text style={styles.devTitle}>Developer Mock Mode</Text>
-            <Text style={styles.devMeta}>
-              {wallet.data.balance.toLocaleString()} coins · {stepsToday.toLocaleString()} steps
-            </Text>
-            <View style={styles.devRow}>
-              <PressableScale style={styles.devBtn} onPress={() => triggerMockStepsBoost(1000)}>
-                <Text style={styles.devBtnText}>+1,000 Steps</Text>
-              </PressableScale>
-              <PressableScale style={styles.devBtn} onPress={() => triggerMockStepsBoost(5000)}>
-                <Text style={styles.devBtnText}>+5,000 Steps</Text>
-              </PressableScale>
-              <PressableScale
-                style={[styles.devBtn, styles.devOff]}
-                onPress={() => health.setMockMode(false)}
-              >
-                <Text style={styles.devBtnText}>Exit Mock</Text>
-              </PressableScale>
-            </View>
-          </View>
         ) : null}
 
         <GlassCard style={styles.ringCard}>
@@ -242,38 +227,55 @@ export function HomeScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.weekLabel}>Weekly Momentum</Text>
                 <Text style={styles.weekCopy}>
-                  You're <Text style={{ color: colors.primary }}>12% more active</Text> than last week!
+                  {week.changePercent === null ? (
+                    `${week.thisWeek.toLocaleString()} steps in the last 7 days`
+                  ) : (
+                    <>
+                      You&apos;re{" "}
+                      <Text style={{ color: week.changePercent >= 0 ? colors.primary : colors.coral }}>
+                        {Math.abs(week.changePercent)}% {week.changePercent >= 0 ? "more" : "less"} active
+                      </Text>{" "}
+                      than last week
+                    </>
+                  )}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={16} color={colors.muted} />
             </View>
             <View style={styles.bars}>
-              {userStats.weeklySteps.map((info, idx) => {
-                const h = Math.max(4, Math.min((info.steps / 15000) * 80, 80));
-                return (
-                  <View key={`${info.day}-${idx}`} style={styles.barCol}>
-                    {info.isToday ? (
-                      <View style={styles.todayTag}>
-                        <Text style={styles.todayTagText}>Today</Text>
+              {week.days.length === 0 ? (
+                <Text style={styles.weekEmpty}>
+                  {week.loading ? "Loading your week\u2026" : "No steps recorded yet this week."}
+                </Text>
+              ) : (
+                week.days.map((info) => {
+                  const isToday = info.date === new Date().toISOString().slice(0, 10);
+                  const h = Math.max(4, Math.min((info.steps / 15000) * 80, 80));
+                  return (
+                    <View key={info.date} style={styles.barCol}>
+                      {isToday ? (
+                        <View style={styles.todayTag}>
+                          <Text style={styles.todayTagText}>Today</Text>
+                        </View>
+                      ) : (
+                        <View style={styles.todaySpacer} />
+                      )}
+                      <View style={styles.barTrack}>
+                        <View
+                          style={[
+                            styles.barFill,
+                            {
+                              height: h,
+                              backgroundColor: isToday ? colors.primary : "rgba(129,64,243,0.3)",
+                            },
+                          ]}
+                        />
                       </View>
-                    ) : (
-                      <View style={styles.todaySpacer} />
-                    )}
-                    <View style={styles.barTrack}>
-                      <View
-                        style={[
-                          styles.barFill,
-                          {
-                            height: h,
-                            backgroundColor: info.isToday ? colors.primary : "rgba(129,64,243,0.3)",
-                          },
-                        ]}
-                      />
+                      <Text style={[styles.barDay, isToday && styles.barDayActive]}>{weekdayInitial(info.date)}</Text>
                     </View>
-                    <Text style={[styles.barDay, info.isToday && styles.barDayActive]}>{info.day}</Text>
-                  </View>
-                );
-              })}
+                  );
+                })
+              )}
             </View>
           </GlassCard>
         </PressableScale>
@@ -285,6 +287,7 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   brandLogoFallback: { alignItems: "center", justifyContent: "center", backgroundColor: colors.border },
   root: { flex: 1, backgroundColor: colors.canvas },
+  weekEmpty: { color: colors.muted, fontSize: 12, paddingVertical: 20 },
   scroll: { paddingHorizontal: 20, paddingBottom: 120, gap: 20 },
   header: {
     flexDirection: "row",

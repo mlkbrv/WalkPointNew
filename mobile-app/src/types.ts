@@ -44,17 +44,20 @@ export interface UserPreferences {
   marketingPush: boolean;
 }
 
+/**
+ * Per-device settings plus the live step count.
+ *
+ * The coin fields that used to live here (`totalTokens`, `bonusTokens`,
+ * `spentTokens`) are gone: a balance is `SUM(coin_transactions)` on the server,
+ * and a second copy on the device could only ever be a stale guess. Read it from
+ * `useServerData().wallet`. Weekly steps come from `GET /v1/steps/history`.
+ */
 export interface UserStats {
   stepsToday: number;
   stepsGoal: number;
   weightKg: number;
   heightCm: number;
   pedometerActive: boolean;
-  totalTokens: number;
-  bonusTokens: number;
-  spentTokens: number;
-  weeklySteps: { day: string; steps: number; isToday?: boolean }[];
-  streakDays: number;
 }
 
 export interface LeaderboardUser {
@@ -159,7 +162,7 @@ export type RootStackParamList = {
   SupportChat: undefined;
   BrandStore: { partnerId: string };
   CouponDetail: { couponId: string };
-  SecureVerification: undefined;
+  SecureVerification: { voucherId: string };
   Wallet: undefined;
   WorkoutSummary: undefined;
   PerformanceReport: undefined;

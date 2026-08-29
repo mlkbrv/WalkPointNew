@@ -5,7 +5,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../contexts/AuthContext";
-import { useStride } from "../contexts/StrideContext";
+import { useServerData } from "../contexts/ServerDataContext";
 import { colors } from "../theme";
 import { AuthStackParamList, MainTabParamList, RootStackParamList } from "../types";
 import { FeedbackToast } from "../components/FeedbackToast";
@@ -59,8 +59,9 @@ function AuthNavigator() {
 }
 
 function MainTabs() {
-  const { notifications } = useStride();
-  const unread = notifications.filter((n) => !n.read).length;
+  // The badge counts what the server says is unread, so it matches the inbox
+  // even when a notification was read on another device.
+  const { unreadCount: unread } = useServerData();
 
   return (
     <Tab.Navigator

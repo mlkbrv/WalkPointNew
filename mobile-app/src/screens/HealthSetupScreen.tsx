@@ -16,7 +16,7 @@ export function HealthSetupScreen() {
   const [busy, setBusy] = useState(false);
 
   const statusColor =
-    health.mockMode || health.status === "available"
+    health.status === "available"
       ? colors.emerald
       : health.status === "denied"
         ? colors.coral
@@ -34,11 +34,6 @@ export function HealthSetupScreen() {
     await health.startTracking();
     setBusy(false);
     showToast("Tracking started", "🏃");
-  };
-
-  const onMock = async () => {
-    await health.setMockMode(true);
-    showToast("Developer Mock Mode enabled", "🧪");
   };
 
   const iosSteps = [
@@ -65,7 +60,7 @@ export function HealthSetupScreen() {
         <View style={[styles.badge, { backgroundColor: `${statusColor}22`, borderColor: `${statusColor}55` }]}>
           <View style={[styles.dot, { backgroundColor: statusColor }]} />
           <Text style={[styles.badgeText, { color: statusColor }]}>
-            {health.mockMode ? "MOCK MODE" : health.status.toUpperCase()}
+            {health.status.toUpperCase()}
             {health.isTracking ? " • TRACKING" : ""}
           </Text>
         </View>
@@ -94,11 +89,6 @@ export function HealthSetupScreen() {
         <PressableScale style={styles.secondaryBtn} onPress={onStart} disabled={busy}>
           <Ionicons name="play" size={16} color={colors.primary} />
           <Text style={styles.secondaryText}>Start Tracking</Text>
-        </PressableScale>
-
-        <PressableScale style={styles.mockBtn} onPress={onMock}>
-          <Ionicons name="flask-outline" size={16} color={colors.coral} />
-          <Text style={styles.mockText}>Enable Mock Mode</Text>
         </PressableScale>
       </ScrollView>
     </View>
@@ -157,17 +147,4 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   secondaryText: { color: colors.primary, fontWeight: "800", fontSize: 13 },
-  mockBtn: {
-    marginTop: spacing.md,
-    borderWidth: 1,
-    borderColor: "rgba(255,107,82,0.3)",
-    backgroundColor: "rgba(255,107,82,0.08)",
-    borderRadius: radii.lg,
-    paddingVertical: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  mockText: { color: colors.coral, fontWeight: "800", fontSize: 13 },
 });

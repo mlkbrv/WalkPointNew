@@ -1,115 +1,101 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Haptics from "expo-haptics";
-import {
-  Coupon,
-  MerchantCoupon,
-  NotificationItem,
-  PartnerBrand,
-  UserStats,
-} from "../types";
-import {
-  couponsList,
-  initialNotifications,
-  initialUserStats,
-  partnerBrands,
-} from "../utils/mockData";
-import { useHealth } from "./HealthContext";
-import { useAuth } from "./AuthContext";
-import { balanceFromParts } from "../utils/metrics";
+/**
+ * Local UI state — and nothing else.
+ *
+ * This context used to hold a parallel copy of the product: a coin balance
+ * computed on the device, a list of owned coupons, a merchant catalogue, an
+ * inbox. All of that is the server's, and is read through `ServerDataContext`.
+ * Keeping a second copy here meant the two could disagree, and the one the user
+ * saw was the one that was wrong.
+ *
+ * What is genuinely local lives here: the toast queue, the body measurements and
+ * step goal a user sets on this device, and which fitness sources they have
+ * connected. Steps come from `HealthContext` (the device's sensors) and are
+ * mirrored into `userStats` for the screens that read them.
+ */
 
-const STATE_KEY = "@stride/app_state_v3";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+import { UserStats } from "../types";
+import { useHealth } from "./HealthContext";
+
+const STATE_KEY = "@stride/app_state_v4";
 
 export function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
-  return [h > 0 ? String(h).padStart(2, "0") : null, String(m).padStart(2, "0"), String(s).padStart(2, "0")]
+  return [
+    h > 0 ? String(h).padStart(2, "0") : null,
+    String(m).padStart(2, "0"),
+    String(s).padStart(2, "0"),
+  ]
     .filter(Boolean)
     .join(":");
 }
 
 type Toast = { id: string; message: string; emoji?: string } | null;
 
+export interface DeviceLink {
+  id: string;
+  name: string;
+  connected: boolean;
+  lastSync?: string;
+}
+
 type StrideContextValue = {
   userStats: UserStats;
   setUserStats: React.Dispatch<React.SetStateAction<UserStats>>;
-  notifications: NotificationItem[];
-  userCoupons: Coupon[];
-  merchantCoupons: MerchantCoupon[];
-  selectedBrand: PartnerBrand | null;
-  setSelectedBrand: (b: PartnerBrand | null) => void;
-  selectedCoupon: Coupon | null;
-  setSelectedCoupon: (c: Coupon | null) => void;
   togglePermissions: () => void;
-  confirmPurchaseReward: (cost: number, couponItem: Coupon) => boolean;
-  readNotification: (id: string) => void;
-  clearNotifications: () => void;
-  triggerMockStepsBoost: (amt: number) => void;
-  flushToRealHealth: () => void;
   toast: Toast;
   showToast: (message: string, emoji?: string) => void;
   dismissToast: () => void;
-  createMerchantCoupon: (data: Omit<MerchantCoupon, "id" | "createdAt" | "redemptions" | "views" | "published"> & { published?: boolean }) => void;
-  toggleMerchantCoupon: (id: string) => void;
-  redeemMerchantCode: (code: string) => { ok: boolean; message: string };
-  devices: { id: string; name: string; connected: boolean; lastSync?: string }[];
+  devices: DeviceLink[];
   toggleDevice: (id: string) => void;
   syncDevice: (id: string) => Promise<void>;
 };
 
 const StrideContext = createContext<StrideContextValue | null>(null);
 
-function applySteps(prev: UserStats, steps: number): UserStats {
-  const safe = Math.max(0, steps);
-  return {
-    ...prev,
-    stepsToday: safe,
-    totalTokens: balanceFromParts(safe, prev.bonusTokens, prev.spentTokens),
-    weeklySteps: prev.weeklySteps.map((w) => (w.isToday ? { ...w, steps: safe } : w)),
-  };
-}
+/** Body measurements and the goal are per-device settings, not server records. */
+const DEFAULT_STATS: UserStats = {
+  stepsToday: 0,
+  stepsGoal: 10_000,
+  weightKg: 70,
+  heightCm: 175,
+  pedometerActive: false,
+};
+
+const DEFAULT_DEVICES: DeviceLink[] = [
+  { id: "health_connect", name: "Health Connect", connected: false },
+  { id: "apple", name: "Apple Health", connected: false },
+];
 
 export function StrideProvider({ children }: { children: React.ReactNode }) {
   const health = useHealth();
-  const { user } = useAuth();
   const [hydrated, setHydrated] = useState(false);
-  const [userStats, setUserStats] = useState<UserStats>(initialUserStats);
-  const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
-  const [userCoupons, setUserCoupons] = useState<Coupon[]>([]);
-  const [merchantCoupons, setMerchantCoupons] = useState<MerchantCoupon[]>([]);
-  const [selectedBrand, setSelectedBrand] = useState<PartnerBrand | null>(partnerBrands[0]);
-  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(couponsList[0]);
+  const [userStats, setUserStats] = useState<UserStats>(DEFAULT_STATS);
+  const [devices, setDevices] = useState<DeviceLink[]>(DEFAULT_DEVICES);
   const [toast, setToast] = useState<Toast>(null);
-  const [devices, setDevices] = useState([
-    { id: "apple", name: "Apple Health", connected: false, lastSync: undefined as string | undefined },
-    { id: "health_connect", name: "Health Connect", connected: false, lastSync: undefined as string | undefined },
-    { id: "fitbit", name: "Fitbit", connected: false, lastSync: undefined as string | undefined },
-  ]);
-  const milestoneRef = useRef(false);
-  const prevMockRef = useRef(health.mockMode);
 
   useEffect(() => {
-    (async () => {
+    void (async () => {
       try {
         const raw = await AsyncStorage.getItem(STATE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
-          if (parsed.userStats) {
-            const s = parsed.userStats as UserStats;
-            setUserStats({
-              ...initialUserStats,
-              ...s,
-              bonusTokens: s.bonusTokens ?? 0,
-              spentTokens: s.spentTokens ?? 0,
-              totalTokens: balanceFromParts(s.stepsToday ?? 0, s.bonusTokens ?? 0, s.spentTokens ?? 0),
-            });
-          }
-          if (parsed.userCoupons) setUserCoupons(parsed.userCoupons);
-          if (parsed.notifications) setNotifications(parsed.notifications);
-          if (parsed.merchantCoupons) setMerchantCoupons(parsed.merchantCoupons);
+          if (parsed.userStats) setUserStats({ ...DEFAULT_STATS, ...parsed.userStats });
           if (parsed.devices) setDevices(parsed.devices);
         }
+      } catch {
+        // A corrupt cache is not worth failing to start over; defaults are fine.
       } finally {
         setHydrated(true);
       }
@@ -118,53 +104,19 @@ export function StrideProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!hydrated) return;
-    AsyncStorage.setItem(
-      STATE_KEY,
-      JSON.stringify({ userStats, userCoupons, notifications, merchantCoupons, devices })
-    ).catch(() => undefined);
-  }, [hydrated, userStats, userCoupons, notifications, merchantCoupons, devices]);
+    AsyncStorage.setItem(STATE_KEY, JSON.stringify({ userStats, devices })).catch(
+      () => undefined,
+    );
+  }, [hydrated, userStats, devices]);
 
+  // The sensors are the source; this mirror exists so screens do not each have
+  // to reach into HealthContext for one number.
   useEffect(() => {
     if (!hydrated) return;
-    if (prevMockRef.current && !health.mockMode) {
-      setUserStats((prev) => applySteps({ ...prev, bonusTokens: 0, spentTokens: 0 }, health.realSteps));
-      setUserCoupons([]);
-      setToast({ id: String(Date.now()), message: "Mock data flushed — live health sync", emoji: "📡" });
-    }
-    prevMockRef.current = health.mockMode;
-  }, [health.mockMode, health.realSteps, hydrated]);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    setUserStats((prev) => {
-      if (prev.stepsToday === health.stepsToday) {
-        const nextTokens = balanceFromParts(health.stepsToday, prev.bonusTokens, prev.spentTokens);
-        if (nextTokens === prev.totalTokens) return prev;
-        return { ...prev, totalTokens: nextTokens };
-      }
-      return applySteps(prev, health.stepsToday);
-    });
+    setUserStats((prev) =>
+      prev.stepsToday === health.stepsToday ? prev : { ...prev, stepsToday: health.stepsToday },
+    );
   }, [health.stepsToday, hydrated]);
-
-  useEffect(() => {
-    if (userStats.stepsToday >= userStats.stepsGoal && !milestoneRef.current) {
-      milestoneRef.current = true;
-      setToast({ id: String(Date.now()), message: "Daily goal smashed!", emoji: "🎉" });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setNotifications((prev) => [
-        {
-          id: `notify_goal_${Date.now()}`,
-          title: "Goal Reached!",
-          body: `You hit ${userStats.stepsGoal.toLocaleString()} steps today!`,
-          timeAgo: "Just now",
-          category: "milestone",
-          read: false,
-        },
-        ...prev,
-      ]);
-    }
-    if (userStats.stepsToday < userStats.stepsGoal) milestoneRef.current = false;
-  }, [userStats.stepsToday, userStats.stepsGoal]);
 
   const showToast = useCallback((message: string, emoji?: string) => {
     setToast({ id: String(Date.now()), message, emoji });
@@ -181,185 +133,68 @@ export function StrideProvider({ children }: { children: React.ReactNode }) {
     });
   }, [health]);
 
-  const confirmPurchaseReward = useCallback(
-    (cost: number, couponItem: Coupon) => {
-      if (userStats.totalTokens < cost) {
-        showToast("Not enough tokens", "😔");
-        return false;
-      }
-      const code = `${couponItem.brandId.slice(0, 3).toUpperCase()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-      const withCode = { ...couponItem, id: `${couponItem.id}_${Date.now()}`, redemptionCode: code };
-      setUserStats((prev) => {
-        const spentTokens = prev.spentTokens + cost;
-        return {
-          ...prev,
-          spentTokens,
-          totalTokens: balanceFromParts(prev.stepsToday, prev.bonusTokens, spentTokens),
-        };
-      });
-      setUserCoupons((prev) => [withCode, ...prev]);
-      setSelectedCoupon(withCode);
-      setNotifications((prev) => [
-        {
-          id: `notify_purch_${Date.now()}`,
-          title: "Voucher purchased!",
-          body: `${couponItem.title} is now in your wallet.`,
-          timeAgo: "1s ago",
-          category: "coupon",
-          read: false,
-        },
-        ...prev,
-      ]);
-      showToast("Reward unlocked!", "✨");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      return true;
-    },
-    [userStats.totalTokens, showToast]
-  );
-
-  const clearNotifications = useCallback(() => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  }, []);
-
-  const triggerMockStepsBoost = useCallback(
-    (amt: number) => {
-      if (!health.mockMode) {
-        showToast("Enable Developer Mock Mode first", "🛠️");
+  /**
+   * Only Health Connect is a real integration. Turning it "on" means asking the
+   * OS for permission, so a refusal has to leave the switch off rather than
+   * showing a connection that does not exist.
+   */
+  const syncDevice = useCallback(
+    async (id: string) => {
+      if (id !== "health_connect") {
+        showToast("Not available on this device yet", "🚧");
         return;
       }
-      health.boostMockSteps(amt);
-      showToast(`+${amt.toLocaleString()} mock steps`, "⚡");
-    },
-    [health, showToast]
-  );
-
-  const flushToRealHealth = useCallback(() => {
-    setUserStats((prev) => applySteps({ ...prev, bonusTokens: 0, spentTokens: 0 }, health.realSteps));
-    setUserCoupons([]);
-  }, [health.realSteps]);
-
-  const readNotification = useCallback((id: string) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-  }, []);
-
-  const createMerchantCoupon = useCallback(
-    (data: Omit<MerchantCoupon, "id" | "createdAt" | "redemptions" | "views" | "published"> & { published?: boolean }) => {
-      const item: MerchantCoupon = {
-        ...data,
-        id: `mc_${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        redemptions: 0,
-        views: 0,
-        published: data.published ?? true,
-        redemptionCode: data.redemptionCode || `MCH-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
-      };
-      setMerchantCoupons((prev) => [item, ...prev]);
-      showToast("Coupon published", "🏪");
-    },
-    [showToast]
-  );
-
-  const toggleMerchantCoupon = useCallback((id: string) => {
-    setMerchantCoupons((prev) => prev.map((c) => (c.id === id ? { ...c, published: !c.published } : c)));
-  }, []);
-
-  const redeemMerchantCode = useCallback(
-    (code: string) => {
-      const normalized = code.trim().toUpperCase();
-      const owned = userCoupons.find((c) => (c.redemptionCode || "").toUpperCase() === normalized && !c.used);
-      const merchant = merchantCoupons.find((c) => (c.redemptionCode || "").toUpperCase() === normalized);
-      if (owned) {
-        setUserCoupons((prev) => prev.map((c) => (c.id === owned.id ? { ...c, used: true } : c)));
-        if (merchant) {
-          setMerchantCoupons((prev) => prev.map((c) => (c.id === merchant.id ? { ...c, redemptions: c.redemptions + 1 } : c)));
-        }
-        showToast("Coupon validated!", "✅");
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        return { ok: true, message: `Validated: ${owned.title}` };
+      const granted = await health.requestPermissions();
+      if (!granted) {
+        setDevices((prev) => prev.map((d) => (d.id === id ? { ...d, connected: false } : d)));
+        showToast("Health permission was declined", "🔒");
+        return;
       }
-      if (merchant) {
-        setMerchantCoupons((prev) => prev.map((c) => (c.id === merchant.id ? { ...c, redemptions: c.redemptions + 1 } : c)));
-        showToast("Merchant code accepted", "✅");
-        return { ok: true, message: `Redeemed: ${merchant.title}` };
-      }
-      showToast("Invalid code", "❌");
-      return { ok: false, message: "Code not found or already used." };
-    },
-    [userCoupons, merchantCoupons, showToast]
-  );
-
-  const toggleDevice = useCallback((id: string) => {
-    setDevices((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, connected: !d.connected, lastSync: !d.connected ? "Just now" : d.lastSync } : d))
-    );
-  }, []);
-
-  const syncDevice = useCallback(async (id: string) => {
-    await new Promise((r) => setTimeout(r, 1200));
-    setDevices((prev) => prev.map((d) => (d.id === id ? { ...d, connected: true, lastSync: "Just now" } : d)));
-    if (id === "health_connect") {
-      await health.requestPermissions();
       await health.startTracking();
-    }
-    showToast("Device synced", "📡");
-  }, [health, showToast]);
+      setDevices((prev) =>
+        prev.map((d) =>
+          d.id === id ? { ...d, connected: true, lastSync: new Date().toISOString() } : d,
+        ),
+      );
+      showToast("Health Connect synced", "📡");
+    },
+    [health, showToast],
+  );
+
+  const toggleDevice = useCallback(
+    (id: string) => {
+      const device = devices.find((d) => d.id === id);
+      if (!device) return;
+      if (device.connected) {
+        setDevices((prev) => prev.map((d) => (d.id === id ? { ...d, connected: false } : d)));
+        if (id === "health_connect") health.stopTracking();
+        return;
+      }
+      void syncDevice(id);
+    },
+    [devices, health, syncDevice],
+  );
 
   useEffect(() => {
-    if (hydrated && userStats.pedometerActive) {
-      health.startTracking();
-    }
+    if (hydrated && userStats.pedometerActive) health.startTracking();
+    // Runs once hydration lands; `health` is stable enough that re-running on it
+    // would restart tracking on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated]);
 
-  const value = useMemo(
+  const value = useMemo<StrideContextValue>(
     () => ({
       userStats,
       setUserStats,
-      notifications,
-      userCoupons,
-      merchantCoupons,
-      selectedBrand,
-      setSelectedBrand,
-      selectedCoupon,
-      setSelectedCoupon,
       togglePermissions,
-      confirmPurchaseReward,
-      readNotification,
-      clearNotifications,
-      triggerMockStepsBoost,
-      flushToRealHealth,
       toast,
       showToast,
       dismissToast,
-      createMerchantCoupon,
-      toggleMerchantCoupon,
-      redeemMerchantCode,
       devices,
       toggleDevice,
       syncDevice,
     }),
-    [
-      userStats,
-      notifications,
-      userCoupons,
-      merchantCoupons,
-      selectedBrand,
-      selectedCoupon,
-      togglePermissions,
-      confirmPurchaseReward,
-      readNotification,
-      clearNotifications,
-      triggerMockStepsBoost,
-      flushToRealHealth,
-      toast,
-      showToast,
-      dismissToast,
-      createMerchantCoupon,
-      toggleMerchantCoupon,
-      redeemMerchantCode,
-      devices,
-      toggleDevice,
-      syncDevice,
-    ]
+    [userStats, togglePermissions, toast, showToast, dismissToast, devices, toggleDevice, syncDevice],
   );
 
   return <StrideContext.Provider value={value}>{children}</StrideContext.Provider>;
