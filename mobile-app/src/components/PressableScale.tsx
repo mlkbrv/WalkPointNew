@@ -36,7 +36,16 @@ export function PressableScale({ children, onPress, style, disabled, haptic = tr
     }).start();
 
   return (
-    <Animated.View style={[{ transform: [{ scale }] }, style]}>
+    // The caller's style goes on the Pressable, not on this wrapper, so the hit
+    // area is exactly the styled box — the same as when this used Reanimated's
+    // animated Pressable directly.
+    //
+    // Putting the style on the wrapper and giving the Pressable `flex: 0` does
+    // not work: in React Native `flex: 0` also sets `flexBasis: 0`, so inside a
+    // column container the Pressable collapses to zero height. The children
+    // still paint (they overflow), so the button looks perfectly normal and
+    // simply cannot be tapped — with no error anywhere.
+    <Animated.View style={{ transform: [{ scale }] }}>
       <Pressable
         disabled={disabled}
         onPressIn={() => spring(0.96)}
@@ -45,9 +54,7 @@ export function PressableScale({ children, onPress, style, disabled, haptic = tr
           if (haptic) void Haptics.selectionAsync();
           onPress?.();
         }}
-        // The wrapper carries the caller's style, so the pressable itself only
-        // has to fill it — otherwise padding would be applied twice.
-        style={{ flex: 0 }}
+        style={style}
       >
         {children}
       </Pressable>

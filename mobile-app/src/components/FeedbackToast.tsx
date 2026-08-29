@@ -45,6 +45,12 @@ export function FeedbackToast() {
     ]).start(({ finished }) => {
       if (finished) setShown(null);
     });
+
+    // Same reason as the splash: an interrupted animation reports
+    // finished:false, and clearing only on `finished` would leave the toast on
+    // screen indefinitely with no way to dismiss it.
+    const failsafe = setTimeout(() => setShown(null), FADE_MS + 200);
+    return () => clearTimeout(failsafe);
     // `shown` is deliberately not a dependency: reacting to it would restart the
     // exit animation it just finished.
     // eslint-disable-next-line react-hooks/exhaustive-deps

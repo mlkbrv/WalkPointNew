@@ -65,7 +65,19 @@ export function AnimatedSplashScreen({ onFinish }: Props) {
   const overlay = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    Animated.sequence([
+    // `start`'s callback reports finished:false when an animation is
+    // interrupted — backgrounding the app during launch is enough. Gating the
+    // hand-off on `finished` alone would leave this overlay up forever: opaque,
+    // covering the whole app, with nothing the user could do about it. So the
+    // hand-off happens on whichever comes first, and only once.
+    let handedOver = false;
+    const handOver = () => {
+      if (handedOver) return;
+      handedOver = true;
+      onFinish();
+    };
+
+    const animation = Animated.sequence([
       Animated.timing(markIn, {
         toValue: 1,
         duration: 420,
@@ -85,11 +97,15 @@ export function AnimatedSplashScreen({ onFinish }: Props) {
         easing: Easing.inOut(Easing.ease),
         useNativeDriver: true,
       }),
-    ]).start(({ finished }) => {
-      // Only hand over when the fade actually completed; an interrupted
-      // animation would otherwise reveal a half-faded overlay.
-      if (finished) onFinish();
-    });
+    ]);
+
+    animation.start(handOver);
+    const failsafe = setTimeout(handOver, 2500);
+
+    return () => {
+      clearTimeout(failsafe);
+      animation.stop();
+    };
   }, [markIn, wordIn, overlay, onFinish]);
 
   return (
