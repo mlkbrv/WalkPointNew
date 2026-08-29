@@ -1,0 +1,66 @@
+# TLS, reverse proxy, and static hosting for the admin panel.
+#
+# Caddy rather than nginx+certbot here for one reason: this box has no domain,
+# only an IP, and Let's Encrypt will not issue a certificate for a bare IP.
+# `sslip.io` resolves any A.B.C.D.sslip.io to that address, which gives a real
+# hostname a real certificate can be issued for — and Caddy obtains and renews
+# it with no cron job and no extra container.
+#
+# {$STRIDE_HOST} comes from the environment so the same file works for the
+# sslip.io hostname now and a real domain later, with no edit.
+
+{
+	email {$STRIDE_ACME_EMAIL}
+	# The stack may not own :80/:443 on a shared box — see docker-compose.vps.yml.
+	http_port {$STRIDE_HTTP_PORT:80}
+	https_port {$STRIDE_HTTPS_PORT:443}
+}
+
+{$STRIDE_HOST} {
+	# Written by bootstrap.sh. Empty when this stack owns :80, so Caddy obtains a
+	# real Let's Encrypt certificate; `tls internal` (self-signed) when the ports
+	# had to move, because ACME's HTTP-01 challenge is always answered on :80 and
+	# cannot be redirected — asking for a public certificate there would just
+	# fail on a loop.
+	import /etc/caddy/tls.conf
+
+	encode gzip zstd
+
+	# Uploaded bytes served from our own origin. `nosniff` plus a fixed
+	# disposition is what stops a crafted upload becoming stored XSS.
+	handle_path /media/* {
+		root * /srv/media
+		header X-Content-Type-Options nosniff
+		header Content-Disposition inline
+		header Cache-Control "public, max-age=2592000"
+		file_server
+	}
+
+	# The API. Everything under the versioned prefix plus the unversioned
+	# operational endpoints.
+	handle /v1/* {
+		reverse_proxy backend:8000
+	}
+	handle /health {
+		reverse_proxy backend:8000
+	}
+	handle /docs* {
+		reverse_proxy backend:8000
+	}
+	handle /openapi.json {
+		reverse_proxy backend:8000
+	}
+
+	# Everything else is the admin panel, a single-page app.
+	handle {
+		reverse_proxy admin:80
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}

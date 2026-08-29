@@ -1,0 +1,130 @@
+# Deployment for a single VPS that already hosts something else.
+#
+# Two things make this file different from the root `docker-compose.yml`:
+#
+#   1. **It must not disturb the neighbour.** Every container, volume and
+#      network is namespaced by the compose project name (`stride`), no host
+#      port is published except the two the proxy needs, and those come from
+#      the environment so they can be moved off 80/443 when the other project
+#      already holds them.
+#   2. **TLS without a domain.** Caddy replaces nginx + certbot, because the
+#      box has an IP and no hostname — see the Caddyfile.
+#
+# Bring it up with:  docker compose -p stride -f docker-compose.vps.yml up -d
+
+name: stride
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-stride}
+      POSTGRES_USER: ${POSTGRES_USER:-stride}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # Deliberately not published. Postgres reachable from the internet is the
+    # single most common way a deployment like this gets breached.
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stride}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1", "--appendonly", "no"]
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ../../backend
+    restart: unless-stopped
+    env_file: ../../backend/.env
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_URL: redis://redis:6379/0
+      MEDIA_ROOT: /app/media
+      # Gunicorn forks; each worker would start its own scheduler and every job
+      # would run N times. The jobs live in the `worker` service instead.
+      SCHEDULER_ENABLED: "false"
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-3}
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    volumes:
+      - media:/app/media
+    expose:
+      - "8000"
+    # Migrations then gunicorn — the same script the managed-platform deploy
+    # runs, so the two cannot drift apart.
+    command: ["/app/start.sh"]
+
+  worker:
+    build:
+      context: ../../backend
+    restart: unless-stopped
+    env_file: ../../backend/.env
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_URL: redis://redis:6379/0
+      MEDIA_ROOT: /app/media
+      SCHEDULER_ENABLED: "true"
+    depends_on:
+      backend: { condition: service_started }
+      postgres: { condition: service_healthy }
+    volumes:
+      - media:/app/media
+    # Exactly one process. Two would duplicate every scheduled run.
+    command: ["python", "-m", "app.worker"]
+
+  admin:
+    build:
+      context: ../../admin-panel
+      args:
+        # Same origin as the API in production: Caddy routes /v1 to the backend,
+        # so the panel needs no absolute URL and there is no CORS to configure.
+        VITE_API_BASE_URL: ""
+    restart: unless-stopped
+    expose:
+      - "80"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - admin
+    environment:
+      STRIDE_HOST: ${STRIDE_HOST:?set STRIDE_HOST in .env}
+      STRIDE_ACME_EMAIL: ${STRIDE_ACME_EMAIL:-admin@example.com}
+      STRIDE_HTTP_PORT: ${STRIDE_HTTP_PORT:-80}
+      STRIDE_HTTPS_PORT: ${STRIDE_HTTPS_PORT:-443}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./tls.conf:/etc/caddy/tls.conf:ro
+      - media:/srv/media:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    ports:
+      # Quoted, and host-side taken from the environment: on a box where the
+      # other project already owns 80/443 these move to 8080/8443 and the
+      # neighbour is untouched.
+      - "${STRIDE_HTTP_PORT:-80}:${STRIDE_HTTP_PORT:-80}"
+      - "${STRIDE_HTTPS_PORT:-443}:${STRIDE_HTTPS_PORT:-443}"
+
+volumes:
+  pgdata:
+  media:
+  caddy-data:
+  caddy-config:
