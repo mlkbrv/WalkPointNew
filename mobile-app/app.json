@@ -26,6 +26,9 @@
         "android.permission.ACTIVITY_RECOGNITION",
         "android.permission.health.READ_STEPS",
         "android.permission.POST_NOTIFICATIONS"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "sdkVersion": "57.0.0",
@@ -56,6 +59,14 @@
       "expo-secure-store",
       "./plugins/withCxxStagingDir",
       "react-native-health-connect",
+      [
+        "expo-location",
+        {
+          "isAndroidForegroundServiceEnabled": true,
+          "isAndroidBackgroundLocationEnabled": false,
+          "locationWhenInUsePermission": "STRIDE records your walking route only while you switch it on."
+        }
+      ],
       [
         "expo-build-properties",
         {

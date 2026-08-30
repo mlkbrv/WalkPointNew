@@ -1,4 +1,7 @@
 import "react-native-gesture-handler";
+// Imported for its side effect: the background location task must be defined
+// before the OS can hand a batch back, which can happen with no React tree.
+import "./src/location/routeTask";
 import { useState } from "react";
 import { StatusBar, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
