@@ -164,7 +164,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius: radii.full,
     backgroundColor: colors.primary,
   },
-  retryText: { color: colors.white, fontWeight: "600", fontSize: 13 },
+  retryText: { color: colors.white, fontWeight: "400", fontSize: 15 },
   root: { flex: 1, backgroundColor: colors.canvas },
   scroll: { paddingHorizontal: 20, paddingBottom: 120, gap: 20 },
   header: {
@@ -173,13 +173,11 @@ const useStyles = makeStyles((colors) => ({
     alignItems: "center",
     marginTop: 8,
   },
-  heading: { fontSize: 20, fontWeight: "800", color: colors.charcoal },
+  heading: { fontSize: 22, fontWeight: "600", color: colors.charcoal },
   sub: {
-    fontSize: 10,
-    fontWeight: "700",
+    fontSize: 12,
+    fontWeight: "600",
     color: colors.muted,
-    textTransform: "uppercase",
-    letterSpacing: 1,
     marginTop: 2,
   },
   clearBtn: {
@@ -188,14 +186,12 @@ const useStyles = makeStyles((colors) => ({
     paddingVertical: 6,
     borderRadius: radii.full,
   },
-  clearText: { fontSize: 11, fontWeight: "700", color: colors.primary },
+  clearText: { fontSize: 13, fontWeight: "600", color: colors.primary },
   section: { gap: 10 },
   sectionLabel: {
-    fontSize: 10,
-    fontWeight: "700",
+    fontSize: 12,
+    fontWeight: "600",
     color: colors.muted,
-    textTransform: "uppercase",
-    letterSpacing: 1.5,
   },
   list: { gap: 10 },
   card: {
@@ -223,10 +219,10 @@ const useStyles = makeStyles((colors) => ({
   },
   body: { flex: 1, gap: 6 },
   titleRow: { flexDirection: "row", justifyContent: "space-between", gap: 8 },
-  title: { flex: 1, fontSize: 12, fontWeight: "800", color: colors.charcoal, lineHeight: 16 },
-  titleRead: { fontWeight: "600", color: colors.slate },
-  time: { fontSize: 9, color: colors.muted, fontWeight: "600" },
-  copy: { fontSize: 11, color: colors.slate, lineHeight: 16 },
+  title: { flex: 1, fontSize: 13, fontWeight: "600", color: colors.charcoal, lineHeight: 16 },
+  titleRead: { fontWeight: "400", color: colors.slate },
+  time: { fontSize: 11, color: colors.muted, fontWeight: "400" },
+  copy: { fontSize: 13, color: colors.slate, lineHeight: 16 },
   actionBtn: {
     alignSelf: "flex-start",
     marginTop: 4,
@@ -238,7 +234,7 @@ const useStyles = makeStyles((colors) => ({
   summaryBtn: {
     backgroundColor: "rgba(129,64,243,0.1)",
   },
-  actionText: { color: colors.white, fontSize: 10, fontWeight: "800", letterSpacing: 0.8 },
+  actionText: { color: colors.white, fontSize: 12, fontWeight: "600", letterSpacing: 0.8 },
   codeBox: {
     marginTop: 4,
     flexDirection: "row",
@@ -253,11 +249,10 @@ const useStyles = makeStyles((colors) => ({
   },
   code: {
     fontFamily: "monospace",
-    fontSize: 10,
-    fontWeight: "700",
+    fontSize: 12,
+    fontWeight: "600",
     color: colors.charcoal,
-    letterSpacing: 1,
   },
   empty: { padding: 32, alignItems: "center", gap: 10 },
-  emptyText: { fontSize: 13, fontWeight: "600", color: colors.muted },
+  emptyText: { fontSize: 15, fontWeight: "400", color: colors.muted },
 }));

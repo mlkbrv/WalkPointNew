@@ -176,8 +176,8 @@ const useStyles = makeStyles((colors) => ({
   centered: { paddingVertical: spacing.xxxl, alignItems: "center" },
 
   notice: { padding: spacing.xl, alignItems: "center", gap: spacing.sm },
-  noticeTitle: { fontSize: 16, fontWeight: "600", color: colors.text },
-  noticeBody: { fontSize: 14, fontWeight: "500", color: colors.slate, textAlign: "center" },
+  noticeTitle: { fontSize: 17, fontWeight: "400", color: colors.text },
+  noticeBody: { fontSize: 15, fontWeight: "400", color: colors.slate, textAlign: "center" },
   retry: {
     marginTop: spacing.sm,
     paddingHorizontal: spacing.xl,
@@ -185,7 +185,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius: radii.full,
     backgroundColor: colors.primary,
   },
-  retryText: { color: colors.white, fontWeight: "600", fontSize: 14 },
+  retryText: { color: colors.white, fontWeight: "400", fontSize: 15 },
 
   bubbleRow: { flexDirection: "row", marginBottom: spacing.md },
   bubbleRowMine: { justifyContent: "flex-end" },
@@ -198,21 +198,21 @@ const useStyles = makeStyles((colors) => ({
     borderColor: colors.border,
     borderBottomLeftRadius: radii.sm,
   },
-  bubbleText: { fontSize: 14, fontWeight: "500", color: colors.text },
+  bubbleText: { fontSize: 15, fontWeight: "400", color: colors.text },
   bubbleTextMine: { color: colors.textLight },
-  bubbleTime: { fontSize: 11, fontWeight: "500", color: colors.muted, marginTop: 4 },
+  bubbleTime: { fontSize: 13, fontWeight: "400", color: colors.muted, marginTop: 4 },
   bubbleTimeMine: { color: "rgba(255,255,255,0.7)" },
 
   closedNote: {
-    fontSize: 12,
-    fontWeight: "500",
+    fontSize: 13,
+    fontWeight: "400",
     color: colors.muted,
     textAlign: "center",
     marginTop: spacing.lg,
   },
   inlineError: {
-    fontSize: 12,
-    fontWeight: "500",
+    fontSize: 13,
+    fontWeight: "400",
     color: colors.coralInk,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
@@ -237,7 +237,7 @@ const useStyles = makeStyles((colors) => ({
     backgroundColor: colors.canvas,
     borderWidth: 1,
     borderColor: colors.border,
-    fontSize: 14,
+    fontSize: 15,
     color: colors.text,
   },
   send: {

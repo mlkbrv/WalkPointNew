@@ -140,15 +140,15 @@ const useStyles = makeStyles((colors) => ({
 
   stateBox: { paddingVertical: spacing.xxxl, alignItems: "center" },
   stateCard: { padding: spacing.xl, alignItems: "center", gap: spacing.sm, margin: spacing.lg },
-  stateTitle: { fontSize: 16, fontWeight: "600", color: colors.text },
-  stateBody: { fontSize: 14, fontWeight: "500", color: colors.slate, textAlign: "center" },
+  stateTitle: { fontSize: 17, fontWeight: "400", color: colors.text },
+  stateBody: { fontSize: 15, fontWeight: "400", color: colors.slate, textAlign: "center" },
 
   brandCard: { flexDirection: "row", gap: spacing.lg, padding: spacing.lg, alignItems: "center" },
   logo: { width: 56, height: 56, borderRadius: radii.lg },
   logoFallback: { alignItems: "center", justifyContent: "center", backgroundColor: colors.border },
   brandMeta: { flex: 1, gap: 4 },
-  brandName: { fontSize: 18, fontWeight: "700", color: colors.text },
-  brandDesc: { fontSize: 13, fontWeight: "500", color: colors.slate },
+  brandName: { fontSize: 20, fontWeight: "600", color: colors.text },
+  brandDesc: { fontSize: 15, fontWeight: "400", color: colors.slate },
 
   balanceRow: {
     flexDirection: "row",
@@ -157,8 +157,8 @@ const useStyles = makeStyles((colors) => ({
     marginTop: spacing.xxl,
     marginBottom: spacing.md,
   },
-  sectionTitle: { fontSize: 18, fontWeight: "700", color: colors.text },
-  balance: { fontSize: 14, fontWeight: "700", color: colors.primary },
+  sectionTitle: { fontSize: 20, fontWeight: "600", color: colors.text },
+  balance: { fontSize: 15, fontWeight: "600", color: colors.primary },
 
   couponCard: {
     flexDirection: "row",
@@ -168,8 +168,8 @@ const useStyles = makeStyles((colors) => ({
     marginBottom: spacing.md,
   },
   couponBody: { flex: 1, gap: 4 },
-  couponTitle: { fontSize: 15, fontWeight: "600", color: colors.text },
-  couponDesc: { fontSize: 13, fontWeight: "500", color: colors.slate },
+  couponTitle: { fontSize: 17, fontWeight: "400", color: colors.text },
+  couponDesc: { fontSize: 15, fontWeight: "400", color: colors.slate },
   price: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
@@ -177,6 +177,6 @@ const useStyles = makeStyles((colors) => ({
     backgroundColor: colors.primary,
   },
   priceMuted: { backgroundColor: colors.border },
-  priceText: { fontSize: 13, fontWeight: "700", color: colors.white },
+  priceText: { fontSize: 15, fontWeight: "600", color: colors.white },
   priceTextMuted: { color: colors.muted },
 }));

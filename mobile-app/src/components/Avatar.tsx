@@ -87,5 +87,5 @@ export function Avatar({
 
 const useStyles = makeStyles((colors) => ({
   fallback: { alignItems: "center", justifyContent: "center", overflow: "hidden" },
-  initials: { color: colors.white, fontWeight: "800", letterSpacing: 0.5 },
+  initials: { color: colors.white, fontWeight: "600", letterSpacing: 0.5 },
 }));

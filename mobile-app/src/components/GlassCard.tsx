@@ -5,9 +5,8 @@ import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 export function GlassCard({ children, style, dark }: { children: React.ReactNode; style?: StyleProp<ViewStyle>; dark?: boolean }) {
   const styles = useStyles();
-  const { shadows } = useTheme();
   return (
-    <View style={[dark ? styles.dark : [styles.light, shadows.glass], style]}>
+    <View style={[dark ? styles.dark : styles.light, style]}>
       {children}
     </View>
   );
@@ -15,15 +14,19 @@ export function GlassCard({ children, style, dark }: { children: React.ReactNode
 
 const useStyles = makeStyles((colors) => ({
   light: {
-    backgroundColor: colors.cardTranslucent,
-    borderRadius: radii.xl,
-    borderWidth: 1,
-    borderColor: colors.cardTranslucentBorder,
+    // A plain surface with a hairline, not frosted glass over a drop shadow.
+    // Translucency and a 24pt radius on every container is the look that reads
+    // as decoration rather than structure; a grouped section with a real edge
+    // is what the system's own lists do.
+    backgroundColor: colors.card,
+    borderRadius: radii.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
   },
   dark: {
-    backgroundColor: "rgba(18,20,23,0.92)",
-    borderRadius: radii.xl,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
+    backgroundColor: colors.cardDark,
+    borderRadius: radii.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.borderDark,
   },
 }));

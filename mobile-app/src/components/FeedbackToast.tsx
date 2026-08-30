@@ -86,6 +86,6 @@ const useStyles = makeStyles((colors) => ({
     paddingVertical: 12,
     borderRadius: radii.full,
   },
-  emoji: { fontSize: 16 },
-  text: { color: colors.textLight, fontWeight: "700", fontSize: 13 },
+  emoji: { fontSize: 17 },
+  text: { color: colors.textLight, fontWeight: "600", fontSize: 15 },
 }));

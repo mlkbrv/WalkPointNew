@@ -1,466 +1,287 @@
 /**
- * Live workout tracking.
+ * Activity.
  *
- * The session itself lives on the server (see `useWorkoutSession`); this screen
- * owns only what is genuinely local — the map style and the hold-to-finish gesture.
- * The bonus shown afterwards is whatever the server actually paid, so a session
- * flagged as implausible reports zero here rather than a number we invented.
+ * This screen used to invent everything it showed. Distance advanced by a fixed
+ * 0.002 km every second whether the phone was moving or lying on a table —
+ * exactly 7.2 km/h for everyone. Calories accumulated 0.15 per tick through a
+ * `Math.floor`, so the fractional part was discarded every time and the number
+ * never left zero. The route was a `Math.random()` walk in screen pixels, drawn
+ * over three slanted rectangles that were the same "roads" for every user on
+ * Earth. A pill read "GPS TRACKING ACTIVE" while nothing had ever asked for a
+ * location.
+ *
+ * None of that is here. Steps come from the system and are counted whether the
+ * app is open or not, so there is nothing to start: the day's total and the
+ * week's history are simply shown. The one thing that genuinely needs asking
+ * for is GPS, because it costs battery and it is location data — so route
+ * recording is a switch, and while it is on Android shows a persistent
+ * notification saying so.
  */
 
-import React, { useCallback, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  Dimensions,
-} from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useCallback, useState } from "react";
+import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { radii } from "../theme";
-import { PressableScale } from "../components/PressableScale";
+
+import { describeError } from "../api/client";
+import { workoutsApi, type ApiWeeklySummary, type ApiWorkout } from "../api/endpoints";
 import { GlassCard } from "../components/GlassCard";
+import { PressableScale } from "../components/PressableScale";
+import { RouteTrace } from "../components/RouteTrace";
+import { useHealth } from "../contexts/HealthContext";
 import { useStride, formatDuration } from "../contexts/StrideContext";
-import { useServerData } from "../contexts/ServerDataContext";
-import { useWorkoutSession } from "../hooks/useWorkoutSession";
-import { ActiveWorkout } from "../types";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
-
-const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
-
-const MAP_COLORS: Record<ActiveWorkout["mapView"], string> = {
-  neon: "#090a0f",
-  satellite: "#0c1510",
-  slate: "#1e293b",
-};
+import { useRouteRecorder } from "../hooks/useRouteRecorder";
+import { useStepHistory } from "../hooks/useStepHistory";
+import { radii, spacing } from "../theme";
+import { caloriesFromSteps, distanceFromSteps } from "../utils/metrics";
 
 export function TrackScreen() {
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const styles = useStyles();
-  const navigation = useNavigation<any>();
-  const insets = useSafeAreaInsets();
+  const health = useHealth();
   const { showToast } = useStride();
-  const { refreshWallet } = useServerData();
-  const { metrics, isActive, isPaused, busy, error, start, togglePause, finish } =
-    useWorkoutSession();
+  const week = useStepHistory();
+  const recorder = useRouteRecorder();
 
-  const [mapView, setMapViewState] = useState<ActiveWorkout["mapView"]>("neon");
-  const [showMapDrawer, setShowMapDrawer] = useState(false);
-  const [pressProgress, setPressProgress] = useState(0);
-  const pressRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [summary, setSummary] = useState<ApiWeeklySummary | null>(null);
+  const [recent, setRecent] = useState<ApiWorkout[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const mapBg = MAP_COLORS[mapView];
-  const offsetX = SCREEN_W / 2 - 150;
-  const offsetY = SCREEN_H / 2 - 300;
+  const load = useCallback(async () => {
+    try {
+      const [totals, history] = await Promise.all([
+        workoutsApi.summary(),
+        workoutsApi.history(5),
+      ]);
+      setSummary(totals);
+      setRecent(history);
+    } catch {
+      // The screen's real content is today's steps, which come from the device.
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const onStart = useCallback(async () => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await start();
-  }, [start]);
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+    }, [load]),
+  );
 
-  const onFinish = useCallback(async () => {
-    const result = await finish();
-    if (!result) return;
-
-    // The wallet changed on the server, so re-read it rather than adding locally.
-    void refreshWallet();
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    // Sessions record activity; coins come from steps alone. Announcing
-     // "+0 coins" here would read as a bug rather than as the rule.
-    showToast(
-      result.workout.is_suspicious
-        ? "Workout saved \u2014 this one is under review"
-        : "Workout saved",
-    );
-    navigation.navigate("WorkoutSummary");
-  }, [finish, refreshWallet, showToast, navigation]);
-
-  const onFinishHoldStart = () => {
-    let current = 0;
-    pressRef.current = setInterval(() => {
-      current += 5;
-      if (current >= 100) {
-        if (pressRef.current) clearInterval(pressRef.current);
-        setPressProgress(0);
-        void onFinish();
-      } else {
-        setPressProgress(current);
+  const toggleRecording = useCallback(async () => {
+    if (recorder.recording) {
+      setSaving(true);
+      const route = await recorder.stop();
+      if (!route) {
+        setSaving(false);
+        showToast("Too short to save");
+        return;
       }
-    }, 100);
-  };
+      try {
+        // The session exists only to carry the route; steps are already counted.
+        const started = await workoutsApi.start("walk");
+        await workoutsApi.finish(started.id, {
+          distance_km: route.distanceKm,
+          duration_seconds: route.t[route.t.length - 1] ?? 0,
+          route: { v: 1, coordinates: route.coordinates, t: route.t, dist_km: route.distanceKm },
+        });
+        showToast(`Route saved — ${route.distanceKm.toFixed(2)} km`);
+        void load();
+      } catch (caught) {
+        showToast(describeError(caught));
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
 
-  const onFinishHoldEnd = () => {
-    if (pressRef.current) clearInterval(pressRef.current);
-    setPressProgress(0);
-  };
+    const ok = await recorder.start();
+    if (ok) showToast("Recording your route");
+  }, [recorder, showToast, load]);
 
-  const setMapView = (next: ActiveWorkout["mapView"]) => {
-    setMapViewState(next);
-    setShowMapDrawer(false);
-  };
+  const steps = health.stepsToday;
 
   return (
-    <View style={[styles.root, { backgroundColor: mapBg }]}>
-      <View style={styles.mapLayer} pointerEvents="none">
-        {mapView === "slate"
-          ? Array.from({ length: 16 }).map((_, i) => (
-              <View
-                key={`v-${i}`}
-                style={[styles.gridLineV, { left: i * 25 }]}
-              />
-            ))
-          : null}
-        {mapView === "slate"
-          ? Array.from({ length: 30 }).map((_, i) => (
-              <View
-                key={`h-${i}`}
-                style={[styles.gridLineH, { top: i * 25 }]}
-              />
-            ))
-          : null}
-        {mapView === "neon" ? (
-          <>
-            <View style={[styles.road, { left: "15%", height: "100%", width: 2, transform: [{ rotate: "4deg" }] }]} />
-            <View style={[styles.road, { left: "40%", height: "100%", width: 2, transform: [{ rotate: "-2deg" }] }]} />
-            <View style={[styles.road, { left: "65%", height: "100%", width: 2, transform: [{ rotate: "3deg" }] }]} />
-            <View style={[styles.roadH, { top: "18%" }]} />
-            <View style={[styles.roadH, { top: "45%" }]} />
-            <View style={[styles.roadH, { top: "78%" }]} />
-            <View style={styles.neonGlow} />
-          </>
-        ) : null}
-        {metrics.routeCoordinates.map((pt, idx) => {
-          const isLast = idx === metrics.routeCoordinates.length - 1;
-          return (
-            <View
-              key={`${idx}-${pt.x}-${pt.y}`}
-              style={[
-                isLast ? styles.routePulse : styles.routeDot,
-                {
-                  left: pt.x + offsetX - (isLast ? 8 : 3),
-                  top: pt.y + offsetY - (isLast ? 8 : 3),
-                },
-              ]}
-            />
-          );
-        })}
-      </View>
+    <View style={[styles.root, { paddingTop: insets.top + 8 }]}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <Text style={styles.title}>Activity</Text>
 
-      <View style={[styles.topBar, { paddingTop: insets.top + 12 }]}>
-        <View style={styles.gpsPill}>
-          <Ionicons name="locate" size={14} color={colors.emerald} />
-          <Text style={styles.gpsText}>
-            {isActive ? (isPaused ? "GPS PAUSED" : "GPS TRACKING ACTIVE") : "GPS READY"}
-          </Text>
-        </View>
-        <PressableScale style={styles.layerBtn} onPress={() => setShowMapDrawer(true)}>
-          <Ionicons name="layers-outline" size={18} color={colors.textLight} />
-        </PressableScale>
-      </View>
+        {/* Today, from the system. Nothing here was started by a button. */}
+        <GlassCard style={styles.today}>
+          <Text style={styles.steps}>{steps.toLocaleString()}</Text>
+          <Text style={styles.stepsLabel}>steps today</Text>
 
-      {showMapDrawer ? (
-        <View style={styles.drawer}>
-          <View style={styles.drawerHead}>
-            <Text style={styles.drawerTitle}>Map Style</Text>
-            <PressableScale onPress={() => setShowMapDrawer(false)}>
-              <Ionicons name="close" size={20} color={colors.textLight} />
-            </PressableScale>
-          </View>
-          {(["neon", "satellite", "slate"] as const).map((style) => (
-            <PressableScale
-              key={style}
-              style={[styles.mapOption, mapView === style && styles.mapOptionActive]}
-              onPress={() => setMapView(style)}
-            >
-              <Text style={styles.mapOptionText}>{style.toUpperCase()}</Text>
-              {mapView === style ? (
-                <Ionicons name="checkmark" size={16} color={colors.primary} />
-              ) : null}
-            </PressableScale>
-          ))}
-        </View>
-      ) : null}
-
-      <View style={[styles.hud, { bottom: insets.bottom + 88 }]}>
-        <GlassCard dark style={styles.hudCard}>
-          <View style={styles.handle} />
-          {!isActive ? (
-            <View style={styles.idle}>
-              <Ionicons name="compass-outline" size={44} color={colors.primary} />
-              <Text style={styles.idleTitle}>Outdoor GPS Track</Text>
-              <Text style={styles.idleBody}>
-                Record live paths on the map and earn bonus Step-Tokens.
-              </Text>
-              <PressableScale
-                style={styles.startBtn}
-                disabled={busy}
-                onPress={() => void onStart()}
-              >
-                {busy ? (
-                  <ActivityIndicator color={colors.white} size="small" />
-                ) : (
-                  <>
-                    <Ionicons name="play" size={14} color={colors.white} />
-                    <Text style={styles.startText}>START TRAINING</Text>
-                  </>
-                )}
-              </PressableScale>
-              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          <View style={styles.metrics}>
+            <View style={styles.metric}>
+              <Text style={styles.metricValue}>{distanceFromSteps(steps).toFixed(2)}</Text>
+              <Text style={styles.metricLabel}>km</Text>
             </View>
+            <View style={styles.metric}>
+              <Text style={styles.metricValue}>{caloriesFromSteps(steps)}</Text>
+              <Text style={styles.metricLabel}>kcal</Text>
+            </View>
+            <View style={styles.metric}>
+              <Text style={styles.metricValue}>
+                {week.changePercent === null ? "—" : `${week.changePercent > 0 ? "+" : ""}${week.changePercent}%`}
+              </Text>
+              <Text style={styles.metricLabel}>vs last week</Text>
+            </View>
+          </View>
+
+          {health.status !== "ready" ? (
+            <Text style={styles.notice}>
+              STRIDE cannot read your step count yet. Open Profile → Step tracking.
+            </Text>
+          ) : !health.countsInBackground ? (
+            <Text style={styles.notice}>
+              Steps are counted only while STRIDE is open on this device.
+            </Text>
+          ) : null}
+        </GlassCard>
+
+        {/* The one thing worth asking permission for. */}
+        <GlassCard style={styles.recordCard}>
+          <View style={styles.recordRow}>
+            <View style={styles.recordText}>
+              <Text style={styles.recordTitle}>Record route</Text>
+              <Text style={styles.recordBody}>
+                {recorder.recording
+                  ? "Recording. Your phone can stay in your pocket."
+                  : "Uses GPS while you walk. Off by default — steps are counted either way."}
+              </Text>
+            </View>
+            <Switch
+              value={recorder.recording}
+              disabled={saving}
+              onValueChange={() => void toggleRecording()}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor={colors.white}
+            />
+          </View>
+
+          {recorder.error ? <Text style={styles.error}>{recorder.error}</Text> : null}
+
+          {recorder.recording || recorder.points.length > 0 ? (
+            <>
+              <RouteTrace points={recorder.points} />
+              <View style={styles.liveRow}>
+                <Ionicons name="navigate-outline" size={16} color={colors.primary} />
+                <Text style={styles.liveText}>
+                  {recorder.distanceKm.toFixed(2)} km · {recorder.points.length} points
+                </Text>
+              </View>
+            </>
+          ) : null}
+        </GlassCard>
+
+        <Text style={styles.section}>This week</Text>
+        <GlassCard style={styles.weekCard}>
+          {loading && !summary ? (
+            <ActivityIndicator color={colors.primary} />
           ) : (
-            <View style={styles.active}>
-              <View style={styles.metrics}>
-                <View style={styles.metric}>
-                  <Text style={styles.metricLabel}>DURATION</Text>
-                  <Text style={styles.metricValue}>{formatDuration(metrics.durationSeconds)}</Text>
-                </View>
-                <View style={styles.metric}>
-                  <Text style={styles.metricLabel}>DISTANCE</Text>
-                  <Text style={styles.metricValue}>{metrics.distanceKm.toFixed(2)} km</Text>
-                </View>
+            <View style={styles.metrics}>
+              <View style={styles.metric}>
+                <Text style={styles.metricValue}>{week.thisWeek.toLocaleString()}</Text>
+                <Text style={styles.metricLabel}>steps</Text>
               </View>
-              <View style={styles.metrics}>
-                <View style={styles.metric}>
-                  <Text style={styles.metricLabel}>KCAL</Text>
-                  <Text style={styles.metricValue}>{metrics.caloriesKcal}</Text>
-                </View>
-                <View style={styles.metric}>
-                  <Text style={styles.metricLabel}>AVG SPEED</Text>
-                  <Text style={styles.metricValue}>{metrics.avgSpeedKmH.toFixed(1)} km/h</Text>
-                </View>
+              <View style={styles.metric}>
+                <Text style={styles.metricValue}>{summary?.sessions ?? 0}</Text>
+                <Text style={styles.metricLabel}>routes</Text>
               </View>
-              <View style={styles.controls}>
-                <PressableScale style={styles.pauseBtn} onPress={togglePause}>
-                  <Ionicons
-                    name={isPaused ? "play" : "pause"}
-                    size={22}
-                    color={colors.white}
-                  />
-                </PressableScale>
-                <Pressable
-                  style={styles.finishBtn}
-                  onPressIn={onFinishHoldStart}
-                  onPressOut={onFinishHoldEnd}
-                >
-                  <View style={[styles.finishFill, { width: `${pressProgress}%` }]} />
-                  <Ionicons name="stop" size={18} color={colors.white} />
-                  <Text style={styles.finishText}>
-                    {pressProgress > 0 ? "HOLD…" : "FINISH"}
-                  </Text>
-                </Pressable>
+              <View style={styles.metric}>
+                <Text style={styles.metricValue}>
+                  {(summary?.distance_km ?? 0).toFixed(1)}
+                </Text>
+                <Text style={styles.metricLabel}>km recorded</Text>
               </View>
-              {error ? <Text style={styles.errorText}>{error}</Text> : null}
             </View>
           )}
         </GlassCard>
-      </View>
+
+        {recent.length > 0 ? (
+          <>
+            <Text style={styles.section}>Recent routes</Text>
+            {recent.map((workout) => (
+              <GlassCard key={workout.id} style={styles.historyRow}>
+                <View style={styles.historyText}>
+                  <Text style={styles.historyDate}>
+                    {new Date(workout.finished_at ?? workout.started_at).toLocaleDateString(
+                      undefined,
+                      { month: "short", day: "numeric" },
+                    )}
+                  </Text>
+                  <Text style={styles.historyMeta}>
+                    {workout.distance_km.toFixed(2)} km · {formatDuration(workout.duration_seconds)}
+                  </Text>
+                </View>
+                {workout.is_suspicious ? (
+                  <Text style={styles.flagged}>under review</Text>
+                ) : null}
+              </GlassCard>
+            ))}
+          </>
+        ) : null}
+
+        <PressableScale style={styles.reportsBtn} onPress={() => void load()}>
+          <Text style={styles.reportsText}>Refresh</Text>
+        </PressableScale>
+      </ScrollView>
     </View>
   );
 }
 
 const useStyles = makeStyles((colors) => ({
-  root: { flex: 1 },
-  mapLayer: { ...StyleSheet.absoluteFill },
-  gridLineV: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    width: 1,
-    backgroundColor: "rgba(255,255,255,0.04)",
-  },
-  gridLineH: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: "rgba(255,255,255,0.04)",
-  },
-  road: {
-    position: "absolute",
-    backgroundColor: "rgba(255,255,255,0.07)",
-  },
-  roadH: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    height: 2,
-    backgroundColor: "rgba(255,255,255,0.07)",
-  },
-  neonGlow: {
-    position: "absolute",
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: "rgba(129,64,243,0.08)",
-    top: "40%",
-    left: "28%",
-  },
-  routeDot: {
-    position: "absolute",
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.primary,
-  },
-  routePulse: {
-    position: "absolute",
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.primary,
-    borderWidth: 2.5,
-    borderColor: colors.white,
-  },
-  topBar: {
-    position: "absolute",
-    top: 0,
-    left: 16,
-    right: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    zIndex: 20,
-  },
-  gpsPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: radii.full,
-    backgroundColor: "rgba(11,13,16,0.7)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-  },
-  gpsText: {
-    color: "#E2E8F0",
-    fontSize: 9,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-  },
-  layerBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(11,13,16,0.7)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  drawer: {
-    position: "absolute",
-    top: 100,
-    right: 16,
-    width: 180,
-    backgroundColor: "rgba(11,13,16,0.92)",
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
-    padding: 12,
-    zIndex: 30,
-    gap: 8,
-  },
-  drawerHead: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  drawerTitle: { color: colors.textLight, fontWeight: "800", fontSize: 12 },
-  mapOption: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: radii.md,
-    backgroundColor: "rgba(255,255,255,0.04)",
-  },
-  mapOptionActive: {
-    backgroundColor: "rgba(129,64,243,0.2)",
-    borderWidth: 1,
-    borderColor: "rgba(129,64,243,0.4)",
-  },
-  mapOptionText: { color: colors.textLight, fontSize: 11, fontWeight: "700" },
-  hud: { position: "absolute", left: 16, right: 16, zIndex: 20 },
-  hudCard: { padding: 20 },
-  handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    alignSelf: "center",
-    marginBottom: 16,
-  },
-  idle: { alignItems: "center", gap: 12, paddingVertical: 8 },
-  idleTitle: { color: colors.white, fontSize: 16, fontWeight: "900" },
-  idleBody: {
-    color: colors.mutedDark,
-    fontSize: 11,
+  root: { flex: 1, backgroundColor: colors.canvas },
+  scroll: { paddingHorizontal: 20, paddingBottom: 120, gap: 16 },
+  title: { fontSize: 34, fontWeight: "700", color: colors.charcoal, marginBottom: 4 },
+
+  today: { padding: 20, alignItems: "center", gap: 4 },
+  steps: { fontSize: 34, fontWeight: "700", color: colors.charcoal },
+  stepsLabel: { fontSize: 15, color: colors.muted },
+
+  metrics: { flexDirection: "row", marginTop: 16, alignSelf: "stretch" },
+  metric: { flex: 1, alignItems: "center", gap: 2 },
+  metricValue: { fontSize: 17, fontWeight: "600", color: colors.charcoal },
+  metricLabel: { fontSize: 13, color: colors.muted },
+
+  notice: {
+    marginTop: 14,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.muted,
     textAlign: "center",
-    maxWidth: 280,
-    lineHeight: 16,
   },
-  startBtn: {
-    marginTop: 8,
-    width: "100%",
-    backgroundColor: colors.primary,
-    borderRadius: radii.lg,
-    paddingVertical: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-  },
-  startText: { color: colors.white, fontSize: 12, fontWeight: "900", letterSpacing: 0.8 },
-  active: { gap: 16 },
-  metrics: { flexDirection: "row", gap: 16 },
-  metric: { flex: 1 },
-  metricLabel: {
-    color: colors.mutedDark,
-    fontSize: 8,
-    fontWeight: "700",
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  metricValue: { color: colors.white, fontSize: 22, fontWeight: "900" },
-  controls: { flexDirection: "row", gap: 12, marginTop: 4 },
-  pauseBtn: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  finishBtn: {
-    flex: 1,
-    height: 52,
-    borderRadius: radii.lg,
-    backgroundColor: colors.coralInk,
-    overflow: "hidden",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  finishFill: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.25)",
-  },
-  finishText: { color: colors.white, fontWeight: "900", fontSize: 12, letterSpacing: 0.8 },
-  errorText: {
-    color: colors.coralInk,
-    fontSize: 11,
-    fontWeight: "600",
-    textAlign: "center",
+
+  recordCard: { padding: 18, gap: 14 },
+  recordRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  recordText: { flex: 1, gap: 4 },
+  recordTitle: { fontSize: 17, fontWeight: "600", color: colors.charcoal },
+  recordBody: { fontSize: 13, lineHeight: 18, color: colors.muted },
+  error: { fontSize: 13, color: colors.coralInk },
+  liveRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  liveText: { fontSize: 13, color: colors.slate },
+
+  section: { fontSize: 15, fontWeight: "600", color: colors.muted, marginTop: 8 },
+  weekCard: { padding: 18, minHeight: 84, justifyContent: "center" },
+
+  historyRow: { padding: 16, flexDirection: "row", alignItems: "center" },
+  historyText: { flex: 1, gap: 2 },
+  historyDate: { fontSize: 15, fontWeight: "600", color: colors.charcoal },
+  historyMeta: { fontSize: 13, color: colors.muted },
+  flagged: { fontSize: 13, color: colors.muted, fontStyle: "italic" },
+
+  reportsBtn: {
     marginTop: 4,
+    borderRadius: radii.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    paddingVertical: 14,
+    alignItems: "center",
   },
+  reportsText: { fontSize: 15, fontWeight: "600", color: colors.primary },
+  spacing: { height: spacing.md },
 }));

@@ -212,16 +212,16 @@ const useStyles = makeStyles((colors) => ({
     justifyContent: "center",
     backgroundColor: "rgba(255,255,255,0.2)",
   },
-  brand: { flex: 1, color: colors.white, fontSize: 14, fontWeight: "700" },
+  brand: { flex: 1, color: colors.white, fontSize: 15, fontWeight: "600" },
 
   touchLayer: { position: "absolute", left: 0, right: 0, bottom: 0, flexDirection: "row", top: 90 },
   touchHalf: { flex: 1 },
 
   captionBox: { position: "absolute", left: 0, right: 0, bottom: 0, paddingHorizontal: 20 },
-  caption: { color: colors.white, fontSize: 16, fontWeight: "600", lineHeight: 22 },
+  caption: { color: colors.white, fontSize: 17, fontWeight: "400", lineHeight: 22 },
 
   emptyBox: { flex: 1, alignItems: "center", gap: 12 },
-  emptyText: { color: colors.textLight, fontSize: 15, fontWeight: "600" },
+  emptyText: { color: colors.textLight, fontSize: 17, fontWeight: "400" },
   emptyClose: {
     marginTop: 8,
     paddingHorizontal: 24,
@@ -229,5 +229,5 @@ const useStyles = makeStyles((colors) => ({
     borderRadius: radii.full,
     backgroundColor: "rgba(255,255,255,0.16)",
   },
-  emptyCloseText: { color: colors.white, fontWeight: "600" },
+  emptyCloseText: { color: colors.white, fontWeight: "400" },
 }));

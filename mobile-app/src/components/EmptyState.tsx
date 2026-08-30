@@ -133,14 +133,14 @@ const useStyles = makeStyles((colors) => ({
   root: { alignItems: "center", paddingVertical: spacing.xxl, paddingHorizontal: spacing.xl },
   title: {
     marginTop: spacing.md,
-    fontSize: 16,
-    fontWeight: "800",
+    fontSize: 17,
+    fontWeight: "600",
     color: colors.charcoal,
     textAlign: "center",
   },
   body: {
     marginTop: spacing.sm,
-    fontSize: 13,
+    fontSize: 15,
     lineHeight: 19,
     color: colors.slate,
     textAlign: "center",
@@ -154,5 +154,5 @@ const useStyles = makeStyles((colors) => ({
     paddingHorizontal: 24,
     paddingVertical: 13,
   },
-  actionText: { color: colors.white, fontWeight: "800", fontSize: 13 },
+  actionText: { color: colors.white, fontWeight: "600", fontSize: 15 },
 }));

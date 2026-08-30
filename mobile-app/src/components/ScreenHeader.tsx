@@ -53,8 +53,8 @@ const useStyles = makeStyles((colors) => ({
   },
   spacer: { width: 40 },
   title: {
-    fontSize: 16,
-    fontWeight: "800",
+    fontSize: 17,
+    fontWeight: "600",
     color: colors.charcoal,
   },
   titleLight: { color: colors.textLight },

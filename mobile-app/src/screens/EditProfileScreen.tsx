@@ -161,12 +161,10 @@ const useStyles = makeStyles((colors) => ({
   form: { padding: 18 },
   label: {
     color: colors.muted,
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 1,
+    fontSize: 13,
+    fontWeight: "600",
     marginBottom: 6,
     marginTop: 10,
-    textTransform: "uppercase",
   },
   input: {
     backgroundColor: colors.inputSurface,
@@ -176,7 +174,7 @@ const useStyles = makeStyles((colors) => ({
     color: colors.charcoal,
     borderWidth: 1,
     borderColor: colors.border,
-    fontWeight: "600",
+    fontWeight: "400",
   },
   saveBtn: {
     marginTop: spacing.xl,
@@ -185,5 +183,5 @@ const useStyles = makeStyles((colors) => ({
     paddingVertical: 18,
     alignItems: "center",
   },
-  saveText: { color: colors.white, fontWeight: "900", fontSize: 12, letterSpacing: 1 },
+  saveText: { color: colors.white, fontWeight: "600", fontSize: 13, letterSpacing: 1 },
 }));

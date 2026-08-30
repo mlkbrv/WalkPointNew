@@ -51,11 +51,9 @@ export function StoriesRail({ stories, seenIds, onOpen }: Props) {
 
 const useStyles = makeStyles((colors) => ({
   title: {
-    fontSize: 11,
-    fontWeight: "800",
+    fontSize: 13,
+    fontWeight: "600",
     color: colors.slate,
-    letterSpacing: 1,
-    textTransform: "uppercase",
     marginBottom: 10,
   },
   row: { gap: 14, paddingRight: 8 },
@@ -77,5 +75,5 @@ const useStyles = makeStyles((colors) => ({
     overflow: "hidden",
   },
   logo: { width: 60, height: 60 },
-  name: { fontSize: 10, fontWeight: "700", color: colors.charcoal, width: 72, textAlign: "center" },
+  name: { fontSize: 12, fontWeight: "600", color: colors.charcoal, width: 72, textAlign: "center" },
 }));

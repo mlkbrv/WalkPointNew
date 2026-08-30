@@ -152,6 +152,40 @@ export const darkColors: Palette = {
   white: "#FFFFFF",
 };
 
+/**
+ * The type scale.
+ *
+ * Before this the app used fourteen different sizes between 8 and 28, with the
+ * mass at 10–12 and 77% of every label set in 700, 800 or 900. That is why it
+ * read as generated: nothing could stand out because everything shouted, and
+ * fifty-six labels sat below the 11pt minimum that mobile guidance sets.
+ *
+ * These are the system text styles, which exist precisely so hierarchy comes
+ * from a small, deliberate set rather than from picking a number per component.
+ *
+ * Guideline — Typography: mobile default 17pt, minimum 11pt; prefer Regular,
+ * Medium, Semibold and Bold, and avoid lighter weights.
+ */
+export const type = {
+  largeTitle: { fontSize: 34, fontWeight: "700", lineHeight: 41 },
+  title: { fontSize: 28, fontWeight: "700", lineHeight: 34 },
+  title2: { fontSize: 22, fontWeight: "600", lineHeight: 28 },
+  title3: { fontSize: 20, fontWeight: "600", lineHeight: 25 },
+  /** A heading inside a card or a row. */
+  headline: { fontSize: 17, fontWeight: "600", lineHeight: 22 },
+  /** The default for reading. Anything long-form belongs here. */
+  body: { fontSize: 17, fontWeight: "400", lineHeight: 22 },
+  callout: { fontSize: 16, fontWeight: "400", lineHeight: 21 },
+  subhead: { fontSize: 15, fontWeight: "400", lineHeight: 20 },
+  footnote: { fontSize: 13, fontWeight: "400", lineHeight: 18 },
+  caption: { fontSize: 12, fontWeight: "400", lineHeight: 16 },
+  /** The floor. Nothing smaller than this is allowed to carry meaning. */
+  caption2: { fontSize: 11, fontWeight: "400", lineHeight: 13 },
+} as const;
+
+/** The smallest legible size on mobile, per the typography guidance. */
+export const MIN_FONT_SIZE = 11;
+
 export const spacing = {
   xs: 4,
   sm: 8,

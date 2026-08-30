@@ -69,13 +69,13 @@ export function RegisterScreen() {
 const useStyles = makeStyles((colors) => ({
   root: { flex: 1 },
   content: { flexGrow: 1, justifyContent: "center", padding: 24 },
-  title: { color: colors.textLight, fontSize: 28, fontWeight: "900", textAlign: "center" },
+  title: { color: colors.textLight, fontSize: 34, fontWeight: "700", textAlign: "center" },
   sub: { color: colors.mutedDark, textAlign: "center", marginTop: 8, marginBottom: 20 },
   card: { backgroundColor: colors.cardDark, borderRadius: radii.xl, padding: 20, borderWidth: 1, borderColor: colors.borderDark },
-  label: { color: colors.mutedDark, fontSize: 11, fontWeight: "700", letterSpacing: 1, marginBottom: 6, marginTop: 10 },
+  label: { color: colors.mutedDark, fontSize: 13, fontWeight: "600", letterSpacing: 1, marginBottom: 6, marginTop: 10 },
   input: { backgroundColor: "#0F172A", borderRadius: radii.md, paddingHorizontal: 14, paddingVertical: 12, color: colors.textLight, borderWidth: 1, borderColor: colors.borderDark },
-  error: { color: colors.coralInk, marginTop: 12, fontWeight: "600" },
+  error: { color: colors.coralInk, marginTop: 12, fontWeight: "400" },
   primaryBtn: { marginTop: 20, backgroundColor: colors.primary, borderRadius: radii.full, paddingVertical: 16, alignItems: "center" },
-  primaryText: { color: colors.onPrimary, fontWeight: "800", letterSpacing: 1 },
-  link: { color: colors.emeraldInk, textAlign: "center", fontWeight: "600" },
+  primaryText: { color: colors.onPrimary, fontWeight: "600", letterSpacing: 1 },
+  link: { color: colors.emeraldInk, textAlign: "center", fontWeight: "400" },
 }));

@@ -82,7 +82,7 @@ export function ConnectedDevicesScreen() {
 const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.canvas },
   content: { padding: spacing.xl, paddingTop: 56, paddingBottom: 40 },
-  sub: { color: colors.slate, fontSize: 12, lineHeight: 18, marginBottom: spacing.lg, marginTop: -4 },
+  sub: { color: colors.slate, fontSize: 13, lineHeight: 18, marginBottom: spacing.lg, marginTop: -4 },
   card: { padding: 16, marginBottom: spacing.md },
   row: { flexDirection: "row", alignItems: "center", gap: 12 },
   iconWrap: {
@@ -94,8 +94,8 @@ const useStyles = makeStyles((colors) => ({
     justifyContent: "center",
   },
   meta: { flex: 1 },
-  name: { color: colors.charcoal, fontWeight: "800", fontSize: 14 },
-  status: { color: colors.muted, fontSize: 11, marginTop: 2 },
+  name: { color: colors.charcoal, fontWeight: "600", fontSize: 15 },
+  status: { color: colors.muted, fontSize: 13, marginTop: 2 },
   syncBtn: {
     marginTop: 14,
     borderWidth: 1,
@@ -108,7 +108,7 @@ const useStyles = makeStyles((colors) => ({
     gap: 6,
     backgroundColor: "rgba(129,64,243,0.06)",
   },
-  syncText: { color: colors.primary, fontWeight: "700", fontSize: 12 },
+  syncText: { color: colors.primary, fontWeight: "600", fontSize: 13 },
   guideBtn: {
     marginTop: spacing.lg,
     backgroundColor: colors.primary,
@@ -119,5 +119,5 @@ const useStyles = makeStyles((colors) => ({
     justifyContent: "center",
     gap: 8,
   },
-  guideText: { color: colors.white, fontWeight: "800", fontSize: 13 },
+  guideText: { color: colors.white, fontWeight: "600", fontSize: 15 },
 }));

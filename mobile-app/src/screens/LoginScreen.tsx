@@ -90,12 +90,11 @@ const useStyles = makeStyles((colors) => ({
   content: { flexGrow: 1, justifyContent: "center", padding: 24 },
   brand: {
     color: colors.primary,
-    fontSize: 40,
-    fontWeight: "900",
-    letterSpacing: 4,
+    fontSize: 34,
+    fontWeight: "700",
     textAlign: "center",
   },
-  sub: { color: colors.mutedDark, textAlign: "center", marginTop: 8, marginBottom: 32, fontWeight: "500" },
+  sub: { color: colors.mutedDark, textAlign: "center", marginTop: 8, marginBottom: 32, fontWeight: "400" },
   card: {
     backgroundColor: colors.cardDark,
     borderRadius: radii.xl,
@@ -103,7 +102,7 @@ const useStyles = makeStyles((colors) => ({
     borderWidth: 1,
     borderColor: colors.borderDark,
   },
-  label: { color: colors.mutedDark, fontSize: 11, fontWeight: "700", letterSpacing: 1, marginBottom: 6, marginTop: 10 },
+  label: { color: colors.mutedDark, fontSize: 13, fontWeight: "600", letterSpacing: 1, marginBottom: 6, marginTop: 10 },
   input: {
     backgroundColor: "#0F172A",
     borderRadius: radii.md,
@@ -113,7 +112,7 @@ const useStyles = makeStyles((colors) => ({
     borderWidth: 1,
     borderColor: colors.borderDark,
   },
-  error: { color: colors.coralInk, marginTop: 12, fontWeight: "600", fontSize: 13 },
+  error: { color: colors.coralInk, marginTop: 12, fontWeight: "400", fontSize: 15 },
   primaryBtn: {
     marginTop: 20,
     backgroundColor: colors.primary,
@@ -121,8 +120,8 @@ const useStyles = makeStyles((colors) => ({
     paddingVertical: 16,
     alignItems: "center",
   },
-  primaryText: { color: colors.onPrimary, fontWeight: "800", letterSpacing: 1 },
-  link: { color: colors.emeraldInk, textAlign: "center", marginTop: 16, fontWeight: "600" },
+  primaryText: { color: colors.onPrimary, fontWeight: "600", letterSpacing: 1 },
+  link: { color: colors.emeraldInk, textAlign: "center", marginTop: 16, fontWeight: "400" },
   secondary: { marginTop: 24, alignItems: "center" },
-  secondaryText: { color: colors.textLight, fontWeight: "700" },
+  secondaryText: { color: colors.textLight, fontWeight: "600" },
 }));

@@ -183,9 +183,9 @@ const useStyles = makeStyles((colors) => ({
     borderRadius: radii.full,
     borderWidth: 1,
   },
-  secureText: { fontSize: 10, fontWeight: "800", letterSpacing: 0.8, textTransform: "uppercase" },
-  title: { color: colors.charcoal, fontWeight: "800", fontSize: 20, textAlign: "center" },
-  sub: { color: colors.slate, fontSize: 12, textAlign: "center" },
+  secureText: { fontSize: 12, fontWeight: "600", letterSpacing: 0.8, textTransform: "uppercase" },
+  title: { color: colors.charcoal, fontWeight: "600", fontSize: 22, textAlign: "center" },
+  sub: { color: colors.slate, fontSize: 13, textAlign: "center" },
   qrBox: {
     marginTop: 10,
     padding: 16,
@@ -199,9 +199,8 @@ const useStyles = makeStyles((colors) => ({
   qrSpent: { opacity: 0.25 },
   code: {
     color: colors.muted,
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 0.4,
+    fontSize: 13,
+    fontWeight: "400",
     marginTop: 4,
   },
   metaRow: {
@@ -210,8 +209,8 @@ const useStyles = makeStyles((colors) => ({
     alignSelf: "stretch",
     marginTop: 4,
   },
-  metaLabel: { color: colors.muted, fontSize: 12, fontWeight: "600" },
-  metaValue: { color: colors.charcoal, fontSize: 12, fontWeight: "800" },
+  metaLabel: { color: colors.muted, fontSize: 13, fontWeight: "400" },
+  metaValue: { color: colors.charcoal, fontSize: 13, fontWeight: "600" },
   copyBtn: {
     marginTop: 12,
     flexDirection: "row",
@@ -223,10 +222,10 @@ const useStyles = makeStyles((colors) => ({
     borderWidth: 1,
     borderColor: colors.primary,
   },
-  copyText: { color: colors.primary, fontWeight: "800", fontSize: 12 },
+  copyText: { color: colors.primary, fontWeight: "600", fontSize: 13 },
   footnote: {
     color: colors.muted,
-    fontSize: 11,
+    fontSize: 13,
     lineHeight: 16,
     textAlign: "center",
     marginTop: spacing.lg,
@@ -238,5 +237,5 @@ const useStyles = makeStyles((colors) => ({
     paddingVertical: 16,
     alignItems: "center",
   },
-  doneText: { color: colors.white, fontWeight: "900", fontSize: 12, letterSpacing: 1 },
+  doneText: { color: colors.white, fontWeight: "600", fontSize: 13, letterSpacing: 1 },
 }));

@@ -175,6 +175,16 @@ export interface ApiLeaderboard {
   self: { rank: number | null; steps: number };
 }
 
+/** A recorded path, in GeoJSON coordinate order: longitude first. */
+export interface ApiWorkoutRoute {
+  v: number;
+  coordinates: [number, number][];
+  /** Seconds elapsed from the workout's start, one per coordinate. */
+  t: number[];
+  /** Distance measured before simplification — a thinned line is shorter. */
+  dist_km: number;
+}
+
 export interface ApiWorkout {
   id: string;
   kind: string;
@@ -187,6 +197,11 @@ export interface ApiWorkout {
   is_finished: boolean;
   bonus_paid: number;
   is_suspicious: boolean;
+}
+
+/** One workout with its path. The list endpoint deliberately omits the route. */
+export interface ApiWorkoutDetail extends ApiWorkout {
+  route: ApiWorkoutRoute | null;
 }
 
 export interface ApiWorkoutFinished {
@@ -299,6 +314,7 @@ export const workoutsApi = {
   last: () => api.get<ApiWorkout | null>("/v1/workouts/last"),
   history: (limit = 30) => api.get<ApiWorkout[]>("/v1/workouts", { limit }),
   summary: () => api.get<ApiWeeklySummary>("/v1/workouts/summary"),
+  detail: (id: string) => api.get<ApiWorkoutDetail>(`/v1/workouts/${id}`),
   progress: (
     id: string,
     data: {
@@ -306,6 +322,7 @@ export const workoutsApi = {
       distance_km?: number;
       steps?: number;
       calories_kcal?: number;
+      route?: ApiWorkoutRoute;
     },
   ) => api.patch<ApiWorkout>(`/v1/workouts/${id}`, data),
   finish: (
@@ -315,6 +332,8 @@ export const workoutsApi = {
       distance_km?: number;
       steps?: number;
       calories_kcal?: number;
+      /** Sent once, on finish — not on every progress ping. */
+      route?: ApiWorkoutRoute;
     },
   ) => api.post<ApiWorkoutFinished>(`/v1/workouts/${id}/finish`, data),
 };

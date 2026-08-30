@@ -142,7 +142,7 @@ export function HomeScreen() {
             </Svg>
             <View style={styles.ringCenter}>
               <Text style={styles.steps}>{stepsToday.toLocaleString()}</Text>
-              <Text style={styles.goal}>GOAL: {stepsGoal.toLocaleString()}</Text>
+              <Text style={styles.goal}>of {stepsGoal.toLocaleString()}</Text>
             </View>
           </View>
 
@@ -154,8 +154,8 @@ export function HomeScreen() {
               else navigation.navigate("TrackTab");
             }}
           >
-            <Ionicons name="sparkles" size={16} color={colors.emeraldInk} />
-            <Text style={styles.trackCtaText}>START TRACKING WORKOUT</Text>
+            <Ionicons name="stats-chart-outline" size={16} color={colors.white} />
+            <Text style={styles.trackCtaText}>See your activity</Text>
           </PressableScale>
         </GlassCard>
 
@@ -288,7 +288,7 @@ export function HomeScreen() {
 const useStyles = makeStyles((colors) => ({
   brandLogoFallback: { alignItems: "center", justifyContent: "center", backgroundColor: colors.border },
   root: { flex: 1, backgroundColor: colors.canvas },
-  weekEmpty: { color: colors.muted, fontSize: 12, paddingVertical: 20 },
+  weekEmpty: { color: colors.muted, fontSize: 13, paddingVertical: 20 },
   scroll: { paddingHorizontal: 20, paddingBottom: 120, gap: 20 },
   header: {
     flexDirection: "row",
@@ -310,8 +310,8 @@ const useStyles = makeStyles((colors) => ({
     borderWidth: 2,
     borderColor: colors.white,
   },
-  hello: { fontSize: 14, fontWeight: "700", color: colors.charcoal },
-  member: { fontSize: 10, fontWeight: "600", color: colors.muted, textTransform: "uppercase", letterSpacing: 1 },
+  hello: { fontSize: 15, fontWeight: "600", color: colors.charcoal },
+  member: { fontSize: 12, fontWeight: "400", color: colors.muted, textTransform: "uppercase", letterSpacing: 1 },
   headerActions: { flexDirection: "row", gap: 8 },
   iconBtn: {
     width: 40,
@@ -343,14 +343,14 @@ const useStyles = makeStyles((colors) => ({
     padding: 12,
   },
   healthTextWrap: { flex: 1 },
-  healthTitle: { fontSize: 12, fontWeight: "800", color: colors.coralInk },
-  healthBody: { fontSize: 10, color: colors.slate, marginTop: 2 },
+  healthTitle: { fontSize: 13, fontWeight: "600", color: colors.coralInk },
+  healthBody: { fontSize: 12, color: colors.slate, marginTop: 2 },
   ringCard: { padding: 24, alignItems: "center" },
   ringWrap: { width: RING_SIZE, height: RING_SIZE, alignItems: "center", justifyContent: "center" },
   ringSvg: { transform: [{ rotate: "-90deg" }], position: "absolute" },
   ringCenter: { alignItems: "center" },
-  steps: { fontSize: 30, fontWeight: "800", color: colors.charcoal },
-  goal: { fontSize: 10, fontWeight: "700", color: colors.muted, letterSpacing: 1, marginTop: 2 },
+  steps: { fontSize: 34, fontWeight: "700", color: colors.charcoal },
+  goal: { fontSize: 12, fontWeight: "600", color: colors.muted, letterSpacing: 1, marginTop: 2 },
   trackCta: {
     marginTop: 24,
     width: "100%",
@@ -362,27 +362,27 @@ const useStyles = makeStyles((colors) => ({
     justifyContent: "center",
     gap: 8,
   },
-  trackCtaText: { color: colors.white, fontSize: 12, fontWeight: "800", letterSpacing: 0.8 },
+  trackCtaText: { color: colors.onPrimary, fontSize: 17, fontWeight: "600" },
   statsRow: { flexDirection: "row", gap: 12 },
   statCard: { flex: 1, padding: 12, alignItems: "center", gap: 6 },
   statHighlight: { borderBottomWidth: 2, borderBottomColor: colors.primary },
   statIcon: { padding: 8, borderRadius: radii.md },
-  statValue: { fontSize: 16, fontWeight: "800", color: colors.charcoal },
-  statLabel: { fontSize: 10, fontWeight: "600", color: colors.muted },
+  statValue: { fontSize: 17, fontWeight: "600", color: colors.charcoal },
+  statLabel: { fontSize: 12, fontWeight: "400", color: colors.muted },
   sectionHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  sectionTitle: { fontSize: 14, fontWeight: "800", color: colors.charcoal },
+  sectionTitle: { fontSize: 15, fontWeight: "600", color: colors.charcoal },
   storeLink: { flexDirection: "row", alignItems: "center", gap: 2 },
-  storeLinkText: { fontSize: 11, fontWeight: "700", color: colors.primary },
+  storeLinkText: { fontSize: 13, fontWeight: "600", color: colors.primary },
   carousel: { gap: 12, paddingVertical: 4 },
   brandCard: { width: 128 },
   brandInner: { padding: 16, alignItems: "center", gap: 8 },
   brandLogo: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.white },
-  brandName: { fontSize: 12, fontWeight: "700", color: colors.charcoal, width: 96, textAlign: "center" },
-  brandCat: { fontSize: 9, fontWeight: "700", color: colors.primary, textTransform: "uppercase", letterSpacing: 0.8 },
+  brandName: { fontSize: 13, fontWeight: "600", color: colors.charcoal, width: 96, textAlign: "center" },
+  brandCat: { fontSize: 11, fontWeight: "600", color: colors.primary, textTransform: "uppercase", letterSpacing: 0.8 },
   weekCard: { padding: 20 },
   weekHead: { flexDirection: "row", alignItems: "center", marginBottom: 16, gap: 8 },
-  weekLabel: { fontSize: 11, fontWeight: "700", color: colors.slate, textTransform: "uppercase", letterSpacing: 1 },
-  weekCopy: { fontSize: 13, fontWeight: "700", color: colors.charcoal, marginTop: 2 },
+  weekLabel: { fontSize: 13, fontWeight: "600", color: colors.slate, textTransform: "uppercase", letterSpacing: 1 },
+  weekCopy: { fontSize: 15, fontWeight: "600", color: colors.charcoal, marginTop: 2 },
   bars: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", height: 110, gap: 8 },
   barCol: { flex: 1, alignItems: "center", gap: 6 },
   todayTag: {
@@ -392,7 +392,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius: 6,
     marginBottom: 2,
   },
-  todayTagText: { color: colors.white, fontSize: 8, fontWeight: "900", textTransform: "uppercase" },
+  todayTagText: { color: colors.white, fontSize: 11, fontWeight: "600", textTransform: "uppercase" },
   todaySpacer: { height: 16 },
   barTrack: {
     // Fixed width, not "100%". The column count varies with how many days the
@@ -406,6 +406,6 @@ const useStyles = makeStyles((colors) => ({
     overflow: "hidden",
   },
   barFill: { width: "100%", borderRadius: radii.full },
-  barDay: { fontSize: 10, fontWeight: "700", color: colors.muted },
-  barDayActive: { color: colors.primary, fontSize: 12, fontWeight: "900" },
+  barDay: { fontSize: 12, fontWeight: "600", color: colors.muted },
+  barDayActive: { color: colors.primary, fontSize: 13, fontWeight: "600" },
 }));

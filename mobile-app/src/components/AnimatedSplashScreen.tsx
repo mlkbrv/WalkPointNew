@@ -152,15 +152,13 @@ const useStyles = makeStyles((colors) => ({
   brand: {
     color: colors.primary,
     fontSize: 34,
-    fontWeight: "900",
-    letterSpacing: 6,
+    fontWeight: "700",
     textAlign: "center",
   },
   tagline: {
     color: colors.mutedDark,
-    fontSize: 12,
-    fontWeight: "600",
-    letterSpacing: 1,
+    fontSize: 13,
+    fontWeight: "400",
     textAlign: "center",
     marginTop: 8,
   },
