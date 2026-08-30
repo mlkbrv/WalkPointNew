@@ -25,7 +25,7 @@ export function ProfileScreen() {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const { user, prefs, updatePrefs, switchRole, logout } = useAuth();
-  const { userStats, setUserStats, togglePermissions } = useStride();
+  const { userStats, setUserStats } = useStride();
   const health = useHealth();
 
   const goBack = () => {
@@ -308,16 +308,6 @@ export function ProfileScreen() {
             subtitle="Show profile on scoreboard"
             value={prefs.privacyVisible}
             onValueChange={(v) => updatePrefs({ privacyVisible: v })}
-          />
-          <View style={styles.divider} />
-          <ToggleRow
-            icon="walk-outline"
-            iconColor={colors.emeraldInk}
-            iconBg="rgba(0,225,148,0.12)"
-            title="Pedometer Active"
-            subtitle="Live step tracking"
-            value={userStats.pedometerActive}
-            onValueChange={() => togglePermissions()}
           />
         </GlassCard>
 

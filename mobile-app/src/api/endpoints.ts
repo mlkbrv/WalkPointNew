@@ -227,7 +227,15 @@ export const authApi = {
 };
 
 export const stepsApi = {
-  sync: (date: string, steps: number, source = "health_connect") =>
+  /**
+   * `source` is required, not defaulted.
+   *
+   * It used to default to `"health_connect"`, so every sync claimed that origin
+   * whatever had actually produced the number — including the raw sensor
+   * fallback. Making the caller name it means the server records provenance
+   * instead of a guess.
+   */
+  sync: (date: string, steps: number, source: string) =>
     api.post<ApiStepSync>("/v1/steps/sync", { date, steps, source }),
   today: () => api.get<ApiDailySteps | null>("/v1/steps/today"),
   history: (days = 7) =>

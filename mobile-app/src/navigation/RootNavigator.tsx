@@ -15,7 +15,6 @@ import { useNotificationHandlers } from "../hooks/useNotificationHandlers";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
 import { AuthStackParamList, MainTabParamList, RootStackParamList } from "../types";
 import { FeedbackToast } from "../components/FeedbackToast";
-import { HealthConnectWall } from "../components/HealthConnectWall";
 import { useHealth } from "../contexts/HealthContext";
 
 import { LoginScreen } from "../screens/LoginScreen";
@@ -159,7 +158,7 @@ export function RootNavigator() {
 
   useNotificationHandlers(navigationRef);
 
-  if (loading || (user && !health.hydrated)) {
+  if (loading) {
     return (
       <View style={styles.boot}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -185,7 +184,6 @@ export function RootNavigator() {
         {user ? <AppStack /> : <AuthNavigator />}
       </NavigationContainer>
       {user ? <FeedbackToast /> : null}
-      {user ? <HealthConnectWall /> : null}
     </View>
   );
 }

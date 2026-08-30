@@ -59,7 +59,6 @@ export interface UserStats {
   stepsGoal: number;
   weightKg: number;
   heightCm: number;
-  pedometerActive: boolean;
 }
 
 export interface LeaderboardUser {

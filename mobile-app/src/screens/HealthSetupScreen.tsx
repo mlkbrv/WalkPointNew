@@ -1,98 +1,133 @@
-import React, { useState } from "react";
-import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+/**
+ * Where step access is granted, and where the truth about it is told.
+ *
+ * This replaces a full-screen wall that blocked the whole app behind
+ * instructions describing a screen the user could never reach: it told them to
+ * find STRIDE in Health Connect's app list, which was impossible because the
+ * app never registered the permissions-rationale activity Health Connect
+ * requires. Now it is reachable from Profile, it reports what is actually in
+ * use, and it never claims Health Connect when the raw sensor is standing in.
+ */
+
+import { useCallback, useState } from "react";
+import { Platform, ScrollView, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+
 import { useHealth } from "../contexts/HealthContext";
 import { useStride } from "../contexts/StrideContext";
-import { radii, spacing } from "../theme";
-import { PressableScale } from "../components/PressableScale";
-import { GlassCard } from "../components/GlassCard";
-import { ScreenHeader } from "../components/ScreenHeader";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { radii, spacing } from "../theme";
+import { GlassCard } from "../components/GlassCard";
+import { PressableScale } from "../components/PressableScale";
+import { ScreenHeader } from "../components/ScreenHeader";
 
 export function HealthSetupScreen() {
+  const navigation = useNavigation<{ goBack: () => void }>();
   const { colors } = useTheme();
   const styles = useStyles();
-  const navigation = useNavigation<any>();
   const health = useHealth();
   const { showToast } = useStride();
   const [busy, setBusy] = useState(false);
 
-  const statusColor =
-    health.status === "available"
-      ? colors.emeraldInk
-      : health.status === "denied"
-        ? colors.coralInk
-        : colors.muted;
-
-  const onRequest = async () => {
+  const onGrant = useCallback(async () => {
     setBusy(true);
-    const ok = await health.requestPermissions();
+    const granted = await health.requestPermission();
     setBusy(false);
-    showToast(ok ? "Permissions granted" : "Permission denied", ok ? "✅" : "⚠️");
-  };
+    if (granted) {
+      showToast("Step access granted");
+      return;
+    }
+    // Health Connect stops showing its dialog after two refusals, so a second
+    // "denied" is not a decision the user just made — it is the system going
+    // quiet. Sending them to settings is the only way forward.
+    showToast("Grant step access in settings");
+  }, [health, showToast]);
 
-  const onStart = async () => {
-    setBusy(true);
-    await health.startTracking();
-    setBusy(false);
-    showToast("Tracking started", "🏃");
-  };
-
-  const iosSteps = [
-    "Open Settings → Privacy & Security → Motion & Fitness",
-    "Enable Fitness Tracking and allow STRIDE",
-    "Return here and tap Request Permissions",
-    "Tap Start Tracking to sync live steps",
-  ];
-
-  const androidSteps = [
-    "Install Health Connect from Google Play if missing",
-    "Open Health Connect → App permissions → STRIDE → Allow Steps",
-    "Return here and tap Request Permissions",
-    "STRIDE stays blocked on Android until Health Connect is enabled",
-  ];
-
-  const steps = Platform.OS === "ios" ? iosSteps : androidSteps;
+  const state = (() => {
+    if (health.status === "ready") {
+      return {
+        tone: colors.emeraldInk,
+        label: "Counting steps",
+        detail: health.countsInBackground
+          ? "Steps are counted even when STRIDE is closed."
+          : "Steps are counted only while STRIDE is open.",
+      };
+    }
+    if (health.status === "needs_permission") {
+      return {
+        tone: colors.coralInk,
+        label: "Access needed",
+        detail: "STRIDE cannot read your step count until you allow it.",
+      };
+    }
+    if (health.status === "needs_update") {
+      return {
+        tone: colors.coralInk,
+        label: "Health Connect is out of date",
+        detail: "Update it from Google Play, then come back.",
+      };
+    }
+    return {
+      tone: colors.muted,
+      label: "No step source",
+      detail: "This device has no step counter STRIDE can read.",
+    };
+  })();
 
   return (
     <View style={styles.root}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Health Setup" onBack={() => navigation.goBack()} />
+        <ScreenHeader title="Step tracking" onBack={() => navigation.goBack()} />
 
-        <View style={[styles.badge, { backgroundColor: `${statusColor}22`, borderColor: `${statusColor}55` }]}>
-          <View style={[styles.dot, { backgroundColor: statusColor }]} />
-          <Text style={[styles.badgeText, { color: statusColor }]}>
-            {health.status.toUpperCase()}
-            {health.isTracking ? " • TRACKING" : ""}
-          </Text>
+        <View style={[styles.badge, { borderColor: `${state.tone}55`, backgroundColor: `${state.tone}18` }]}>
+          <View style={[styles.dot, { backgroundColor: state.tone }]} />
+          <Text style={[styles.badgeText, { color: state.tone }]}>{state.label}</Text>
         </View>
 
         <GlassCard style={styles.card}>
           <Text style={styles.cardTitle}>
-            {Platform.OS === "ios" ? "iOS Motion & Fitness" : "Android Health Connect"}
+            {health.provider?.id === "health_connect"
+              ? "Health Connect"
+              : health.provider?.id === "core_motion"
+                ? "Motion & Fitness"
+                : "Step sensor"}
           </Text>
-          <Text style={styles.cardBody}>{health.permissionMessage || "Follow the steps below to connect your pedometer."}</Text>
-          <Text style={styles.stepsToday}>{health.stepsToday.toLocaleString()} steps today</Text>
+          <Text style={styles.body}>{state.detail}</Text>
 
-          {steps.map((s, i) => (
-            <View key={s} style={styles.stepRow}>
-              <View style={styles.stepNum}>
-                <Text style={styles.stepNumText}>{i + 1}</Text>
-              </View>
-              <Text style={styles.stepText}>{s}</Text>
+          {/* The one thing the old screen never admitted. */}
+          {health.degraded ? (
+            <View style={styles.warn}>
+              <Ionicons name="alert-circle-outline" size={16} color={colors.coralInk} />
+              <Text style={styles.warnText}>
+                Health Connect is not available on this device, so STRIDE is using the
+                phone&apos;s own step sensor. That only counts while the app is open —
+                steps taken with STRIDE closed are not recorded.
+              </Text>
             </View>
-          ))}
+          ) : null}
         </GlassCard>
 
-        <PressableScale style={styles.primaryBtn} onPress={onRequest} disabled={busy}>
-          {busy ? <ActivityIndicator color={colors.onPrimary} /> : <Text style={styles.primaryText}>REQUEST PERMISSIONS</Text>}
-        </PressableScale>
+        {health.status !== "ready" ? (
+          <PressableScale style={styles.primaryBtn} disabled={busy} onPress={() => void onGrant()}>
+            <Text style={styles.primaryText}>
+              {busy ? "Asking…" : "Allow step access"}
+            </Text>
+          </PressableScale>
+        ) : null}
 
-        <PressableScale style={styles.secondaryBtn} onPress={onStart} disabled={busy}>
-          <Ionicons name="play" size={16} color={colors.primary} />
-          <Text style={styles.secondaryText}>Start Tracking</Text>
-        </PressableScale>
+        {health.provider?.openSettings ? (
+          <PressableScale style={styles.secondaryBtn} onPress={() => void health.openSettings()}>
+            <Ionicons name="settings-outline" size={16} color={colors.primary} />
+            <Text style={styles.secondaryText}>Open Health Connect settings</Text>
+          </PressableScale>
+        ) : null}
+
+        <Text style={styles.footnote}>
+          {Platform.OS === "android"
+            ? "STRIDE only reads your step count. It never writes to Health Connect."
+            : "STRIDE only reads your step count."}
+        </Text>
       </ScrollView>
     </View>
   );
@@ -102,52 +137,56 @@ const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.canvas },
   content: { padding: spacing.xl, paddingTop: 56, paddingBottom: 40 },
   badge: {
-    alignSelf: "flex-start",
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingHorizontal: 12,
+    alignSelf: "flex-start",
+    paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: radii.full,
     borderWidth: 1,
     marginBottom: spacing.lg,
   },
   dot: { width: 8, height: 8, borderRadius: 4 },
-  badgeText: { fontSize: 11, fontWeight: "800", letterSpacing: 1 },
-  card: { padding: 18 },
-  cardTitle: { color: colors.charcoal, fontWeight: "900", fontSize: 16 },
-  cardBody: { color: colors.slate, fontSize: 12, lineHeight: 18, marginTop: 8 },
-  stepsToday: { color: colors.primary, fontWeight: "800", fontSize: 13, marginTop: 12, marginBottom: 8 },
-  stepRow: { flexDirection: "row", gap: 12, marginTop: 12, alignItems: "flex-start" },
-  stepNum: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "rgba(129,64,243,0.12)",
-    alignItems: "center",
-    justifyContent: "center",
+  badgeText: { fontSize: 12, fontWeight: "600" },
+  card: { padding: 18, gap: 10 },
+  cardTitle: { fontSize: 17, fontWeight: "600", color: colors.charcoal },
+  body: { fontSize: 15, lineHeight: 21, color: colors.slate },
+  warn: {
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "flex-start",
+    marginTop: 4,
+    padding: 12,
+    borderRadius: radii.md,
+    backgroundColor: colors.primaryTint,
   },
-  stepNumText: { color: colors.primary, fontWeight: "800", fontSize: 11 },
-  stepText: { flex: 1, color: colors.charcoal, fontSize: 12, lineHeight: 18 },
+  warnText: { flex: 1, fontSize: 13, lineHeight: 19, color: colors.slate },
   primaryBtn: {
-    marginTop: spacing.xl,
+    marginTop: spacing.lg,
     backgroundColor: colors.primary,
     borderRadius: radii.lg,
-    paddingVertical: 18,
+    paddingVertical: 16,
     alignItems: "center",
   },
-  primaryText: { color: colors.white, fontWeight: "900", fontSize: 12, letterSpacing: 1 },
+  primaryText: { color: colors.onPrimary, fontWeight: "600", fontSize: 16 },
   secondaryBtn: {
     marginTop: spacing.md,
-    borderWidth: 1,
-    borderColor: "rgba(129,64,243,0.3)",
-    backgroundColor: "rgba(129,64,243,0.08)",
-    borderRadius: radii.lg,
-    paddingVertical: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: 15,
   },
-  secondaryText: { color: colors.primary, fontWeight: "800", fontSize: 13 },
+  secondaryText: { color: colors.primary, fontWeight: "600", fontSize: 15 },
+  footnote: {
+    marginTop: spacing.xl,
+    fontSize: 13,
+    lineHeight: 19,
+    color: colors.muted,
+    textAlign: "center",
+  },
 }));

@@ -467,3 +467,44 @@ async def test_steps_rules_are_served_to_the_app(client):
     rules = (await client.get("/v1/steps/rules", headers=headers)).json()
     assert rules["minimum_steps_threshold"] == 5_000
     assert rules["reward_at_threshold"] == 50
+
+
+async def test_an_invented_source_is_refused(client):
+    """`source` was free text defaulting to "health_connect", so the column
+    filled with a claim nobody had made. It is an enum now."""
+    headers = await auth_headers(client, "sourcecheck@example.com")
+    resp = await client.post(
+        "/v1/steps/sync",
+        json={"date": utcnow().date().isoformat(), "steps": 6000, "source": "vibes"},
+        headers=headers,
+    )
+    assert resp.status_code == 400
+
+
+async def test_an_unstated_source_records_as_unknown(client):
+    """Better an honest gap than a plausible guess."""
+    headers = await auth_headers(client, "nosource@example.com")
+    await client.post(
+        "/v1/steps/sync",
+        json={"date": utcnow().date().isoformat(), "steps": 6000},
+        headers=headers,
+    )
+    today = (await client.get("/v1/steps/today", headers=headers)).json()
+    assert today["source"] == "unknown"
+
+
+async def test_the_foreground_fallback_is_recorded_as_such(client):
+    """An operator has to be able to tell a background-counted day from one that
+    only accumulated while the app was open."""
+    headers = await auth_headers(client, "fallback@example.com")
+    await client.post(
+        "/v1/steps/sync",
+        json={
+            "date": utcnow().date().isoformat(),
+            "steps": 6000,
+            "source": "pedometer_foreground",
+        },
+        headers=headers,
+    )
+    today = (await client.get("/v1/steps/today", headers=headers)).json()
+    assert today["source"] == "pedometer_foreground"

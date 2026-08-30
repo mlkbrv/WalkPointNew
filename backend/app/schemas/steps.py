@@ -4,10 +4,36 @@ from __future__ import annotations
 
 import uuid
 from datetime import date as date_type
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
 from app.schemas.common import ORMModel
+
+
+class StepSource(StrEnum):
+    """Where a step count actually came from.
+
+    This was a free-text field defaulting to `"health_connect"`, so every sync
+    claimed that origin no matter what produced the number — and for a long time
+    nothing did, because the client read a raw sensor and posted the default.
+    Constraining it means the stored provenance is a fact rather than a guess,
+    and lets an operator tell a background-counted total from one that only
+    accumulated while the app was open.
+    """
+
+    #: Android Health Connect: counts with the app closed.
+    HEALTH_CONNECT = "health_connect"
+    #: iOS Core Motion: also counts with the app closed.
+    CORE_MOTION = "core_motion"
+    #: Raw step sensor, foreground only — an undercount by construction.
+    PEDOMETER_FOREGROUND = "pedometer_foreground"
+    #: Entered or corrected by a human.
+    MANUAL = "manual"
+    #: The client did not say. Better recorded as unknown than as a plausible
+    #: guess — which is exactly how the old `"health_connect"` default became a
+    #: field full of claims nobody had made.
+    UNKNOWN = "unknown"
 
 
 class StepSyncRequest(BaseModel):
@@ -15,7 +41,7 @@ class StepSyncRequest(BaseModel):
 
     date: date_type
     steps: int = Field(ge=0, le=200_000)
-    source: str = Field(default="health_connect", max_length=30)
+    source: StepSource = StepSource.UNKNOWN
 
 
 class DailyStepsPublic(ORMModel):

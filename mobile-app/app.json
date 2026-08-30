@@ -63,6 +63,7 @@
       ],
       "expo-secure-store",
       "./plugins/withCxxStagingDir",
+      "react-native-health-connect",
       [
         "expo-build-properties",
         {

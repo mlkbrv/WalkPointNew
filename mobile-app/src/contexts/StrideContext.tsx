@@ -53,7 +53,6 @@ export interface DeviceLink {
 type StrideContextValue = {
   userStats: UserStats;
   setUserStats: React.Dispatch<React.SetStateAction<UserStats>>;
-  togglePermissions: () => void;
   toast: Toast;
   showToast: (message: string, emoji?: string) => void;
   dismissToast: () => void;
@@ -70,7 +69,7 @@ const DEFAULT_STATS: UserStats = {
   stepsGoal: 10_000,
   weightKg: 70,
   heightCm: 175,
-  pedometerActive: false,
+
 };
 
 const DEFAULT_DEVICES: DeviceLink[] = [
@@ -124,15 +123,6 @@ export function StrideProvider({ children }: { children: React.ReactNode }) {
 
   const dismissToast = useCallback(() => setToast(null), []);
 
-  const togglePermissions = useCallback(() => {
-    setUserStats((prev) => {
-      const next = !prev.pedometerActive;
-      if (next) health.startTracking();
-      else health.stopTracking();
-      return { ...prev, pedometerActive: next };
-    });
-  }, [health]);
-
   /**
    * Only Health Connect is a real integration. Turning it "on" means asking the
    * OS for permission, so a refusal has to leave the switch off rather than
@@ -144,13 +134,12 @@ export function StrideProvider({ children }: { children: React.ReactNode }) {
         showToast("Not available on this device yet", "🚧");
         return;
       }
-      const granted = await health.requestPermissions();
+      const granted = await health.requestPermission();
       if (!granted) {
         setDevices((prev) => prev.map((d) => (d.id === id ? { ...d, connected: false } : d)));
         showToast("Health permission was declined", "🔒");
         return;
       }
-      await health.startTracking();
       setDevices((prev) =>
         prev.map((d) =>
           d.id === id ? { ...d, connected: true, lastSync: new Date().toISOString() } : d,
@@ -167,7 +156,6 @@ export function StrideProvider({ children }: { children: React.ReactNode }) {
       if (!device) return;
       if (device.connected) {
         setDevices((prev) => prev.map((d) => (d.id === id ? { ...d, connected: false } : d)));
-        if (id === "health_connect") health.stopTracking();
         return;
       }
       void syncDevice(id);
@@ -175,18 +163,10 @@ export function StrideProvider({ children }: { children: React.ReactNode }) {
     [devices, health, syncDevice],
   );
 
-  useEffect(() => {
-    if (hydrated && userStats.pedometerActive) health.startTracking();
-    // Runs once hydration lands; `health` is stable enough that re-running on it
-    // would restart tracking on every render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated]);
-
   const value = useMemo<StrideContextValue>(
     () => ({
       userStats,
       setUserStats,
-      togglePermissions,
       toast,
       showToast,
       dismissToast,
@@ -194,7 +174,7 @@ export function StrideProvider({ children }: { children: React.ReactNode }) {
       toggleDevice,
       syncDevice,
     }),
-    [userStats, togglePermissions, toast, showToast, dismissToast, devices, toggleDevice, syncDevice],
+    [userStats, toast, showToast, dismissToast, devices, toggleDevice, syncDevice],
   );
 
   return <StrideContext.Provider value={value}>{children}</StrideContext.Provider>;
