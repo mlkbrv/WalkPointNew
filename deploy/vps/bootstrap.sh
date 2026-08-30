@@ -69,8 +69,21 @@ fi
 cd "$APP_DIR/deploy/vps"
 
 # --- 3. Ports ----------------------------------------------------------------
+
+# Is this port published by *our own* stack from a previous run?
+#
+# Without this check a re-run sees the Caddy it started last time, concludes the
+# port belongs to a neighbour, and demotes itself to 8080/8443 with a
+# self-signed certificate — taking the site off :443 on every single re-run.
+ours_on_port() {
+  docker compose -p "$PROJECT" -f docker-compose.vps.yml ps --format '{{.Ports}}' 2>/dev/null     | grep -q ":$1->"
+}
+
 # `ss` is on every modern distro; fall back to netstat, then to assuming free.
 port_busy() {
+  # Our own listener is not an obstacle — we are about to replace it.
+  ours_on_port "$1" && return 1
+
   if command -v ss >/dev/null 2>&1; then
     ss -ltn "( sport = :$1 )" 2>/dev/null | grep -q LISTEN
   elif command -v netstat >/dev/null 2>&1; then
