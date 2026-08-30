@@ -4,9 +4,8 @@ A workout is a session the user starts and finishes in the app. It is separate
 from `daily_steps`: steps are the passive total for a calendar day, a workout is
 a deliberate activity with a duration and a distance.
 
-Finishing one pays a bonus, and that payment is idempotent — `bonus_paid` records
-what the ledger already holds for this workout, so a retried finish cannot pay
-twice. Same shape as `daily_steps.coins_awarded`, for the same reason.
+Sessions no longer pay coins — see `app/services/workouts.py` for why —
+so `bonus_paid` stays 0 and is kept only so old ledger rows still read.
 """
 
 from __future__ import annotations
@@ -14,7 +13,17 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Uuid
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Uuid,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import BaseModel
@@ -29,6 +38,19 @@ class Workout(BaseModel):
     )
 
     kind: Mapped[str] = mapped_column(String(20), default="walk", nullable=False)
+
+    #: The recorded path, or None when GPS was off for this session.
+    #:
+    #: Shape: ``{"v": 1, "coordinates": [[lng, lat], ...], "t": [secs, ...], "dist_km": 5.4}``
+    #:
+    #: `coordinates` is GeoJSON order — longitude first — so it hands straight to
+    #: a map library and would survive a move to PostGIS. `t` is seconds elapsed
+    #: from `started_at`, not epoch millis: small integers instead of 13-digit
+    #: numbers, and it stays correct against the one clock this row owns.
+    #:
+    #: Plain JSON rather than JSONB because the test suite runs on SQLite, and
+    #: nothing here queries inside the column.
+    route: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

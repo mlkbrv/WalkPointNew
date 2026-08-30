@@ -312,3 +312,96 @@ async def test_a_workout_touches_neither_the_wallet_nor_the_inbox(client):
 
     # No ledger entry means nothing to announce.
     assert (await client.get("/v1/notifications", headers=me)).json()["items"] == []
+
+
+# --- routes -----------------------------------------------------------------
+
+
+ROUTE = {
+    "v": 1,
+    # GeoJSON order: longitude first.
+    "coordinates": [[37.6173, 55.7558], [37.6180, 55.7561], [37.6191, 55.7566]],
+    "t": [0, 30, 65],
+    "dist_km": 0.21,
+}
+
+
+async def test_a_route_survives_the_round_trip(client):
+    me = await walker(client, "route@example.com")
+    workout_id = (await client.post("/v1/workouts", json={}, headers=me)).json()["id"]
+
+    await client.post(
+        f"/v1/workouts/{workout_id}/finish",
+        json={"duration_seconds": 900, "distance_km": 0.21, "route": ROUTE},
+        headers=me,
+    )
+
+    detail = (await client.get(f"/v1/workouts/{workout_id}", headers=me)).json()
+    assert detail["route"]["coordinates"] == [[37.6173, 55.7558], [37.618, 55.7561], [37.6191, 55.7566]]
+    assert detail["route"]["t"] == [0, 30, 65]
+    assert detail["route"]["dist_km"] == 0.21
+
+
+async def test_the_list_does_not_carry_routes(client):
+    """Thirty routes on a list screen is a quarter-megabyte nobody asked for."""
+    me = await walker(client, "listroute@example.com")
+    workout_id = (await client.post("/v1/workouts", json={}, headers=me)).json()["id"]
+    await client.post(
+        f"/v1/workouts/{workout_id}/finish",
+        json={"duration_seconds": 900, "distance_km": 0.21, "route": ROUTE},
+        headers=me,
+    )
+
+    listed = (await client.get("/v1/workouts", headers=me)).json()
+    assert listed and "route" not in listed[0]
+
+
+async def test_a_shorter_route_does_not_replace_a_longer_one(client):
+    """A retried request carrying a truncated buffer must not shorten the path."""
+    me = await walker(client, "truncated@example.com")
+    workout_id = (await client.post("/v1/workouts", json={}, headers=me)).json()["id"]
+
+    await client.patch(f"/v1/workouts/{workout_id}", json={"route": ROUTE}, headers=me)
+    await client.patch(
+        f"/v1/workouts/{workout_id}",
+        json={"route": {"v": 1, "coordinates": [[37.6173, 55.7558]], "t": [0], "dist_km": 0.0}},
+        headers=me,
+    )
+
+    detail = (await client.get(f"/v1/workouts/{workout_id}", headers=me)).json()
+    assert len(detail["route"]["coordinates"]) == 3
+
+
+async def test_latitude_and_longitude_the_wrong_way_round_is_refused(client):
+    """55.7 as a longitude is plausible; 555 is not. The check catches the swap
+    that matters: a latitude beyond ±90 in the second slot."""
+    me = await walker(client, "swapped@example.com")
+    workout_id = (await client.post("/v1/workouts", json={}, headers=me)).json()["id"]
+
+    resp = await client.patch(
+        f"/v1/workouts/{workout_id}",
+        json={"route": {"v": 1, "coordinates": [[55.7558, 137.6173]], "t": [0]}},
+        headers=me,
+    )
+    assert resp.status_code == 400
+
+
+async def test_mismatched_times_and_points_are_refused(client):
+    me = await walker(client, "mismatch@example.com")
+    workout_id = (await client.post("/v1/workouts", json={}, headers=me)).json()["id"]
+
+    resp = await client.patch(
+        f"/v1/workouts/{workout_id}",
+        json={"route": {"v": 1, "coordinates": [[37.6, 55.7], [37.7, 55.8]], "t": [0]}},
+        headers=me,
+    )
+    assert resp.status_code == 400
+
+
+async def test_another_user_cannot_read_your_route(client):
+    owner = await walker(client, "routeowner@example.com")
+    workout_id = (await client.post("/v1/workouts", json={}, headers=owner)).json()["id"]
+    await client.patch(f"/v1/workouts/{workout_id}", json={"route": ROUTE}, headers=owner)
+
+    stranger = await walker(client, "routestranger@example.com")
+    assert (await client.get(f"/v1/workouts/{workout_id}", headers=stranger)).status_code == 404

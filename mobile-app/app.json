@@ -61,7 +61,16 @@
           "backgroundColor": "#0B0D10"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "./plugins/withCxxStagingDir",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ]
     ],
     "extra": {
       "eas": {

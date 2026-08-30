@@ -13,6 +13,7 @@ from app.schemas.activity import (
     LeaderboardResponse,
     LeaderboardSelf,
     WeeklySummary,
+    WorkoutDetail,
     WorkoutFinished,
     WorkoutProgress,
     WorkoutPublic,
@@ -85,6 +86,20 @@ async def workout_history(
     return [WorkoutPublic.model_validate(row) for row in rows]
 
 
+@workouts_router.get("/{workout_id}", response_model=WorkoutDetail)
+async def workout_detail(
+    workout_id: uuid.UUID, db: DbSession, user: CurrentUser
+) -> WorkoutDetail:
+    """One workout, including its recorded path.
+
+    Declared **after** `/active`, `/last` and `/summary`: FastAPI matches routes
+    in order, so a path parameter placed above them would swallow all three and
+    they would start failing UUID parsing instead of answering.
+    """
+    workout = await workouts_service.get_owned(db, user_id=user.id, workout_id=workout_id)
+    return WorkoutDetail.model_validate(workout)
+
+
 @workouts_router.patch("/{workout_id}", response_model=WorkoutPublic)
 async def update_workout(
     workout_id: uuid.UUID, payload: WorkoutProgress, db: DbSession, user: CurrentUser
@@ -98,6 +113,7 @@ async def update_workout(
         distance_km=payload.distance_km,
         steps=payload.steps,
         calories_kcal=payload.calories_kcal,
+        route=payload.route.model_dump() if payload.route else None,
     )
     return WorkoutPublic.model_validate(updated)
 
@@ -119,6 +135,7 @@ async def finish_workout(
         distance_km=payload.distance_km,
         steps=payload.steps,
         calories_kcal=payload.calories_kcal,
+        route=payload.route.model_dump() if payload.route else None,
     )
     return WorkoutFinished(
         workout=WorkoutPublic.model_validate(updated),

@@ -55,6 +55,20 @@ def screen(duration_seconds: int, distance_km: float) -> tuple[bool, str]:
     return False, ""
 
 
+def _keep_longer_route(workout: Workout, route: dict | None) -> None:
+    """Apply a route only if it is at least as complete as what is stored.
+
+    The scalar fields here use `max()` so a late packet cannot rewind them. A
+    list has no `max()`, but the same invariant matters: a retried request
+    carrying a truncated buffer must not shorten a path already recorded.
+    """
+    if route is None:
+        return
+    stored = len((workout.route or {}).get("coordinates", []))
+    if len(route.get("coordinates", [])) >= stored:
+        workout.route = route
+
+
 async def start(db: AsyncSession, *, user: User, kind: str = "walk") -> Workout:
     """Open a session. An already-open one is returned rather than duplicated."""
     existing = await db.scalar(
@@ -90,6 +104,7 @@ async def update_progress(
     distance_km: float | None = None,
     steps: int | None = None,
     calories_kcal: int | None = None,
+    route: dict | None = None,
 ) -> Workout:
     """Store progress mid-session. Values only ever move forward."""
     if workout.is_finished:
@@ -103,6 +118,7 @@ async def update_progress(
         workout.steps = max(workout.steps, steps)
     if calories_kcal is not None:
         workout.calories_kcal = max(workout.calories_kcal, calories_kcal)
+    _keep_longer_route(workout, route)
 
     await db.commit()
     await db.refresh(workout)
@@ -118,6 +134,7 @@ async def finish(
     distance_km: float | None = None,
     steps: int | None = None,
     calories_kcal: int | None = None,
+    route: dict | None = None,
 ) -> tuple[Workout, int, int]:
     """Close the session. Returns ``(workout, awarded, balance)``.
 
@@ -134,6 +151,7 @@ async def finish(
         workout.steps = max(workout.steps, steps)
     if calories_kcal is not None:
         workout.calories_kcal = max(workout.calories_kcal, calories_kcal)
+    _keep_longer_route(workout, route)
 
     if workout.duration_seconds < MIN_DURATION_SECONDS:
         raise BusinessRuleError(
