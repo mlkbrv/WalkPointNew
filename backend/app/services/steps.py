@@ -17,11 +17,13 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass
 from datetime import date as date_type
-from datetime import timedelta
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.errors import BusinessRuleError, NotFound, StepCapExceeded
 from app.core.time import as_aware, utcnow
 from app.models.economy import DailySteps
@@ -42,7 +44,25 @@ class SyncResult:
 
 
 def _server_today() -> date_type:
-    return utcnow().date()
+    """Today in the deployment's own timezone, not in UTC.
+
+    This returned `utcnow().date()` despite its name, silently ignoring
+    `SERVER_TIMEZONE`. For a deployment at UTC+4 that meant every user's first
+    four hours of the day were rejected as `FUTURE_DATE`: the phone reports its
+    local date, the server compares it against a UTC date still on yesterday,
+    and the sync fails until 04:00 local — every day, for everyone.
+    """
+    try:
+        return datetime.now(ZoneInfo(settings.server_timezone)).date()
+    except Exception:
+        # A misconfigured zone must not take step syncing down with it.
+        return utcnow().date()
+
+
+#: Clients are in their own timezones, which can be ahead of the server's. A day
+#: of slack accepts an honest phone one zone over without opening the door to
+#: back-dating a week of walking.
+FUTURE_SLACK_DAYS = 1
 
 
 async def sync_daily_steps(
@@ -62,7 +82,7 @@ async def sync_daily_steps(
     econ = await economy.get_settings_row(db)
     today = _server_today()
 
-    if day > today:
+    if day > today + timedelta(days=FUTURE_SLACK_DAYS):
         raise BusinessRuleError("Cannot report steps for a future date.", code="FUTURE_DATE")
     if day < today - timedelta(days=econ.max_sync_age_days):
         raise BusinessRuleError(

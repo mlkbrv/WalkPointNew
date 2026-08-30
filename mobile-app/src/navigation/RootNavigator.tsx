@@ -37,9 +37,6 @@ import { WorkoutSummaryScreen } from "../screens/WorkoutSummaryScreen";
 import { PerformanceReportsScreen } from "../screens/PerformanceReportsScreen";
 import { EditProfileScreen } from "../screens/EditProfileScreen";
 import { HealthSetupScreen } from "../screens/HealthSetupScreen";
-import { CreateCouponScreen } from "../screens/CreateCouponScreen";
-import { MerchantManagerScreen } from "../screens/MerchantManagerScreen";
-import { MerchantScannerScreen } from "../screens/MerchantScannerScreen";
 import { StoriesScreen } from "../screens/StoriesScreen";
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -140,9 +137,6 @@ function AppStack() {
       <RootStack.Screen name="PerformanceReport" component={PerformanceReportsScreen} />
       <RootStack.Screen name="EditProfile" component={EditProfileScreen} />
       <RootStack.Screen name="HealthSetup" component={HealthSetupScreen} />
-      <RootStack.Screen name="CreateCoupon" component={CreateCouponScreen} />
-      <RootStack.Screen name="MerchantManager" component={MerchantManagerScreen} />
-      <RootStack.Screen name="MerchantScanner" component={MerchantScannerScreen} />
     </RootStack.Navigator>
   );
 }

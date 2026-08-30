@@ -20,6 +20,8 @@ import type {
   SupportQueueCounts,
   TicketStatus,
   UserPublic,
+  ScanPreview,
+  ScanResult,
 } from './types';
 
 export const authApi = {
@@ -130,4 +132,18 @@ export const businessApi = {
   deleteStory: (id: string) => api.delete<unknown>(`/v1/business/stories/${id}`),
 
   redemptions: () => api.get<RedemptionRecord[]>('/v1/redemptions'),
+
+  /**
+   * Look at a code without consuming it.
+   *
+   * The identifier is the coupon's `qr_token`, not the voucher id — the mobile
+   * scanner that this replaces sent the wrong one, which is why redemption
+   * never worked there.
+   */
+  previewCode: (qr_token: string) =>
+    api.post<ScanPreview>('/v1/redemptions/preview', { qr_token }),
+
+  /** Burn the voucher. Not idempotent by design: a second scan must fail. */
+  redeemCode: (qr_token: string) =>
+    api.post<ScanResult>('/v1/redemptions/scan', { qr_token }),
 };

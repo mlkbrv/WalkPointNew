@@ -169,9 +169,6 @@ export type RootStackParamList = {
   WorkoutSummary: undefined;
   PerformanceReport: undefined;
   EditProfile: undefined;
-  CreateCoupon: undefined;
-  MerchantManager: undefined;
-  MerchantScanner: undefined;
   HealthSetup: undefined;
   Stories: { startId: string };
 };

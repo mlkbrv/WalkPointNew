@@ -30,6 +30,7 @@ import {
   PartnerRedemptionsPage,
   PartnerStoriesPage,
 } from '@/pages/partner/PartnerPages';
+import { PartnerRedeemPage } from '@/pages/partner/RedeemPage';
 
 export function App() {
   const { user, loading, isSuperadmin } = useAuth();
@@ -72,6 +73,7 @@ export function App() {
             <Route path="/business" element={<PartnerDashboardPage />} />
             <Route path="/business/coupons" element={<PartnerCouponsPage />} />
             <Route path="/business/stories" element={<PartnerStoriesPage />} />
+            <Route path="/business/redeem" element={<PartnerRedeemPage />} />
             <Route path="/business/redemptions" element={<PartnerRedemptionsPage />} />
             <Route path="/business/profile" element={<PartnerProfilePage />} />
           </>

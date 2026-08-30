@@ -24,7 +24,7 @@ export function ProfileScreen() {
   const styles = useStyles();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
-  const { user, prefs, updatePrefs, switchRole, logout } = useAuth();
+  const { user, prefs, updatePrefs, logout } = useAuth();
   const { userStats, setUserStats } = useStride();
   const health = useHealth();
 
@@ -118,7 +118,7 @@ export function ProfileScreen() {
           </View>
           <Text style={styles.name}>{user?.name || "Walker"}</Text>
           <Text style={styles.meta}>
-            {user?.role === "merchant" ? "Merchant" : "Active Member"} since {user?.memberSince || "2026"}
+            Member since {user?.memberSince || "2026"}
           </Text>
         </View>
 
@@ -199,51 +199,6 @@ export function ProfileScreen() {
             onPress={() => navigation.navigate("HealthSetup")}
           />
         </GlassCard>
-
-        <Text style={styles.sectionLabel}>Role</Text>
-        <GlassCard style={styles.roleCard}>
-          <PressableScale
-            style={[styles.roleBtn, user?.role === "consumer" && styles.roleBtnActive]}
-            onPress={() => switchRole("consumer")}
-          >
-            <Text style={[styles.roleText, user?.role === "consumer" && styles.roleTextActive]}>
-              Consumer
-            </Text>
-          </PressableScale>
-          <PressableScale
-            style={[styles.roleBtn, user?.role === "merchant" && styles.roleBtnActive]}
-            onPress={() => switchRole("merchant")}
-          >
-            <Text style={[styles.roleText, user?.role === "merchant" && styles.roleTextActive]}>
-              Merchant
-            </Text>
-          </PressableScale>
-        </GlassCard>
-
-        {user?.role === "merchant" ? (
-          <>
-            <Text style={styles.sectionLabel}>Merchant</Text>
-            <GlassCard style={styles.group}>
-              <Row
-                icon="ticket-outline"
-                iconColor={colors.primary}
-                iconBg="rgba(129,64,243,0.12)"
-                title="Create Coupon"
-                subtitle="Publish a new store reward"
-                onPress={() => navigation.navigate("CreateCoupon")}
-              />
-              <View style={styles.divider} />
-              <Row
-                icon="storefront-outline"
-                iconColor={colors.emeraldInk}
-                iconBg="rgba(0,225,148,0.12)"
-                title="Merchant Manager"
-                subtitle="Manage listings and redemptions"
-                onPress={() => navigation.navigate("MerchantManager")}
-              />
-            </GlassCard>
-          </>
-        ) : null}
 
         <Text style={styles.sectionLabel}>Appearance</Text>
         <GlassCard style={styles.group}>
@@ -419,17 +374,6 @@ const useStyles = makeStyles((colors) => ({
   rowTitle: { fontSize: 12, fontWeight: "700", color: colors.charcoal },
   rowSub: { fontSize: 10, color: colors.muted, marginTop: 2 },
   divider: { height: 1, backgroundColor: colors.border, marginLeft: 66 },
-  roleCard: { flexDirection: "row", padding: 6, gap: 6 },
-  roleBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: radii.lg,
-    alignItems: "center",
-    backgroundColor: colors.canvas,
-  },
-  roleBtnActive: { backgroundColor: colors.primary },
-  roleText: { fontSize: 12, fontWeight: "800", color: colors.slate },
-  roleTextActive: { color: colors.white },
   logout: {
     marginTop: 8,
     paddingVertical: 16,

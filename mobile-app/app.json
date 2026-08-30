@@ -13,7 +13,6 @@
         "UIStatusBarHidden": true,
         "UIViewControllerBasedStatusBarAppearance": false,
         "NSMotionUsageDescription": "STRIDE uses motion data to count your steps and award tokens.",
-        "NSCameraUsageDescription": "STRIDE uses the camera to scan coupon redemption codes.",
         "NSPhotoLibraryUsageDescription": "STRIDE uses your photos for profile and merchant logos."
       }
     },
@@ -25,7 +24,6 @@
       "package": "com.walkpoint.app",
       "permissions": [
         "android.permission.ACTIVITY_RECOGNITION",
-        "android.permission.CAMERA",
         "android.permission.health.READ_STEPS",
         "android.permission.POST_NOTIFICATIONS"
       ]
@@ -41,12 +39,6 @@
         }
       ],
       "expo-asset",
-      [
-        "expo-camera",
-        {
-          "cameraPermission": "Allow STRIDE to scan coupon QR codes."
-        }
-      ],
       [
         "expo-image-picker",
         {

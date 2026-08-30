@@ -9,6 +9,7 @@ import HelpIcon from '@mui/icons-material/Help';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import SettingsIcon from '@mui/icons-material/Settings';
 import StoreIcon from '@mui/icons-material/Store';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
@@ -126,6 +127,9 @@ export function Layout() {
 
   const partnerEntries: NavEntry[] = [
     { to: '/business', label: 'Dashboard', icon: <BarChartIcon fontSize="small" /> },
+    // First after the dashboard: this is the thing a business does every day,
+    // standing at a counter with a customer waiting.
+    { to: '/business/redeem', label: 'Redeem', icon: <QrCodeScannerIcon fontSize="small" /> },
     {
       to: '/business/coupons',
       label: 'Coupons',
@@ -134,8 +138,8 @@ export function Layout() {
     { to: '/business/stories', label: 'Stories', icon: <PhotoLibraryIcon fontSize="small" /> },
     {
       to: '/business/redemptions',
-      label: 'Redemptions',
-      icon: <QrCodeScannerIcon fontSize="small" />,
+      label: 'History',
+      icon: <ReceiptLongIcon fontSize="small" />,
     },
     { to: '/business/profile', label: 'Business profile', icon: <StoreIcon fontSize="small" /> },
   ];

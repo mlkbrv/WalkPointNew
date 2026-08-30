@@ -163,15 +163,6 @@ export function StoreScreen() {
           </View>
         )}
       </ScrollView>
-
-      {user?.role === "merchant" ? (
-        <PressableScale
-          style={[styles.fab, { bottom: insets.bottom + 96 }]}
-          onPress={() => navigation.navigate("MerchantManager")}
-        >
-          <Ionicons name="storefront" size={22} color={colors.white} />
-        </PressableScale>
-      ) : null}
     </View>
   );
 }

@@ -61,7 +61,7 @@ export async function configureNotificationChannel(): Promise<void> {
 export type NotificationTarget =
   | { kind: "tab"; name: keyof MainTabParamList }
   /** Only routes that take no parameters — a push carries no ids to fill them with. */
-  | { kind: "screen"; name: "Wallet" | "SupportChat" | "MerchantManager" };
+  | { kind: "screen"; name: "Wallet" | "SupportChat" };
 
 export function routeForNotification(data: Record<string, unknown>): NotificationTarget {
   const type = typeof data.notification_type === "string" ? data.notification_type : "";
@@ -74,8 +74,8 @@ export function routeForNotification(data: Record<string, unknown>): Notificatio
     case "support_reply":
       return { kind: "screen", name: "SupportChat" };
     case "moderation_result":
-      // Only partners receive these, and it is their own content that moved.
-      return { kind: "screen", name: "MerchantManager" };
+      // Partners work in the web console; in this app the row is all there is.
+      return { kind: "tab", name: "InboxTab" };
     case "steps_missed":
       return { kind: "tab", name: "HomeTab" };
     default:

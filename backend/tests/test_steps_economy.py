@@ -133,11 +133,25 @@ async def test_a_lower_total_is_ignored(client):
     assert regressed["day"]["steps"] == 7_000
 
 
-async def test_future_dates_are_rejected(client):
-    headers = await auth_headers(client)
+async def test_a_phone_one_timezone_ahead_is_accepted(client):
+    """Clients send their own local date, which can legitimately be a day ahead.
+
+    The server used to compare against a UTC date regardless of the configured
+    timezone, so at UTC+4 every user's first four hours were rejected as a
+    future date — silently, every day.
+    """
+    headers = await auth_headers(client, "ahead@example.com")
     tomorrow = (utcnow().date() + timedelta(days=1)).isoformat()
 
     resp = await client.post(SYNC, json={"date": tomorrow, "steps": 6_000}, headers=headers)
+    assert resp.status_code == 200
+
+
+async def test_genuinely_future_dates_are_still_rejected(client):
+    headers = await auth_headers(client)
+    far = (utcnow().date() + timedelta(days=3)).isoformat()
+
+    resp = await client.post(SYNC, json={"date": far, "steps": 6_000}, headers=headers)
     assert resp.status_code == 422
     assert resp.json()["error"]["code"] == "FUTURE_DATE"
 

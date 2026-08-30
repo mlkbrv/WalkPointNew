@@ -211,3 +211,25 @@ export interface FAQEntry {
   category: string;
   sort_order: number;
 }
+
+
+/** What a voucher code turns out to be, before anything is consumed. */
+export interface ScanPreview {
+  voucher_id: string;
+  coupon_title: string;
+  status: 'active' | 'used' | 'expired';
+  cost_paid: number;
+  valid_until: string;
+  used_at: string | null;
+  is_redeemable: boolean;
+}
+
+/** The result of actually burning a voucher. */
+export interface ScanResult {
+  voucher_id: string;
+  coupon_title: string;
+  customer_label: string;
+  cost_paid: number;
+  used_at: string | null;
+  status: 'active' | 'used' | 'expired';
+}

@@ -50,20 +50,14 @@ type AuthContextValue = {
   prefs: UserPreferences;
   loading: boolean;
   login: (email: string, password: string) => Promise<Result>;
-  register: (
-    name: string,
-    email: string,
-    password: string,
-    role: UserRole,
-    businessName?: string,
-  ) => Promise<Result>;
+  /** Consumers only. Businesses are onboarded through the partner web console. */
+  register: (name: string, email: string, password: string) => Promise<Result>;
   requestSmsCode: (phone: string) => Promise<Result>;
   verifySmsCode: (phone: string, code: string) => Promise<Result>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ ok: boolean; message: string }>;
   updateProfile: (patch: Partial<AuthUser>) => Promise<void>;
   updatePrefs: (patch: Partial<UserPreferences>) => Promise<void>;
-  switchRole: (role: UserRole) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -137,16 +131,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const register = useCallback(
-    async (name: string, email: string, password: string, role: UserRole): Promise<Result> => {
+    async (name: string, email: string, password: string): Promise<Result> => {
       if (!name.trim() || !email.trim() || !password) {
         return { ok: false, error: "All fields are required." };
       }
       if (password.length < 8) {
         return { ok: false, error: "Password must be at least 8 characters." };
-      }
-      if (role === "merchant") {
-        // Businesses are onboarded and approved through the partner console.
-        return { ok: false, error: "Business accounts are created in the partner web console." };
       }
       try {
         await adopt(
@@ -215,10 +205,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [prefs, persistPrefs],
   );
 
-  const switchRole = useCallback(async (_role: UserRole) => {
-    // Roles come from the server now; a client cannot promote itself.
-  }, []);
-
   const value = useMemo(
     () => ({
       user,
@@ -232,7 +218,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       resetPassword,
       updateProfile,
       updatePrefs,
-      switchRole,
     }),
     [
       user,
@@ -246,7 +231,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       resetPassword,
       updateProfile,
       updatePrefs,
-      switchRole,
     ],
   );
 
