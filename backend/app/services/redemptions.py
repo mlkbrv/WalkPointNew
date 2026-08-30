@@ -175,8 +175,18 @@ async def scan(
     whose coupon has ended. The voucher row is locked so a code shown at two tills
     at once can only be accepted by one of them.
     """
+    # `of=UserCoupon` is not decoration. `UserCoupon.coupon` is declared
+    # `lazy="joined"`, so every select against it emits a LEFT OUTER JOIN, and
+    # PostgreSQL refuses `FOR UPDATE` over the nullable side of an outer join —
+    # the whole call failed with a 500. Naming the table locks the voucher row
+    # and leaves the joined coupon alone, which is all that was ever wanted.
+    #
+    # The test suite runs on SQLite, which accepts and ignores `FOR UPDATE`, so
+    # this only ever appeared against the real database.
     voucher = await db.scalar(
-        select(UserCoupon).where(UserCoupon.qr_token == qr_token).with_for_update()
+        select(UserCoupon)
+        .where(UserCoupon.qr_token == qr_token)
+        .with_for_update(of=UserCoupon)
     )
     if voucher is None:
         raise NotFound("This code is not valid.")
