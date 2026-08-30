@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {
   Image,
   ScrollView,
@@ -10,7 +10,8 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import Svg, { Circle } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { radii } from "../theme";
+import { radii, spacing, type, shadows } from "../theme";
+import { useTheme } from "../contexts/ThemeContext";
 import { PressableScale } from "../components/PressableScale";
 import { Avatar } from "../components/Avatar";
 import { GlassCard } from "../components/GlassCard";
@@ -21,7 +22,7 @@ import { StoriesRail } from "../components/StoriesRail";
 import { useSeenStories } from "../hooks/useSeenStories";
 import { useStepHistory } from "../hooks/useStepHistory";
 import { useServerData } from "../contexts/ServerDataContext";
-import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { makeStyles } from "../contexts/ThemeContext";
 
 const RING = 90;
 const RING_SIZE = 192;
@@ -34,7 +35,7 @@ function weekdayInitial(iso: string): string {
 }
 
 export function HomeScreen() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const styles = useStyles();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
@@ -159,28 +160,37 @@ export function HomeScreen() {
           </PressableScale>
         </GlassCard>
 
+        {/* One entry per tile, so the icon, value and unit cannot drift apart.
+            A half-finished refactor here had rendered "kcal" three times and a
+            literal "[km|mins]" placeholder, five tiles where there are three. */}
         <View style={styles.statsRow}>
-          <GlassCard style={styles.statCard}>
-            <View style={[styles.statIcon, { backgroundColor: "rgba(255,107,82,0.12)" }]}>
-              <Ionicons name="flame" size={16} color={colors.coralInk} />
-            </View>
-            <Text style={styles.statValue}>{caloriesKcal}</Text>
-            <Text style={styles.statLabel}>kcal</Text>
-          </GlassCard>
-          <GlassCard style={[styles.statCard, styles.statHighlight]}>
-            <View style={[styles.statIcon, { backgroundColor: "rgba(129,64,243,0.12)" }]}>
-              <Ionicons name="navigate" size={16} color={colors.primary} />
-            </View>
-            <Text style={styles.statValue}>{distanceKm}</Text>
-            <Text style={styles.statLabel}>km</Text>
-          </GlassCard>
-          <GlassCard style={styles.statCard}>
-            <View style={[styles.statIcon, { backgroundColor: "rgba(0,225,148,0.12)" }]}>
-              <Ionicons name="timer-outline" size={16} color={colors.emeraldInk} />
-            </View>
-            <Text style={styles.statValue}>{durationMins}</Text>
-            <Text style={styles.statLabel}>mins</Text>
-          </GlassCard>
+          {(
+            [
+              { key: "calories", icon: "flame", value: caloriesKcal, unit: "kcal", accent: false },
+              { key: "distance", icon: "navigate", value: distanceKm, unit: "km", accent: true },
+              { key: "duration", icon: "timer-outline", value: durationMins, unit: "min", accent: false },
+            ] as const
+          ).map((stat) => (
+            <GlassCard
+              key={stat.key}
+              style={stat.accent ? [styles.statCard, styles.statHighlight] : styles.statCard}
+            >
+              <View
+                style={[
+                  styles.statIcon,
+                  { backgroundColor: stat.accent ? colors.primaryTint : colors.inputSurface },
+                ]}
+              >
+                <Ionicons
+                  name={stat.icon}
+                  size={16}
+                  color={stat.accent ? colors.primary : colors.coralInk}
+                />
+              </View>
+              <Text style={styles.statValue}>{stat.value}</Text>
+              <Text style={styles.statLabel}>{stat.unit}</Text>
+            </GlassCard>
+          ))}
         </View>
 
         <View style={styles.sectionHead}>
@@ -267,12 +277,12 @@ export function HomeScreen() {
                             styles.barFill,
                             {
                               height: h,
-                              backgroundColor: isToday ? colors.primary : "rgba(129,64,243,0.3)",
+                              backgroundColor: isToday ? colors.primary : colors.border,
                             },
                           ]}
                         />
+                        <Text style={[styles.barDay, isToday && styles.barDayActive]}>{weekdayInitial(info.date)}</Text>
                       </View>
-                      <Text style={[styles.barDay, isToday && styles.barDayActive]}>{weekdayInitial(info.date)}</Text>
                     </View>
                   );
                 })
@@ -298,7 +308,7 @@ const useStyles = makeStyles((colors) => ({
   },
   greeting: { flexDirection: "row", alignItems: "center", gap: 12 },
   avatarWrap: { position: "relative" },
-  avatar: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: "rgba(129,64,243,0.25)" },
+  avatar: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: colors.border },
   onlineDot: {
     position: "absolute",
     right: 0,
@@ -361,10 +371,11 @@ const useStyles = makeStyles((colors) => ({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
+    ...shadows.fab,
   },
   trackCtaText: { color: colors.onPrimary, fontSize: 17, fontWeight: "600" },
   statsRow: { flexDirection: "row", gap: 12 },
-  statCard: { flex: 1, padding: 12, alignItems: "center", gap: 6 },
+  statCard: { flex: 1, padding: 12, alignItems: "center", gap: 6, ...shadows.card },
   statHighlight: { borderBottomWidth: 2, borderBottomColor: colors.primary },
   statIcon: { padding: 8, borderRadius: radii.md },
   statValue: { fontSize: 17, fontWeight: "600", color: colors.charcoal },
@@ -395,9 +406,6 @@ const useStyles = makeStyles((colors) => ({
   todayTagText: { color: colors.white, fontSize: 11, fontWeight: "600", textTransform: "uppercase" },
   todaySpacer: { height: 16 },
   barTrack: {
-    // Fixed width, not "100%". The column count varies with how many days the
-    // server has (a new account has fewer than seven), and a stretched track
-    // with a 999px radius stops being a pill and becomes an ellipse.
     width: 22,
     height: 80,
     backgroundColor: colors.border,

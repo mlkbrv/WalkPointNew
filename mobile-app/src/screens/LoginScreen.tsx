@@ -14,7 +14,7 @@ import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { AuthStackParamList } from "../types";
 import { useAuth } from "../contexts/AuthContext";
-import { radii } from "../theme";
+import { radii, spacing, type, shadows } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
@@ -87,7 +87,7 @@ export function LoginScreen() {
 
 const useStyles = makeStyles((colors) => ({
   root: { flex: 1 },
-  content: { flexGrow: 1, justifyContent: "center", padding: 24 },
+  content: { flexGrow: 1, justifyContent: "center", padding: spacing.xl },
   brand: {
     color: colors.primary,
     fontSize: 34,
@@ -96,21 +96,23 @@ const useStyles = makeStyles((colors) => ({
   },
   sub: { color: colors.mutedDark, textAlign: "center", marginTop: 8, marginBottom: 32, fontWeight: "400" },
   card: {
-    backgroundColor: colors.cardDark,
+    backgroundColor: colors.card,
     borderRadius: radii.xl,
     padding: 20,
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: colors.border,
+    ...shadows.card,
   },
-  label: { color: colors.mutedDark, fontSize: 13, fontWeight: "600", letterSpacing: 1, marginBottom: 6, marginTop: 10 },
+  label: { color: colors.muted, fontSize: 13, fontWeight: "600", letterSpacing: 1, marginBottom: 6, marginTop: 10 },
   input: {
-    backgroundColor: "#0F172A",
+    backgroundColor: colors.inputSurface,
     borderRadius: radii.md,
     paddingHorizontal: 14,
     paddingVertical: 12,
     color: colors.textLight,
     borderWidth: 1,
-    borderColor: colors.borderDark,
+    borderColor: colors.border,
+    ...shadows.surface,
   },
   error: { color: colors.coralInk, marginTop: 12, fontWeight: "400", fontSize: 15 },
   primaryBtn: {
@@ -119,6 +121,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius: radii.full,
     paddingVertical: 16,
     alignItems: "center",
+    ...shadows.fab,
   },
   primaryText: { color: colors.onPrimary, fontWeight: "600", letterSpacing: 1 },
   link: { color: colors.emeraldInk, textAlign: "center", marginTop: 16, fontWeight: "400" },

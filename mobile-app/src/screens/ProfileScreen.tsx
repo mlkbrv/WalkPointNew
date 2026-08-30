@@ -9,7 +9,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { radii } from "../theme";
+import { radii, spacing, type, shadows } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { Avatar } from "../components/Avatar";
 import { GlassCard } from "../components/GlassCard";
@@ -17,7 +17,7 @@ import { ScreenHeader } from "../components/ScreenHeader";
 import { useStride } from "../contexts/StrideContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useHealth } from "../contexts/HealthContext";
-import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { makeStyles, useTheme, Appearance } from "../contexts/ThemeContext";
 
 export function ProfileScreen() {
   const { colors, preference, setPreference, scheme } = useTheme();
@@ -166,7 +166,7 @@ export function ProfileScreen() {
           <Row
             icon="phone-portrait-outline"
             iconColor={colors.primary}
-            iconBg="rgba(129,64,243,0.12)"
+            iconBg={colors.primaryTint}
             title="Connected Devices"
             subtitle="Apple Health and Google Fit sync"
             onPress={() => navigation.navigate("ConnectedDevices")}
@@ -175,7 +175,7 @@ export function ProfileScreen() {
           <Row
             icon="help-circle-outline"
             iconColor={colors.emeraldInk}
-            iconBg="rgba(0,225,148,0.12)"
+            iconBg={colors.primaryTint}
             title="Help & Support"
             subtitle="FAQs and member helpdesk"
             onPress={() => navigation.navigate("HelpSupport")}
@@ -184,7 +184,7 @@ export function ProfileScreen() {
           <Row
             icon="wallet-outline"
             iconColor={colors.coralInk}
-            iconBg="rgba(255,107,82,0.12)"
+            iconBg={colors.primaryTint}
             title="Wallet"
             subtitle="Your redeemed coupons"
             onPress={() => navigation.navigate("Wallet")}
@@ -193,7 +193,7 @@ export function ProfileScreen() {
           <Row
             icon="fitness-outline"
             iconColor={colors.primary}
-            iconBg="rgba(129,64,243,0.12)"
+            iconBg={colors.primaryTint}
             title="Health Setup"
             subtitle="Pedometer and Health Connect permissions"
             onPress={() => navigation.navigate("HealthSetup")}
@@ -203,22 +203,26 @@ export function ProfileScreen() {
         <Text style={styles.sectionLabel}>Appearance</Text>
         <GlassCard style={styles.group}>
           <View style={styles.appearanceRow}>
-            {(
-              [
-                ["system", "Auto", "phone-portrait-outline"],
-                ["light", "Light", "sunny-outline"],
-                ["dark", "Dark", "moon-outline"],
-              ] as const
-            ).map(([value, label, icon]) => {
+            {["system", "light", "dark"].map((value) => {
+              const labelMap: Record<string, string> = {
+                system: "Auto",
+                light: "Light",
+                dark: "Dark",
+              };
+              const iconMap: Record<string, string> = {
+                system: "phone-portrait-outline",
+                light: "sunny-outline",
+                dark: "moon-outline",
+              };
               const active = preference === value;
               return (
                 <PressableScale
                   key={value}
                   style={[styles.appearanceOption, active && styles.appearanceOptionActive]}
-                  onPress={() => setPreference(value)}
+                  onPress={() => setPreference(value as Appearance)}
                 >
                   <Ionicons
-                    name={icon}
+                    name={iconMap[value] as keyof typeof Ionicons.glyphMap}
                     size={18}
                     color={active ? colors.primary : colors.muted}
                   />
@@ -228,14 +232,14 @@ export function ProfileScreen() {
                       active && styles.appearanceLabelActive,
                     ]}
                   >
-                    {label}
+                    {labelMap[value]}
                   </Text>
                 </PressableScale>
               );
             })}
           </View>
           {/* "Auto" is the default and what most people want; naming what it
-              currently resolves to saves them opening the app twice to find out. */}
+            currently resolves to saves them opening the app twice to find out. */}
           <Text style={styles.appearanceHint}>
             {preference === "system"
               ? `Following your device — currently ${scheme}.`
@@ -248,7 +252,7 @@ export function ProfileScreen() {
           <ToggleRow
             icon="notifications-outline"
             iconColor={colors.primary}
-            iconBg="rgba(129,64,243,0.12)"
+            iconBg={colors.primaryTint}
             title="Notifications"
             subtitle="Push alerts and milestones"
             value={prefs.notificationsEnabled}
@@ -258,7 +262,7 @@ export function ProfileScreen() {
           <ToggleRow
             icon="eye-outline"
             iconColor={colors.coralInk}
-            iconBg="rgba(255,107,82,0.12)"
+            iconBg={colors.primaryTint}
             title="Privacy Visible"
             subtitle="Show profile on scoreboard"
             value={prefs.privacyVisible}
@@ -281,15 +285,15 @@ export function ProfileScreen() {
 
 const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.canvas },
-  scroll: { paddingHorizontal: 20, paddingBottom: 40, gap: 16 },
-  hero: { alignItems: "center", gap: 10, marginBottom: 8 },
+  scroll: { paddingHorizontal: 20, paddingBottom: spacing.xl, gap: 16 },
+  hero: { alignItems: "center", gap: 10, marginBottom: spacing.xl },
   avatarWrap: { position: "relative" },
   avatar: {
     width: 96,
     height: 96,
     borderRadius: 48,
     borderWidth: 4,
-    borderColor: "rgba(129,64,243,0.2)",
+    borderColor: colors.border,
   },
   editBtn: {
     position: "absolute",
@@ -303,6 +307,7 @@ const useStyles = makeStyles((colors) => ({
     justifyContent: "center",
     borderWidth: 2,
     borderColor: colors.white,
+    ...shadows.surface,
   },
   name: { fontSize: 22, fontWeight: "600", color: colors.charcoal },
   meta: {
@@ -311,7 +316,7 @@ const useStyles = makeStyles((colors) => ({
     color: colors.muted,
   },
   stats: { flexDirection: "row", gap: 10 },
-  statTile: { flex: 1, padding: 12, alignItems: "center", gap: 8 },
+  statTile: { flex: 1, padding: 12, alignItems: "center", gap: 8, ...shadows.card },
   statLabel: {
     fontSize: 11,
     fontWeight: "600",
@@ -324,7 +329,6 @@ const useStyles = makeStyles((colors) => ({
     flex: 1,
     alignItems: "center",
     gap: 6,
-    // Comfortably over the 44pt minimum touch target.
     paddingVertical: 14,
     borderRadius: radii.md,
     borderWidth: 1,
@@ -373,11 +377,12 @@ const useStyles = makeStyles((colors) => ({
     paddingVertical: 16,
     borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: "rgba(239,68,68,0.25)",
+    borderColor: colors.border,
     alignItems: "center",
+    ...shadows.card,
   },
   logoutText: {
-    color: "#EF4444",
+    color: colors.coralInk,
     fontSize: 15,
     fontWeight: "600",
   },
