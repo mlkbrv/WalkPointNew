@@ -2,9 +2,8 @@
  * The card shown after a session closes.
  *
  * It reads the finished workout back from the server rather than trusting what
- * the tracker had locally — the coin figure here is `bonus_paid`, the amount the
- * ledger actually recorded. A session held for fraud review shows zero and says
- * so, which is the one case a locally-computed number would get wrong.
+ * the tracker had locally. Sessions do not pay coins — steps do — so this is a
+ * record of what was done, not a receipt.
  */
 
 import React, { useEffect, useState } from "react";
@@ -52,7 +51,6 @@ export function WorkoutSummaryScreen() {
   const calories = workout?.calories_kcal ?? 0;
   const hours = (workout?.duration_seconds ?? 0) / 3600;
   const pace = hours > 0 ? ((workout?.distance_km ?? 0) / hours).toFixed(1) : "0.0";
-  const coinsEarned = workout?.bonus_paid ?? 0;
   const underReview = workout?.is_suspicious ?? false;
   const dateStr = workout?.finished_at
     ? new Date(workout.finished_at).toLocaleString(undefined, {
@@ -110,17 +108,19 @@ export function WorkoutSummaryScreen() {
         <Text style={styles.hero}>Workout Completed!</Text>
         <Text style={styles.date}>{dateStr}</Text>
 
+        {/* Distance, not coins: the session is a record of what was done. Coins
+            come from the day's steps, which this walk already contributed to. */}
         <View style={styles.coinOuter}>
           <View style={styles.coinInner}>
             <Ionicons
-              name={underReview ? "search" : "sparkles"}
-              size={28}
-              color={underReview ? colors.mutedDark : "#FDE68A"}
+              name={underReview ? "search" : "walk-outline"}
+              size={26}
+              color={underReview ? colors.mutedDark : colors.primary}
             />
-            <Text style={styles.coinValue}>+{coinsEarned}</Text>
-            <Text style={styles.coinLabel}>Coins</Text>
+            <Text style={styles.coinValue}>{distance}</Text>
+            <Text style={styles.coinLabel}>km</Text>
             <Text style={styles.coinSub}>
-              {underReview ? "Held for review" : "Reward Unlocked"}
+              {underReview ? "Under review" : "Recorded"}
             </Text>
           </View>
         </View>
@@ -129,8 +129,8 @@ export function WorkoutSummaryScreen() {
           <GlassCard dark style={styles.reviewBox}>
             <Ionicons name="information-circle-outline" size={18} color={colors.mutedDark} />
             <Text style={styles.reviewText}>
-              This session moved faster than a person walks or runs, so the bonus is
-              held while a moderator looks at it. Your account is unaffected.
+              This session moved faster than a person walks or runs, so it is
+              flagged for a moderator. Your account is unaffected.
             </Text>
           </GlassCard>
         ) : null}

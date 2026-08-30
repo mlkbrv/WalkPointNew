@@ -224,9 +224,9 @@ export function PerformanceReportsScreen() {
                         year: "numeric",
                       })}
                     </Text>
-                    <Text style={w.is_suspicious ? styles.histHeld : styles.histTokens}>
-                      {w.is_suspicious ? "under review" : `+${w.bonus_paid} coins`}
-                    </Text>
+                    {w.is_suspicious ? (
+                      <Text style={styles.histHeld}>under review</Text>
+                    ) : null}
                   </View>
                   <View style={styles.histRow}>
                     <Text style={styles.histStat}>{w.steps.toLocaleString()} steps</Text>

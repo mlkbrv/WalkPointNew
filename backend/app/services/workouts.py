@@ -1,17 +1,20 @@
-"""Workout sessions and the bonus finishing one pays.
+"""Workout sessions.
 
-The bonus formula comes from the product spec::
+**Sessions do not pay coins.** They used to: `max(180, floor(km * 65))`, paid on
+finish. Two things made that untenable.
 
-    bonus = max(180, floor(distance_km * 65))
+The distance it paid on was fabricated by the client — a fixed +0.002 km every
+second — so it measured nothing, and the flat 180-coin floor meant distance
+barely mattered anyway. Pressing start, waiting a minute and pressing finish
+minted 180 real coins into the ledger for standing still, and the implied
+7.2 km/h sailed under the 25 km/h plausibility check that was supposed to catch
+exactly this.
 
-Paid once, on finish, and only if the session looks real. The same anti-fraud
-stance as step syncing applies: an implausible session is flagged and pays
-nothing, but the account is never blocked for it.
+It was also double payment in principle: steps walked during a session already
+earn through `daily_steps`. Steps are now the single earning path.
 
-A workout's distance does **not** feed the coin ledger twice — steps walked
-during it still count toward the day through `daily_steps`. The bonus is a
-separate reward for completing a tracked session, which is why it is a flat
-formula rather than a per-step rate.
+What remains here is the activity record — duration, distance, calories — kept
+for the history and reports screens, with `bonus_paid` permanently 0.
 """
 
 from __future__ import annotations
@@ -24,13 +27,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import BusinessRuleError, Conflict, NotFound
 from app.core.time import utcnow
-from app.models.enums import CoinSource, NotificationType
 from app.models.user import User
 from app.models.workout import Workout
-from app.services import economy, notifications
-
-MIN_BONUS = 180
-COINS_PER_KM = 65
+from app.services import economy
 
 #: Above this the session is not a walk or a run any more. Used only to flag for
 #: review, never to reject — a cyclist logging a "walk" is a data problem, not fraud.
@@ -38,11 +37,6 @@ MAX_PLAUSIBLE_KMH = 25.0
 
 #: Below this a "workout" is someone tapping start and stop.
 MIN_DURATION_SECONDS = 60
-
-
-def compute_bonus(distance_km: float) -> int:
-    """Coins for finishing a session. Flat floor, then per-kilometre."""
-    return max(MIN_BONUS, int(distance_km * COINS_PER_KM))
 
 
 def screen(duration_seconds: int, distance_km: float) -> tuple[bool, str]:
@@ -125,10 +119,12 @@ async def finish(
     steps: int | None = None,
     calories_kcal: int | None = None,
 ) -> tuple[Workout, int, int]:
-    """Close the session and pay the bonus. Returns ``(workout, awarded, balance)``.
+    """Close the session. Returns ``(workout, awarded, balance)``.
 
-    Idempotent: `bonus_paid` mirrors the ledger, so finishing twice pays the
-    difference, which is nothing.
+    `awarded` is always 0 — the tuple shape is kept so the router and its
+    response schema do not have to change, and so a client built against the old
+    API still parses the reply. See the module docstring for why sessions stopped
+    paying.
     """
     if duration_seconds is not None:
         workout.duration_seconds = max(workout.duration_seconds, duration_seconds)
@@ -153,38 +149,13 @@ async def finish(
 
     workout.is_suspicious = workout.is_suspicious or suspicious
 
-    awarded = 0
-    note = None
-
-    if not workout.is_suspicious:
-        earned = compute_bonus(workout.distance_km)
-        awarded = max(earned - workout.bonus_paid, 0)
-        if awarded > 0:
-            workout.bonus_paid += awarded
-            economy.record_entry(
-                db,
-                user_id=user.id,
-                amount=awarded,
-                source=CoinSource.WORKOUT_BONUS,
-                note=f"{workout.distance_km:.2f} km workout",
-                reference_id=workout.id,
-            )
-            note = notifications.queue(
-                db,
-                user_id=user.id,
-                title=f"{awarded} coins for your workout",
-                body=f"{workout.distance_km:.2f} km in {workout.duration_seconds // 60} minutes.",
-                notification_type=NotificationType.COINS_AWARDED,
-                data={"workout_id": str(workout.id), "coins": awarded},
-            )
-
+    # Still screened and still flagged: the flag is what the moderation queue
+    # reads, and it stays useful for spotting implausible activity even though
+    # nothing is paid for it any more.
     await db.commit()
     await db.refresh(workout)
 
-    if note is not None:
-        await notifications.deliver(db, note)
-
-    return workout, awarded, await economy.get_balance(db, user.id)
+    return workout, 0, await economy.get_balance(db, user.id)
 
 
 async def history(

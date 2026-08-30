@@ -4,10 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-import pytest
-
 from app.core.time import utcnow
-from app.services import workouts as workouts_service
 
 SYNC = "/v1/steps/sync"
 
@@ -116,20 +113,8 @@ async def test_the_board_requires_authentication(client):
 # --- workouts ---------------------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    ("distance", "expected"),
-    [
-        (0.0, 180),  # the floor: a short session still pays something
-        (1.0, 180),  # 65 is below the floor
-        (2.8, 182),  # floor(2.8 * 65) = 182
-        (10.0, 650),
-    ],
-)
-def test_the_bonus_formula(distance, expected):
-    assert workouts_service.compute_bonus(distance) == expected
-
-
-async def test_a_workout_pays_on_finish(client):
+async def test_a_workout_pays_nothing(client):
+    """Sessions record activity; they do not mint coins."""
     me = await walker(client, "runner@example.com")
 
     started = await client.post("/v1/workouts", json={"kind": "run"}, headers=me)
@@ -144,12 +129,37 @@ async def test_a_workout_pays_on_finish(client):
     assert finished.status_code == 200
     body = finished.json()
 
-    assert body["coins_awarded"] == 325  # floor(5.0 * 65)
-    assert body["balance"] == 325
+    assert body["coins_awarded"] == 0
+    assert body["balance"] == 0
+    assert body["workout"]["bonus_paid"] == 0
+    # The session itself is still recorded — only the payout is gone.
     assert body["workout"]["is_finished"] is True
+    assert body["workout"]["distance_km"] == 5.0
 
 
-async def test_finishing_twice_pays_once(client):
+async def test_a_minute_long_session_mints_nothing(client):
+    """The exploit this closes.
+
+    The client fabricated 0.002 km per second — 7.2 km/h, comfortably under the
+    25 km/h plausibility check — and the payout had a flat 180-coin floor that
+    ignored distance. So sixty seconds of standing still paid 180 real coins.
+    """
+    me = await walker(client, "exploit@example.com")
+    workout_id = (await client.post("/v1/workouts", json={}, headers=me)).json()["id"]
+
+    body = (
+        await client.post(
+            f"/v1/workouts/{workout_id}/finish",
+            json={"duration_seconds": 60, "distance_km": 0.12},
+            headers=me,
+        )
+    ).json()
+
+    assert body["coins_awarded"] == 0
+    assert (await client.get("/v1/wallet", headers=me)).json()["balance"] == 0
+
+
+async def test_finishing_twice_is_still_harmless(client):
     me = await walker(client, "twice@example.com")
     workout_id = (await client.post("/v1/workouts", json={}, headers=me)).json()["id"]
 
@@ -157,9 +167,9 @@ async def test_finishing_twice_pays_once(client):
     first = await client.post(f"/v1/workouts/{workout_id}/finish", json=payload, headers=me)
     second = await client.post(f"/v1/workouts/{workout_id}/finish", json=payload, headers=me)
 
-    assert first.json()["coins_awarded"] == 260
+    assert first.json()["coins_awarded"] == 0
     assert second.json()["coins_awarded"] == 0
-    assert second.json()["balance"] == 260
+    assert second.json()["balance"] == 0
 
 
 async def test_starting_twice_returns_the_same_session(client):
@@ -184,9 +194,10 @@ async def test_an_implausibly_fast_session_is_flagged_and_pays_nothing(client):
         )
     ).json()
 
+    # Flagging still happens — the moderation queue reads it — even though no
+    # session pays, so a zero payout here is no longer what proves the point.
     assert body["workout"]["is_suspicious"] is True
     assert body["coins_awarded"] == 0
-    assert body["balance"] == 0
 
 
 async def test_a_flagged_user_is_not_blocked(client):
@@ -283,10 +294,10 @@ async def test_history_active_and_summary(client):
     summary = (await client.get("/v1/workouts/summary", headers=me)).json()
     assert summary["sessions"] == 1
     assert summary["distance_km"] == 4.0
-    assert summary["coins"] == 260
+    assert summary["coins"] == 0
 
 
-async def test_the_workout_bonus_shows_up_in_the_wallet_and_inbox(client):
+async def test_a_workout_touches_neither_the_wallet_nor_the_inbox(client):
     me = await walker(client, "wallet@example.com")
     workout_id = (await client.post("/v1/workouts", json={}, headers=me)).json()["id"]
     await client.post(
@@ -296,8 +307,8 @@ async def test_the_workout_bonus_shows_up_in_the_wallet_and_inbox(client):
     )
 
     wallet = (await client.get("/v1/wallet", headers=me)).json()
-    assert wallet["balance"] == 390
-    assert wallet["earned_total"] == 390
+    assert wallet["balance"] == 0
+    assert wallet["earned_total"] == 0
 
-    inbox = (await client.get("/v1/notifications", headers=me)).json()
-    assert inbox["items"][0]["title"] == "390 coins for your workout"
+    # No ledger entry means nothing to announce.
+    assert (await client.get("/v1/notifications", headers=me)).json()["items"] == []

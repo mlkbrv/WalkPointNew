@@ -68,11 +68,12 @@ export function TrackScreen() {
     // The wallet changed on the server, so re-read it rather than adding locally.
     void refreshWallet();
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    // Sessions record activity; coins come from steps alone. Announcing
+     // "+0 coins" here would read as a bug rather than as the rule.
     showToast(
-      result.coinsAwarded > 0
-        ? `+${result.coinsAwarded} coins earned`
-        : "Workout saved \u2014 this one is under review",
-      result.coinsAwarded > 0 ? "\u{1F3C6}" : "\u{1F50D}",
+      result.workout.is_suspicious
+        ? "Workout saved \u2014 this one is under review"
+        : "Workout saved",
     );
     navigation.navigate("WorkoutSummary");
   }, [finish, refreshWallet, showToast, navigation]);
