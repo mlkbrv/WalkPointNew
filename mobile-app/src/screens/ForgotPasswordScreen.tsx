@@ -29,7 +29,7 @@ export function ForgotPasswordScreen() {
   };
 
   return (
-    <LinearGradient colors={["#0B0D10", "#1A1030", "#0B0D10"]} style={styles.root}>
+    <LinearGradient colors={["#0B0D10", "#0D2620", "#0B0D10"]} style={styles.root}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.inner}>
         <ScreenHeader title="Reset Password" onBack={() => navigation.goBack()} light />
         <Text style={styles.sub}>We'll email you a secure reset link for your STRIDE account.</Text>

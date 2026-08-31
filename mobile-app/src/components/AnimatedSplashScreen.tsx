@@ -38,21 +38,21 @@ function StrideMark({ size = 104 }: { size?: number }) {
     <Svg width={size} height={size} viewBox="0 0 120 120">
       <Defs>
         <RadialGradient id="splashGlow" cx="50%" cy="50%" r="50%">
-          <Stop offset="0%" stopColor="#A97CFF" stopOpacity="0.40" />
-          <Stop offset="100%" stopColor="#A97CFF" stopOpacity="0" />
+          <Stop offset="0%" stopColor="#3ECFAE" stopOpacity="0.40" />
+          <Stop offset="100%" stopColor="#3ECFAE" stopOpacity="0" />
         </RadialGradient>
       </Defs>
       <Circle cx="60" cy="60" r="58" fill="url(#splashGlow)" />
       <Path
         d="M85.1 28.0 C53.0 18.2 34.9 40.5 61.4 56.5 C87.8 73.9 69.7 99.0 36.3 90.6"
-        stroke="#A97CFF"
+        stroke="#3ECFAE"
         strokeWidth={12.2}
         strokeLinecap="round"
         strokeLinejoin="round"
         fill="none"
       />
       {/* The next step, ahead of the path. */}
-      <Circle cx="87.8" cy="87.8" r="5.6" fill="#A97CFF" />
+      <Circle cx="87.8" cy="87.8" r="5.6" fill="#3ECFAE" />
     </Svg>
   );
 }

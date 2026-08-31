@@ -40,7 +40,7 @@ export function RegisterScreen() {
   };
 
   return (
-    <LinearGradient colors={["#0B0D10", "#1A1030", "#0B0D10"]} style={styles.root}>
+    <LinearGradient colors={["#0B0D10", "#0D2620", "#0B0D10"]} style={styles.root}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Join STRIDE</Text>

@@ -7,25 +7,26 @@
  */
 
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { useStride, formatDuration } from "../contexts/StrideContext";
+import { formatDuration } from "../contexts/StrideContext";
 import { describeError } from "../api/client";
-import { workoutsApi, type ApiWorkout } from "../api/endpoints";
+import { workoutsApi, type ApiWorkout, type ApiWorkoutRoute } from "../api/endpoints";
 import { radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { GlassCard } from "../components/GlassCard";
+import { RouteTrace } from "../components/RouteTrace";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 export function WorkoutSummaryScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
-  const navigation = useNavigation<any>();
-  const { showToast } = useStride();
+  const navigation = useNavigation<{ goBack: () => void; navigate: (s: string) => void }>();
 
   const [workout, setWorkout] = useState<ApiWorkout | null>(null);
+  const [route, setRoute] = useState<ApiWorkoutRoute | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +35,14 @@ export function WorkoutSummaryScreen() {
     void (async () => {
       try {
         const last = await workoutsApi.last();
-        if (!cancelled) setWorkout(last);
+        if (cancelled) return;
+        setWorkout(last);
+        // The route lives only on the detail endpoint — the list/last shape
+        // deliberately omits it so a lighter call stays lighter.
+        if (last) {
+          const detail = await workoutsApi.detail(last.id).catch(() => null);
+          if (!cancelled) setRoute(detail?.route ?? null);
+        }
       } catch (caught) {
         if (!cancelled) setError(describeError(caught));
       } finally {
@@ -62,8 +70,14 @@ export function WorkoutSummaryScreen() {
       })
     : "";
 
-  const handleShare = () => {
-    showToast("Workout shared to socials", "\u{1F4E3}");
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `I just walked ${distance} km on STRIDE — ${duration}, ${calories} kcal.`,
+      });
+    } catch {
+      // A cancelled or failed share sheet needs no toast; the OS already showed one.
+    }
   };
 
   // The server already saved it; this button just moves on.
@@ -150,13 +164,17 @@ export function WorkoutSummaryScreen() {
           ))}
         </View>
 
-        <GlassCard dark style={styles.routeCard}>
-          <View style={styles.routeLine} />
-          <View style={styles.routeRow}>
-            <Ionicons name="compass-outline" size={14} color={colors.emerald} />
-            <Text style={styles.routeText}>Morning Run Route</Text>
-          </View>
-        </GlassCard>
+        {/* Only shown when a route was actually recorded — no placeholder
+            pretending every walk has a traced path. */}
+        {route && route.coordinates.length >= 2 ? (
+          <>
+            <View style={styles.routeHeading}>
+              <Ionicons name="compass-outline" size={14} color={colors.emerald} />
+              <Text style={styles.routeText}>Route recorded</Text>
+            </View>
+            <RouteTrace points={route.coordinates} height={140} />
+          </>
+        ) : null}
 
         <GlassCard dark style={styles.savedBox}>
           <Ionicons name="shield-checkmark" size={20} color={colors.primary} />
@@ -200,43 +218,32 @@ const useStyles = makeStyles((colors) => ({
     height: 176,
     borderRadius: 88,
     borderWidth: 6,
-    borderColor: "rgba(129,64,243,0.55)",
+    borderColor: "rgba(62,207,174,0.4)",
     alignSelf: "center",
     marginVertical: 24,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#170A2D",
+    backgroundColor: "#0A241E",
   },
   coinInner: {
     width: "88%",
     height: "88%",
     borderRadius: 999,
-    backgroundColor: "#100325",
+    backgroundColor: "#071912",
     borderWidth: 1,
-    borderColor: "rgba(129,64,243,0.2)",
+    borderColor: "rgba(62,207,174,0.2)",
     alignItems: "center",
     justifyContent: "center",
   },
   coinValue: { color: "#FDE68A", fontWeight: "700", fontSize: 34, marginTop: 4 },
-  coinLabel: { color: "#A78BFA", fontSize: 11, fontWeight: "600", letterSpacing: 1.5, textTransform: "uppercase", marginTop: 4 },
+  coinLabel: { color: "#7FE0C4", fontSize: 11, fontWeight: "600", letterSpacing: 1.5, textTransform: "uppercase", marginTop: 4 },
   coinSub: { color: colors.mutedDark, fontSize: 11, fontWeight: "600", letterSpacing: 1, textTransform: "uppercase", marginTop: 2 },
   statsRow: { flexDirection: "row", gap: 8 },
   statCard: { flex: 1, padding: 10, alignItems: "center" },
   statLabel: { color: colors.mutedDark, fontSize: 11, fontWeight: "600", textTransform: "uppercase" },
   statValue: { color: colors.primary, fontWeight: "600", fontSize: 13, marginTop: 6 },
   statUnit: { color: colors.slate, fontSize: 11, fontWeight: "600", marginTop: 2, textTransform: "uppercase" },
-  routeCard: { height: 112, marginTop: spacing.lg, padding: 14, justifyContent: "flex-end", overflow: "hidden" },
-  routeLine: {
-    position: "absolute",
-    left: 24,
-    right: 24,
-    top: 40,
-    height: 3,
-    backgroundColor: colors.primary,
-    borderRadius: 2,
-    transform: [{ rotate: "-8deg" }],
-  },
-  routeRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  routeHeading: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: spacing.lg, marginBottom: 8 },
   routeText: { color: "#CBD5E1", fontSize: 11, fontWeight: "600", letterSpacing: 0.8, textTransform: "uppercase" },
   savedBox: { marginTop: spacing.lg, padding: 16, flexDirection: "row", gap: 12, alignItems: "flex-start" },
   savedTitle: { color: colors.textLight, fontWeight: "600", fontSize: 13 },

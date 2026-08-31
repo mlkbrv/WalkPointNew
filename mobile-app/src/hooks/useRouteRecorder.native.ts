@@ -71,7 +71,7 @@ export function useRouteRecorder(): RouteRecorder {
         foregroundService: {
           notificationTitle: "STRIDE is recording your route",
           notificationBody: "Tap to open. Turn off recording to stop.",
-          notificationColor: "#8140F3",
+          notificationColor: "#0E6E5D",
         },
         pausesUpdatesAutomatically: false,
       });

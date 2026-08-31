@@ -23,8 +23,10 @@ import {
   catalogueApi,
   inboxApi,
   storiesApi,
+  stepsApi,
   walletApi,
   type ApiCoupon,
+  type ApiDailySteps,
   type ApiLedgerEntry,
   type ApiNotification,
   type ApiStore,
@@ -68,11 +70,14 @@ type ServerDataValue = {
   storyGroups: StoryGroup[];
   inbox: Section<ApiNotification[]>;
   unreadCount: number;
+  /** Last 14 days of `daily_steps`, oldest first — the same rows the economy pays on. */
+  stepsHistory: Section<ApiDailySteps[]>;
 
   refreshWallet: () => Promise<void>;
   refreshCatalogue: () => Promise<void>;
   refreshStories: () => Promise<void>;
   refreshInbox: () => Promise<void>;
+  refreshSteps: () => Promise<void>;
   refreshAll: () => Promise<void>;
 
   purchaseCoupon: (couponId: string) => Promise<{ ok: boolean; error?: string; code?: string }>;
@@ -97,6 +102,7 @@ export function ServerDataProvider({ children }: { children: React.ReactNode }) 
   const [stories, setStories] = useState<Section<ApiStory[]>>(idle([]));
   const [inbox, setInbox] = useState<Section<ApiNotification[]>>(idle([]));
   const [unreadCount, setUnreadCount] = useState(0);
+  const [stepsHistory, setStepsHistory] = useState<Section<ApiDailySteps[]>>(idle([]));
 
   /**
    * Runs one section's load, keeping the previous data visible while it is in
@@ -144,6 +150,12 @@ export function ServerDataProvider({ children }: { children: React.ReactNode }) 
     await load(setStories, () => storiesApi.feed());
   }, [load]);
 
+  const refreshSteps = useCallback(async () => {
+    if (!signedIn) return;
+    // Fourteen days: seven to show, seven for the week-over-week comparison.
+    await load(setStepsHistory, async () => (await stepsApi.history(14)).days);
+  }, [signedIn, load]);
+
   const refreshInbox = useCallback(async () => {
     if (!signedIn) return;
     setInbox((current) => ({ ...current, loading: true, error: null }));
@@ -157,8 +169,14 @@ export function ServerDataProvider({ children }: { children: React.ReactNode }) 
   }, [signedIn, load]);
 
   const refreshAll = useCallback(async () => {
-    await Promise.all([refreshWallet(), refreshCatalogue(), refreshStories(), refreshInbox()]);
-  }, [refreshWallet, refreshCatalogue, refreshStories, refreshInbox]);
+    await Promise.all([
+      refreshWallet(),
+      refreshCatalogue(),
+      refreshStories(),
+      refreshInbox(),
+      refreshSteps(),
+    ]);
+  }, [refreshWallet, refreshCatalogue, refreshStories, refreshInbox, refreshSteps]);
 
   useEffect(() => {
     void refreshCatalogue();
@@ -173,11 +191,13 @@ export function ServerDataProvider({ children }: { children: React.ReactNode }) 
       setVouchers(idle([]));
       setInbox(idle([]));
       setUnreadCount(0);
+      setStepsHistory(idle([]));
       return;
     }
     void refreshWallet();
     void refreshInbox();
-  }, [signedIn, refreshWallet, refreshInbox]);
+    void refreshSteps();
+  }, [signedIn, refreshWallet, refreshInbox, refreshSteps]);
 
   const purchaseCoupon = useCallback(
     async (couponId: string) => {
@@ -269,10 +289,12 @@ export function ServerDataProvider({ children }: { children: React.ReactNode }) 
       storyGroups,
       inbox,
       unreadCount,
+      stepsHistory,
       refreshWallet,
       refreshCatalogue,
       refreshStories,
       refreshInbox,
+      refreshSteps,
       refreshAll,
       purchaseCoupon,
       markStorySeen,
@@ -289,10 +311,12 @@ export function ServerDataProvider({ children }: { children: React.ReactNode }) 
       storyGroups,
       inbox,
       unreadCount,
+      stepsHistory,
       refreshWallet,
       refreshCatalogue,
       refreshStories,
       refreshInbox,
+      refreshSteps,
       refreshAll,
       purchaseCoupon,
       markStorySeen,

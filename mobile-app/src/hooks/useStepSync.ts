@@ -27,7 +27,7 @@ const MIN_INTERVAL_MS = 60_000;
 export function useStepSync(): void {
   const { user } = useAuth();
   const { status, stepsToday } = useHealth();
-  const { refreshWallet } = useServerData();
+  const { refreshWallet, refreshSteps } = useServerData();
 
   const lastRunAt = useRef(0);
   const lastSentSteps = useRef(-1);
@@ -42,19 +42,28 @@ export function useStepSync(): void {
       lastRunAt.current = Date.now();
       try {
         const outcome = await syncStepsOnce();
-        // The balance only moves when the step count did.
+        // The balance only moves when the step count did. The week chart is
+        // refreshed alongside it so "today" never shows two different numbers
+        // on the same screen — the live counter and a history bar that hasn't
+        // heard about this sync yet.
         if (outcome.synced && outcome.steps !== lastSentSteps.current) {
           lastSentSteps.current = outcome.steps;
           void refreshWallet();
+          void refreshSteps();
         }
       } catch {
         // A failed sync is retried on the next resume; steps are not lost,
         // because the device keeps the total, not this app.
       } finally {
+        // Reentrancy is precluded by the `inFlight.current` check at the top
+        // of this function, which runs synchronously before any `await` — so
+        // despite the assignment following one, there is no other invocation
+        // in flight that this could race with.
+        // eslint-disable-next-line require-atomic-updates
         inFlight.current = false;
       }
     },
-    [user, status, refreshWallet],
+    [user, status, refreshWallet, refreshSteps],
   );
 
   useEffect(() => {

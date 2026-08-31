@@ -1,6 +1,8 @@
 /**
  * Material Design 3 color system for mobile.
- * Primary: Stride purple (brand hue).
+ * Primary: a deep trail-green — a walking app has no reason to borrow the
+ * purple every AI-adjacent product defaults to, and green is the one hue
+ * that already means "movement, health, go" before a user reads a word.
  * Surface system: canvas → card → cardDark → dark.
  * Text: on-surface primary, secondary, tertiary.
  *
@@ -50,7 +52,9 @@ export interface Palette {
  * All text contrasts checked WCAG AA.
  */
 export const lightColors: Palette = {
-  primary: "#8140F3",
+  // #0E6E5D on white is 6.16:1 — well past the 4.5:1 floor, so it also works
+  // as body-weight text/icon colour, not just a fill.
+  primary: "#0E6E5D",
   onPrimary: "#FFFFFF",
 
   coral: "#FF6B52",
@@ -67,7 +71,7 @@ export const lightColors: Palette = {
   cardTranslucent: "rgba(255,255,255,0.84)",
   cardTranslucentBorder: "rgba(255,255,255,0.54)",
   inputSurface: "#FAFAFB",
-  primaryTint: "rgba(129,64,243,0.08)",
+  primaryTint: "rgba(14,110,93,0.08)",
 
   border: "#D1D5DB",
   borderDark: "#4B5563",
@@ -90,7 +94,10 @@ export const lightColors: Palette = {
  * Shadows dropped; elevation implied by surface steps.
  */
 export const darkColors: Palette = {
-  primary: "#A97CFF",
+  // Lighter than the light theme's primary, same rule dark palettes always
+  // follow here: a dark ink (#1F2937) sits on it, not white, so it has to be
+  // light enough itself to carry that ink at 4.5:1 (measures 7.51:1).
+  primary: "#3ECFAE",
   onPrimary: "#1F2937",
 
   coral: "#FF6B52",
@@ -106,7 +113,7 @@ export const darkColors: Palette = {
   cardTranslucent: "rgba(15,23,42,0.8)",
   cardTranslucentBorder: "rgba(255,255,255,0.05)",
   inputSurface: "#1E293B",
-  primaryTint: "rgba(169,124,255,0.12)",
+  primaryTint: "rgba(62,207,174,0.12)",
 
   border: "#374151",
   borderDark: "#4B5563",
@@ -230,7 +237,7 @@ export function shadowsFor(dark: boolean) {
           elevation: 2,
         },
     glow: {
-      shadowColor: dark ? "#A97CFF" : "#8140F3",
+      shadowColor: dark ? "#3ECFAE" : "#0E6E5D",
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: dark ? 0.25 : 0.35,
       shadowRadius: 12,
