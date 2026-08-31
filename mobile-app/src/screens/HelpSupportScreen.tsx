@@ -88,7 +88,7 @@ export function HelpSupportScreen() {
 
         <Text style={styles.section}>Contact</Text>
         <PressableScale style={styles.action} onPress={() => showToast("Opening email support…", "✉️")}>
-          <View style={[styles.actionIcon, { backgroundColor: "rgba(129,64,243,0.12)" }]}>
+          <View style={[styles.actionIcon, { backgroundColor: `${colors.primary}1F` }]}>
             <Ionicons name="mail-outline" size={18} color={colors.primary} />
           </View>
           <View style={styles.actionMeta}>

@@ -1,30 +1,27 @@
-import React, { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Image,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { radii, shadows } from "../theme";
+import { radii } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
 import { useServerData } from "../contexts/ServerDataContext";
-import { useAuth } from "../contexts/AuthContext";
 import type { ApiCoupon } from "../api/endpoints";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 export function StoreScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<{ navigate: (s: string, p?: object) => void }>();
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
   const { wallet, coupons, stores, refreshCatalogue } = useServerData();
   const [storeFilter, setStoreFilter] = useState<string>("All");
 
@@ -122,42 +119,47 @@ export function StoreScreen() {
             {filtered.map((perk) => {
               const affordable = tokens >= perk.cost_coins;
               return (
-                <PressableScale
-                  key={perk.id}
-                  style={styles.cardWrap}
-                  onPress={() => openCoupon(perk)}
-                >
-                  <GlassCard style={styles.card}>
-                    <View style={styles.imageWrap}>
-                      {perk.image_path ? (
-                        <Image source={{ uri: perk.image_path }} style={styles.image} />
-                      ) : (
-                        <View style={[styles.image, styles.imageFallback]}>
-                          <Ionicons name="gift-outline" size={28} color={colors.primary} />
+                // The percentage width has to live on a plain View, not on
+                // PressableScale: it wraps its content in its own unstyled
+                // Animated.View, and a percentage passed to it would resolve
+                // against that wrapper — which has no width of its own — not
+                // against this grid row. That mismatch was rendering every
+                // card at its own text's minimum width, with the rest of its
+                // 47.5% column left as blank gap.
+                <View key={perk.id} style={styles.cardWrap}>
+                  <PressableScale onPress={() => openCoupon(perk)}>
+                    <GlassCard style={styles.card}>
+                      <View style={styles.imageWrap}>
+                        {perk.image_path ? (
+                          <Image source={{ uri: perk.image_path }} style={styles.image} />
+                        ) : (
+                          <View style={[styles.image, styles.imageFallback]}>
+                            <Ionicons name="gift-outline" size={28} color={colors.primary} />
+                          </View>
+                        )}
+                        <View style={styles.catBadge}>
+                          <Text style={styles.catText}>
+                            {perk.quantity_remaining > 0
+                              ? `${perk.quantity_remaining} left`
+                              : "Sold out"}
+                          </Text>
                         </View>
-                      )}
-                      <View style={styles.catBadge}>
-                        <Text style={styles.catText}>
-                          {perk.quantity_remaining > 0
-                            ? `${perk.quantity_remaining} left`
-                            : "Sold out"}
-                        </Text>
                       </View>
-                    </View>
-                    <View style={styles.cardBody}>
-                      <Text style={styles.brand}>{storeName(perk.partner_id)}</Text>
-                      <Text style={styles.perkTitle} numberOfLines={2}>{perk.title}</Text>
-                      <View style={affordable ? styles.costBtn : [styles.costBtn, styles.costBtnMuted]}>
-                        <Text
-                          style={affordable ? styles.costText : [styles.costText, styles.costTextMuted]}
-                        >
-                          {perk.cost_coins.toLocaleString()}{" "}
-                          <Text style={styles.costUnit}>ST</Text>
-                        </Text>
+                      <View style={styles.cardBody}>
+                        <Text style={styles.brand}>{storeName(perk.partner_id)}</Text>
+                        <Text style={styles.perkTitle} numberOfLines={2}>{perk.title}</Text>
+                        <View style={affordable ? styles.costBtn : [styles.costBtn, styles.costBtnMuted]}>
+                          <Text
+                            style={affordable ? styles.costText : [styles.costText, styles.costTextMuted]}
+                          >
+                            {perk.cost_coins.toLocaleString()}{" "}
+                            <Text style={styles.costUnit}>ST</Text>
+                          </Text>
+                        </View>
                       </View>
-                    </View>
-                  </GlassCard>
-                </PressableScale>
+                    </GlassCard>
+                  </PressableScale>
+                </View>
               );
             })}
           </View>
@@ -197,9 +199,9 @@ const useStyles = makeStyles((colors) => ({
     marginTop: 2,
   },
   tokenPill: {
-    backgroundColor: "rgba(129,64,243,0.1)",
+    backgroundColor: colors.primaryTint,
     borderWidth: 1,
-    borderColor: "rgba(129,64,243,0.2)",
+    borderColor: `${colors.primary}33`,
     borderRadius: radii.full,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -264,15 +266,4 @@ const useStyles = makeStyles((colors) => ({
   costText: { color: colors.white, fontSize: 13, fontWeight: "600" },
   costTextMuted: { color: colors.muted },
   costUnit: { fontSize: 11, fontWeight: "400" },
-  fab: {
-    position: "absolute",
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    ...shadows.glow,
-  },
 }));

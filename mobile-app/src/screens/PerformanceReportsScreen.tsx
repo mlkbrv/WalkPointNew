@@ -176,7 +176,7 @@ export function PerformanceReportsScreen() {
                               height: `${Math.max(8, (d.steps / maxSteps) * 100)}%`,
                               backgroundColor: d.active
                                 ? colors.primary
-                                : "rgba(129,64,243,0.35)",
+                                : `${colors.primary}59`,
                             },
                           ]}
                         />

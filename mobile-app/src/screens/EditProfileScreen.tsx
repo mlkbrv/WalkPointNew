@@ -144,7 +144,7 @@ const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.canvas },
   content: { padding: spacing.xl, paddingTop: 56, paddingBottom: 40 },
   avatarWrap: { alignSelf: "center", marginBottom: spacing.xl },
-  avatar: { width: 96, height: 96, borderRadius: 48, borderWidth: 3, borderColor: "rgba(129,64,243,0.25)" },
+  avatar: { width: 96, height: 96, borderRadius: 48, borderWidth: 3, borderColor: `${colors.primary}40` },
   editBadge: {
     position: "absolute",
     right: 0,

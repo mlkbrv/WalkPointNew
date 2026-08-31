@@ -58,9 +58,9 @@ export function InboxScreen() {
     if (type === "coins_awarded")
       return { name: "sparkles" as const, bg: "rgba(0,225,148,0.12)", color: colors.emeraldInk };
     if (type === "new_coupon" || type === "moderation_result")
-      return { name: "bag-handle" as const, bg: "rgba(129,64,243,0.12)", color: colors.primary };
+      return { name: "bag-handle" as const, bg: `${colors.primary}1F`, color: colors.primary };
     if (type === "support_reply")
-      return { name: "chatbubbles" as const, bg: "rgba(129,64,243,0.12)", color: colors.primary };
+      return { name: "chatbubbles" as const, bg: `${colors.primary}1F`, color: colors.primary };
     return { name: "trophy" as const, bg: colors.border, color: colors.slate };
   };
 
@@ -181,7 +181,7 @@ const useStyles = makeStyles((colors) => ({
     marginTop: 2,
   },
   clearBtn: {
-    backgroundColor: "rgba(129,64,243,0.1)",
+    backgroundColor: `${colors.primary}1A`,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: radii.full,
@@ -201,7 +201,7 @@ const useStyles = makeStyles((colors) => ({
     overflow: "hidden",
     opacity: 0.85,
   },
-  cardUnread: { opacity: 1, borderColor: "rgba(129,64,243,0.25)" },
+  cardUnread: { opacity: 1, borderColor: `${colors.primary}40` },
   unreadBar: {
     position: "absolute",
     left: 0,
@@ -232,7 +232,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius: radii.md,
   },
   summaryBtn: {
-    backgroundColor: "rgba(129,64,243,0.1)",
+    backgroundColor: `${colors.primary}1A`,
   },
   actionText: { color: colors.white, fontSize: 12, fontWeight: "600", letterSpacing: 0.8 },
   codeBox: {

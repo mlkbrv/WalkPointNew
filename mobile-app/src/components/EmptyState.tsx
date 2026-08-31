@@ -3,8 +3,8 @@
  *
  * Empty states were a grey outline glyph and a line of text, which reads as a
  * failure whether or not anything is wrong. These are drawn from the same
- * vocabulary as the app icon — round-capped strokes, brand purple, one idea per
- * picture — so an empty screen looks designed rather than broken.
+ * vocabulary as the app icon — round-capped strokes, the brand colour, one
+ * idea per picture — so an empty screen looks designed rather than broken.
  *
  * Vector, not bitmap, and drawn locally: they scale to any size, adapt to the
  * palette, and cost no network round trip on the screen least likely to have
@@ -12,7 +12,7 @@
  */
 
 import type { ReactNode } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 
 import { radii, spacing } from "../theme";
@@ -27,7 +27,7 @@ function Art({ kind, size = 132 }: { kind: EmptyArt; size?: number }) {
   const TINT = colors.primary;
   // A tint of the brand colour, lightened in dark mode so the disc reads as a
   // raised surface rather than a hole.
-  const FAINT = isDark ? "rgba(169,124,255,0.14)" : "rgba(129,64,243,0.16)";
+  const FAINT = `${colors.primary}${isDark ? "24" : "29"}`;
   const common = {
     stroke: TINT,
     strokeWidth: 5,

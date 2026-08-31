@@ -225,7 +225,7 @@ const useStyles = makeStyles((colors) => ({
     color: colors.white,
     fontSize: 11,
     fontWeight: "600",
-    backgroundColor: "rgba(129,64,243,0.35)",
+    backgroundColor: `${colors.primary}59`,
     alignSelf: "flex-start",
     paddingHorizontal: 6,
     paddingVertical: 2,

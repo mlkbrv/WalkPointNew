@@ -271,9 +271,9 @@ const useStyles = makeStyles((colors) => ({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: radii.full,
-    backgroundColor: "rgba(129,64,243,0.1)",
+    backgroundColor: `${colors.primary}1A`,
     borderWidth: 1,
-    borderColor: "rgba(129,64,243,0.2)",
+    borderColor: `${colors.primary}33`,
   },
   seasonText: { fontSize: 12, fontWeight: "600", color: colors.primary },
   podium: {
@@ -327,7 +327,7 @@ const useStyles = makeStyles((colors) => ({
   },
   rowSelf: {
     backgroundColor: colors.primaryTint,
-    borderColor: "rgba(129,64,243,0.4)",
+    borderColor: `${colors.primary}66`,
   },
   rowLeft: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1 },
   rank: { width: 24, textAlign: "center", fontSize: 15, fontWeight: "600" },
