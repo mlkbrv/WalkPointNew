@@ -16,11 +16,14 @@ export function SegmentedChips<T extends string>({
   value,
   onChange,
   variant = "pill",
+  labelFor,
 }: {
   options: readonly T[];
   value: T;
   onChange: (next: T) => void;
   variant?: "pill" | "segmented";
+  /** Maps an option to its display text; without it the option is shown as-is. */
+  labelFor?: (option: T) => string;
 }) {
   const styles = useStyles();
   const enclosed = variant === "segmented";
@@ -47,7 +50,7 @@ export function SegmentedChips<T extends string>({
                   active && (enclosed ? styles.textOnSegment : styles.textOnChip),
                 ]}
               >
-                {option}
+                {labelFor ? labelFor(option) : option}
               </Text>
             </PressableScale>
           </View>

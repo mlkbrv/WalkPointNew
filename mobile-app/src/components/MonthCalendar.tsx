@@ -14,9 +14,8 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { PressableScale } from "./PressableScale";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { useI18n } from "../contexts/I18nContext";
 import { localDateKey } from "../health/dates";
-
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function MonthCalendar({
   month,
@@ -33,6 +32,12 @@ export function MonthCalendar({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { language } = useI18n();
+  // Built from the selected language, not a hardcoded list, so the header
+  // matches the month name rendered right above it.
+  const weekdays = Array.from({ length: 7 }, (_, i) =>
+    new Date(2024, 8, 1 + i).toLocaleDateString(language, { weekday: "short" }),
+  );
 
   const year = month.getFullYear();
   const monthIndex = month.getMonth();
@@ -54,7 +59,7 @@ export function MonthCalendar({
     };
   });
 
-  const title = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  const title = first.toLocaleDateString(language, { month: "long", year: "numeric" });
 
   return (
     <View style={styles.root}>
@@ -75,7 +80,7 @@ export function MonthCalendar({
       </View>
 
       <View style={styles.weekRow}>
-        {WEEKDAYS.map((w) => (
+        {weekdays.map((w) => (
           <View key={w} style={styles.cell}>
             <Text style={styles.weekday}>{w}</Text>
           </View>

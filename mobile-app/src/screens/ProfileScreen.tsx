@@ -15,9 +15,12 @@ import { ScreenHeader } from "../components/ScreenHeader";
 import { useStride } from "../contexts/StrideContext";
 import { useAuth } from "../contexts/AuthContext";
 import { makeStyles, useTheme, Appearance } from "../contexts/ThemeContext";
+import { useI18n, type LanguagePreference } from "../contexts/I18nContext";
+import { LANGUAGES } from "../i18n/strings";
 
 export function ProfileScreen() {
   const { colors, preference, setPreference, scheme } = useTheme();
+  const { t, preference: langPref, setPreference: setLangPref } = useI18n();
   const styles = useStyles();
   const navigation = useNavigation<{
     navigate: (s: string) => void;
@@ -101,7 +104,7 @@ export function ProfileScreen() {
     <View style={[styles.root, { paddingTop: insets.top + 8 }]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* No back button: this is a tab root, so there is nothing to go back to. */}
-        <ScreenHeader title="Account" />
+        <ScreenHeader title={t("account")} />
 
         <View style={styles.hero}>
           <View style={styles.avatarWrap}>
@@ -112,13 +115,13 @@ export function ProfileScreen() {
           </View>
           <Text style={styles.name}>{user?.name || "Walker"}</Text>
           <Text style={styles.meta}>
-            Member since {user?.memberSince || "2026"}
+            {t("memberSince", { year: user?.memberSince || "2026" })}
           </Text>
         </View>
 
         <View style={styles.stats}>
           <GlassCard style={styles.statTile}>
-            <Text style={styles.statLabel}>Weight</Text>
+            <Text style={styles.statLabel}>{t("weight")}</Text>
             <View style={styles.statEdit}>
               <PressableScale onPress={() => bump("weightKg", -1)}>
                 <Ionicons name="remove-circle-outline" size={18} color={colors.primary} />
@@ -130,7 +133,7 @@ export function ProfileScreen() {
             </View>
           </GlassCard>
           <GlassCard style={styles.statTile}>
-            <Text style={styles.statLabel}>Height</Text>
+            <Text style={styles.statLabel}>{t("height")}</Text>
             <View style={styles.statEdit}>
               <PressableScale onPress={() => bump("heightCm", -1)}>
                 <Ionicons name="remove-circle-outline" size={18} color={colors.primary} />
@@ -142,7 +145,7 @@ export function ProfileScreen() {
             </View>
           </GlassCard>
           <GlassCard style={styles.statTile}>
-            <Text style={styles.statLabel}>Goal</Text>
+            <Text style={styles.statLabel}>{t("goal")}</Text>
             <View style={styles.statEdit}>
               <PressableScale onPress={() => bump("stepsGoal", -500)}>
                 <Ionicons name="remove-circle-outline" size={18} color={colors.primary} />
@@ -157,14 +160,14 @@ export function ProfileScreen() {
 
         {/* Inbox, Board and History are reached from here now: they gave up their
             tab slots to Report and Account. */}
-        <Text style={styles.sectionLabel}>Activity</Text>
+        <Text style={styles.sectionLabel}>{t("activity")}</Text>
         <GlassCard style={styles.group}>
           <Row
             icon="notifications-outline"
             iconColor={colors.primary}
             iconBg={colors.primaryTint}
-            title="Notifications"
-            subtitle="Coins earned and partner news"
+            title={t("notifications")}
+            subtitle={t("notificationsSub")}
             onPress={() => navigation.navigate("Inbox")}
           />
           <View style={styles.divider} />
@@ -172,8 +175,8 @@ export function ProfileScreen() {
             icon="time-outline"
             iconColor={colors.primary}
             iconBg={colors.primaryTint}
-            title="History"
-            subtitle="Every session you have recorded"
+            title={t("history")}
+            subtitle={t("historySub")}
             onPress={() => navigation.navigate("History")}
           />
           <View style={styles.divider} />
@@ -181,8 +184,8 @@ export function ProfileScreen() {
             icon="medal-outline"
             iconColor={colors.primary}
             iconBg={colors.primaryTint}
-            title="Achievements"
-            subtitle="Levels you have reached"
+            title={t("achievements")}
+            subtitle={t("achievementsSub")}
             onPress={() => navigation.navigate("Achievements")}
           />
           <View style={styles.divider} />
@@ -190,20 +193,20 @@ export function ProfileScreen() {
             icon="trophy-outline"
             iconColor={colors.primary}
             iconBg={colors.primaryTint}
-            title="Leaderboard"
-            subtitle="How you rank this week"
+            title={t("leaderboard")}
+            subtitle={t("leaderboardSub")}
             onPress={() => navigation.navigate("Scoreboard")}
           />
         </GlassCard>
 
-        <Text style={styles.sectionLabel}>Account</Text>
+        <Text style={styles.sectionLabel}>{t("account")}</Text>
         <GlassCard style={styles.group}>
           <Row
             icon="phone-portrait-outline"
             iconColor={colors.primary}
             iconBg={colors.primaryTint}
-            title="Connected Devices"
-            subtitle="Apple Health and Google Fit sync"
+            title={t("connectedDevices")}
+            subtitle={t("connectedDevicesSub")}
             onPress={() => navigation.navigate("ConnectedDevices")}
           />
           <View style={styles.divider} />
@@ -211,8 +214,8 @@ export function ProfileScreen() {
             icon="help-circle-outline"
             iconColor={colors.primary}
             iconBg={colors.primaryTint}
-            title="Help & Support"
-            subtitle="FAQs and member helpdesk"
+            title={t("helpSupport")}
+            subtitle={t("helpSupportSub")}
             onPress={() => navigation.navigate("HelpSupport")}
           />
           <View style={styles.divider} />
@@ -220,8 +223,8 @@ export function ProfileScreen() {
             icon="wallet-outline"
             iconColor={colors.coralInk}
             iconBg={colors.primaryTint}
-            title="Wallet"
-            subtitle="Your redeemed coupons"
+            title={t("wallet")}
+            subtitle={t("walletSub")}
             onPress={() => navigation.navigate("Wallet")}
           />
           <View style={styles.divider} />
@@ -229,20 +232,20 @@ export function ProfileScreen() {
             icon="fitness-outline"
             iconColor={colors.primary}
             iconBg={colors.primaryTint}
-            title="Health Setup"
-            subtitle="Pedometer and Health Connect permissions"
+            title={t("healthSetup")}
+            subtitle={t("healthSetupSub")}
             onPress={() => navigation.navigate("HealthSetup")}
           />
         </GlassCard>
 
-        <Text style={styles.sectionLabel}>Appearance</Text>
+        <Text style={styles.sectionLabel}>{t("appearance")}</Text>
         <GlassCard style={styles.group}>
           <View style={styles.appearanceRow}>
             {["system", "light", "dark"].map((value) => {
               const labelMap: Record<string, string> = {
-                system: "Auto",
-                light: "Light",
-                dark: "Dark",
+                system: t("auto"),
+                light: t("light"),
+                dark: t("dark"),
               };
               const iconMap: Record<string, string> = {
                 system: "phone-portrait-outline",
@@ -277,19 +280,43 @@ export function ProfileScreen() {
             currently resolves to saves them opening the app twice to find out. */}
           <Text style={styles.appearanceHint}>
             {preference === "system"
-              ? `Following your device — currently ${scheme}.`
-              : `Always ${preference}, whatever your device is set to.`}
+              ? t("followingDevice", { scheme: scheme === "dark" ? t("dark") : t("light") })
+              : t("alwaysTheme", {
+                  theme: preference === "dark" ? t("dark") : t("light"),
+                })}
           </Text>
         </GlassCard>
 
-        <Text style={styles.sectionLabel}>Preferences</Text>
+        <Text style={styles.sectionLabel}>{t("language")}</Text>
+        <GlassCard style={styles.group}>
+          <View style={styles.appearanceRow}>
+            {(["system", ...Object.keys(LANGUAGES)] as LanguagePreference[]).map((value) => {
+              const active = langPref === value;
+              return (
+                <PressableScale
+                  key={value}
+                  style={[styles.appearanceOption, active && styles.appearanceOptionActive]}
+                  onPress={() => setLangPref(value)}
+                >
+                  <Text
+                    style={[styles.appearanceLabel, active && styles.appearanceLabelActive]}
+                  >
+                    {value === "system" ? t("auto") : LANGUAGES[value].label}
+                  </Text>
+                </PressableScale>
+              );
+            })}
+          </View>
+        </GlassCard>
+
+        <Text style={styles.sectionLabel}>{t("preferences")}</Text>
         <GlassCard style={styles.group}>
           <ToggleRow
             icon="notifications-outline"
             iconColor={colors.primary}
             iconBg={colors.primaryTint}
-            title="Notifications"
-            subtitle="Push alerts and milestones"
+            title={t("notifications")}
+            subtitle={t("pushAlerts")}
             value={prefs.notificationsEnabled}
             onValueChange={(v) => updatePrefs({ notificationsEnabled: v })}
           />
@@ -298,8 +325,8 @@ export function ProfileScreen() {
             icon="eye-outline"
             iconColor={colors.coralInk}
             iconBg={colors.primaryTint}
-            title="Privacy Visible"
-            subtitle="Show profile on scoreboard"
+            title={t("privacyVisible")}
+            subtitle={t("privacyVisibleSub")}
             value={prefs.privacyVisible}
             onValueChange={(v) => updatePrefs({ privacyVisible: v })}
           />
@@ -311,7 +338,7 @@ export function ProfileScreen() {
             await logout();
           }}
         >
-          <Text style={styles.logoutText}>Log Out</Text>
+          <Text style={styles.logoutText}>{t("logOut")}</Text>
         </PressableScale>
       </ScrollView>
     </View>

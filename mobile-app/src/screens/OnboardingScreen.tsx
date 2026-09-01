@@ -28,6 +28,7 @@ import { SegmentedChips } from "../components/SegmentedChips";
 import { WheelPicker } from "../components/WheelPicker";
 import { useStride } from "../contexts/StrideContext";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { useI18n } from "../contexts/I18nContext";
 import type { Gender } from "../types";
 
 const STEPS = 6;
@@ -62,6 +63,7 @@ function Title({ text, accent }: { text: string; accent: string }) {
 
 export function OnboardingScreen({ onDone }: { onDone: () => void }) {
   const { colors } = useTheme();
+  const { t } = useI18n();
   const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { userStats, setUserStats } = useStride();
@@ -106,13 +108,13 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
       <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
         {step === 0 ? (
           <>
-            <Title text="Select Your {}" accent="Gender" />
-            <Text style={styles.subtitle}>Let&apos;s start by understanding you.</Text>
+            <Title text={t("selectYourGender") + "{}"} accent={t("gender")} />
+            <Text style={styles.subtitle}>{t("genderSub")}</Text>
             <View style={styles.genderRow}>
               {(
                 [
-                  { key: "man", label: "Man", icon: "man" },
-                  { key: "woman", label: "Woman", icon: "woman" },
+                  { key: "man", label: t("man"), icon: "man" },
+                  { key: "woman", label: t("woman"), icon: "woman" },
                 ] as const
               ).map((option) => {
                 const active = userStats.gender === option.key;
@@ -142,13 +144,13 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
 
         {step === 1 ? (
           <>
-            <Title text="Do You Live a {} Lifestyle?" accent="Sedentary" />
-            <Text style={styles.subtitle}>Tell us about your daily routine.</Text>
+            <Title text={t("sedentaryTitle") + "{}" + t("sedentaryTitleEnd")} accent={t("sedentary")} />
+            <Text style={styles.subtitle}>{t("sedentarySub")}</Text>
             <View style={styles.yesNoRow}>
               {(
                 [
-                  { key: false, label: "No" },
-                  { key: true, label: "Yes" },
+                  { key: false, label: t("no") },
+                  { key: true, label: t("yes") },
                 ] as const
               ).map((option) => {
                 const active = userStats.sedentary === option.key;
@@ -170,12 +172,12 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
 
         {step === 2 ? (
           <>
-            <Title text="How {} Are You?" accent="Old" />
-            <Text style={styles.subtitle}>Share your age with us.</Text>
+            <Title text={t("howOldTitle") + "{}" + t("howOldTitleEnd")} accent={t("old")} />
+            <Text style={styles.subtitle}>{t("ageSub")}</Text>
             <WheelPicker
               values={AGE}
               value={userStats.ageYears}
-              unit="years"
+              unit={t("years")}
               onChange={(v) => set("ageYears", Number(v))}
             />
           </>
@@ -183,8 +185,8 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
 
         {step === 3 ? (
           <>
-            <Title text="What&apos;s Your {}?" accent="Height" />
-            <Text style={styles.subtitle}>How tall are you?</Text>
+            <Title text={t("heightTitle") + "{}?"} accent={t("heightWord")} />
+            <Text style={styles.subtitle}>{t("heightSub")}</Text>
             <View style={styles.unitRow}>
               <SegmentedChips
                 options={["cm", "ft"] as const}
@@ -207,8 +209,8 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
 
         {step === 4 ? (
           <>
-            <Title text="What&apos;s Your {}?" accent="Weight" />
-            <Text style={styles.subtitle}>Share your weight with us.</Text>
+            <Title text={t("weightTitle") + "{}?"} accent={t("weightWord")} />
+            <Text style={styles.subtitle}>{t("weightSub")}</Text>
             <View style={styles.unitRow}>
               <SegmentedChips
                 options={["kg", "lbs"] as const}
@@ -230,12 +232,12 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
 
         {step === 5 ? (
           <>
-            <Title text="Set Your {}" accent="Step Goal" />
-            <Text style={styles.subtitle}>Choose your daily step goal to stay motivated!</Text>
+            <Title text={t("goalTitle") + "{}"} accent={t("goalWord")} />
+            <Text style={styles.subtitle}>{t("goalSub")}</Text>
             <WheelPicker
               values={GOAL}
               value={userStats.stepsGoal}
-              unit="steps"
+              unit={t("steps")}
               onChange={(v) => set("stepsGoal", Number(v))}
             />
           </>
@@ -243,8 +245,8 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
-        <PillButton label="Skip" variant="soft" flex onPress={next} />
-        <PillButton label={step === STEPS - 1 ? "Finish" : "Continue"} flex onPress={next} />
+        <PillButton label={t("skip")} variant="soft" flex onPress={next} />
+        <PillButton label={step === STEPS - 1 ? t("finish") : t("cont")} flex onPress={next} />
       </View>
     </View>
   );

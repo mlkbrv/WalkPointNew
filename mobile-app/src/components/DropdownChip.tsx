@@ -25,20 +25,25 @@ export function DropdownChip<T extends string>({
   options,
   onChange,
   align = "right",
+  labelFor,
 }: {
   value: T;
   options: readonly T[];
   onChange: (next: T) => void;
   align?: "left" | "right";
+  /** Maps an option to its display text. Without it the option is shown as-is,
+   *  which is only right when the options are already human-readable. */
+  labelFor?: (option: T) => string;
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
   const [open, setOpen] = useState(false);
+  const label = (option: T) => (labelFor ? labelFor(option) : option);
 
   return (
     <View style={styles.wrap}>
       <PressableScale style={styles.chip} onPress={() => setOpen((v) => !v)}>
-        <Text style={styles.chipText}>{value}</Text>
+        <Text style={styles.chipText}>{label(value)}</Text>
         <Ionicons
           name={open ? "chevron-up" : "chevron-down"}
           size={13}
@@ -66,7 +71,7 @@ export function DropdownChip<T extends string>({
                 }}
               >
                 <Text style={[styles.optionText, option === value && styles.optionActive]}>
-                  {option}
+                  {label(option)}
                 </Text>
                 {option === value ? (
                   <Ionicons name="checkmark" size={14} color={colors.primary} />

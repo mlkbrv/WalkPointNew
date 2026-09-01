@@ -15,9 +15,8 @@ import { Text, View } from "react-native";
 
 import { PressableScale } from "./PressableScale";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { useI18n } from "../contexts/I18nContext";
 import { localDateKey } from "../health/dates";
-
-const WEEKDAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function DayCircleRow({
   days,
@@ -33,6 +32,7 @@ export function DayCircleRow({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t, language } = useI18n();
 
   const stepsByDate = new Map(days.map((d) => [d.date, d.steps]));
   const today = localDateKey(new Date());
@@ -46,7 +46,7 @@ export function DayCircleRow({
     return {
       iso,
       dayOfMonth: d.getDate(),
-      weekday: WEEKDAY[d.getDay()],
+      weekday: d.toLocaleDateString(language, { weekday: "short" }),
       steps: stepsByDate.get(iso) ?? 0,
       isToday: iso === today,
     };
@@ -90,7 +90,7 @@ export function DayCircleRow({
               </Text>
             </View>
             <Text style={[styles.weekday, slot.isToday && { color: colors.primary }]}>
-              {slot.isToday ? "Today" : slot.weekday}
+              {slot.isToday ? t("today") : slot.weekday}
             </Text>
           </PressableScale>
         );

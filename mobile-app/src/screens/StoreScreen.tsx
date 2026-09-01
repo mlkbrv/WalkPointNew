@@ -17,13 +17,21 @@ import { useServerData } from "../contexts/ServerDataContext";
 import type { ApiCoupon } from "../api/endpoints";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
+import { useI18n } from "../contexts/I18nContext";
+
+/** Sentinel for the unfiltered view. Not the translated word: the selected
+ *  filter is state, and it would stop matching the moment language changed. */
+const ALL = "\u0000all";
+
+
 export function StoreScreen() {
   const { colors } = useTheme();
+  const { t } = useI18n();
   const styles = useStyles();
   const navigation = useNavigation<{ navigate: (s: string, p?: object) => void }>();
   const insets = useSafeAreaInsets();
   const { wallet, coupons, stores, refreshCatalogue } = useServerData();
-  const [storeFilter, setStoreFilter] = useState<string>("All");
+  const [storeFilter, setStoreFilter] = useState<string>(ALL);
 
   // Coming back from a purchase should show the new balance and the new stock.
   useFocusEffect(
@@ -40,17 +48,17 @@ export function StoreScreen() {
   // client-side would put labels on screen that nothing on the server backs.
   const storeName = useMemo(() => {
     const byId = new Map(stores.data.map((store) => [store.id, store.company_name]));
-    return (partnerId: string) => byId.get(partnerId) ?? "Partner";
-  }, [stores.data]);
+    return (partnerId: string) => byId.get(partnerId) ?? t("partner");
+  }, [stores.data, t]);
 
   const filters = useMemo(
-    () => ["All", ...stores.data.map((store) => store.company_name)],
+    () => [ALL, ...stores.data.map((store) => store.company_name)],
     [stores.data],
   );
 
   const filtered = useMemo(
     () =>
-      storeFilter === "All"
+      storeFilter === ALL
         ? coupons.data
         : coupons.data.filter((coupon) => storeName(coupon.partner_id) === storeFilter),
     [coupons.data, storeFilter, storeName],
@@ -65,17 +73,17 @@ export function StoreScreen() {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>Rewards Store</Text>
-            <Text style={styles.sub}>Exchange Steps for Perks</Text>
+            <Text style={styles.title}>{t("rewardsStore")}</Text>
+            <Text style={styles.sub}>{t("exchangeStepsForPerks")}</Text>
           </View>
           <PressableScale style={styles.tokenPill} onPress={() => navigation.navigate("Wallet")}>
-            <Text style={styles.tokenLabel}>Wallet</Text>
+            <Text style={styles.tokenLabel}>{t("wallet")}</Text>
             <Text style={styles.tokenValue}>{tokens.toLocaleString()} ST</Text>
           </PressableScale>
         </View>
 
         <Text style={styles.blurb}>
-          Redeem your hard-earned steps for exclusive product discounts, free meals, and premium apparel coupons.
+          {t("storeBlurb")}
         </Text>
 
         <ScrollView
@@ -90,7 +98,7 @@ export function StoreScreen() {
               onPress={() => setStoreFilter(cat)}
             >
               <Text style={[styles.chipText, storeFilter === cat && styles.chipTextActive]}>
-                {cat}
+                {cat === ALL ? t("all") : cat}
               </Text>
             </PressableScale>
           ))}
@@ -103,16 +111,16 @@ export function StoreScreen() {
         ) : coupons.error && coupons.data.length === 0 ? (
           <EmptyState
             art="offline"
-            title="Could not load the store"
+            title={t("couldNotLoadStore")}
             body={coupons.error ?? undefined}
-            actionLabel="Try again"
+            actionLabel={t("tryAgain")}
             onAction={() => void refreshCatalogue()}
           />
         ) : filtered.length === 0 ? (
           <EmptyState
             art="store"
-            title="No offers yet"
-            body="Partner coupons appear here once a moderator approves them."
+            title={t("noOffersYet")}
+            body={t("noOffersBody")}
           />
         ) : (
           <View style={styles.grid}>
@@ -140,8 +148,8 @@ export function StoreScreen() {
                         <View style={styles.catBadge}>
                           <Text style={styles.catText}>
                             {perk.quantity_remaining > 0
-                              ? `${perk.quantity_remaining} left`
-                              : "Sold out"}
+                              ? t("left", { n: perk.quantity_remaining })
+                              : t("soldOut")}
                           </Text>
                         </View>
                       </View>

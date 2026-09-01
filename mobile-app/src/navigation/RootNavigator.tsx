@@ -16,6 +16,7 @@ import { makeStyles, useTheme } from "../contexts/ThemeContext";
 import { AuthStackParamList, MainTabParamList, RootStackParamList } from "../types";
 import { FeedbackToast } from "../components/FeedbackToast";
 import { useOnboarding } from "../hooks/useOnboarding";
+import { useI18n } from "../contexts/I18nContext";
 
 import { LoginScreen } from "../screens/LoginScreen";
 import { RegisterScreen } from "../screens/RegisterScreen";
@@ -81,7 +82,8 @@ const TAB_ICON: Record<
 };
 
 function MainTabs() {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
+  const { t } = useI18n();
   const insets = useSafeAreaInsets();
 
   return (
@@ -89,7 +91,10 @@ function MainTabs() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: isDark ? "rgba(22,26,33,0.97)" : "rgba(255,255,255,0.96)",
+          // From the palette, not a literal: this used to be a hardcoded
+          // slate-blue that stayed put when the dark surfaces moved to neutral
+          // black, leaving the bar a different colour from the app above it.
+          backgroundColor: colors.card,
           borderTopColor: colors.border,
           // Without the inset the bar sits under the gesture indicator on a
           // phone with no home button, and the last row of every tab is
@@ -107,15 +112,15 @@ function MainTabs() {
         },
       })}
     >
-      <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: "Home" }} />
-      <Tab.Screen name="TrackTab" component={TrackScreen} options={{ title: "Track" }} />
+      <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: t("tabHome") }} />
+      <Tab.Screen name="TrackTab" component={TrackScreen} options={{ title: t("tabTrack") }} />
       <Tab.Screen
         name="ReportTab"
         component={PerformanceReportsScreen}
-        options={{ title: "Report" }}
+        options={{ title: t("tabReport") }}
       />
-      <Tab.Screen name="StoreTab" component={StoreScreen} options={{ title: "Store" }} />
-      <Tab.Screen name="AccountTab" component={ProfileScreen} options={{ title: "Account" }} />
+      <Tab.Screen name="StoreTab" component={StoreScreen} options={{ title: t("tabStore") }} />
+      <Tab.Screen name="AccountTab" component={ProfileScreen} options={{ title: t("tabAccount") }} />
     </Tab.Navigator>
   );
 }

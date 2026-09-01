@@ -23,6 +23,7 @@ import { stepsApi } from "../api/endpoints";
 import { EmptyState } from "../components/EmptyState";
 import { PressableScale } from "../components/PressableScale";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { useI18n } from "../contexts/I18nContext";
 
 /** Fifteen rungs, matching the reference's grid. */
 const THRESHOLDS = [
@@ -39,6 +40,7 @@ function short(n: number): string {
 
 export function AchievementsScreen() {
   const { colors } = useTheme();
+  const { t } = useI18n();
   const styles = useStyles();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<{ goBack: () => void }>();
@@ -88,25 +90,28 @@ export function AchievementsScreen() {
             <PressableScale style={styles.back} onPress={() => navigation.goBack()}>
               <Ionicons name="arrow-back" size={20} color={colors.white} />
             </PressableScale>
-            <Text style={styles.heroTitle}>Achievements</Text>
+            <Text style={styles.heroTitle}>{t("achievements")}</Text>
             <View style={styles.back} />
           </View>
 
           <View style={styles.medal}>
             <Ionicons name="trophy" size={56} color="#FBBF24" />
           </View>
-          <Text style={styles.heroLevel}>{level === 0 ? "No level yet" : `Level ${level}`}</Text>
+          <Text style={styles.heroLevel}>{level === 0 ? t("noLevelYet") : t("levelN", { n: level })}</Text>
           <Text style={styles.heroCopy}>
             {level === 0
-              ? `Walk ${short(THRESHOLDS[0])} steps to reach your first level`
-              : `You've passed ${short(THRESHOLDS[level - 1])} steps in the last year`}
+              ? t("reachFirstLevel", { steps: short(THRESHOLDS[0]) })
+              : t("passedStepsLastYear", { steps: short(THRESHOLDS[level - 1]) })}
           </Text>
           {nextThreshold ? (
             <Text style={styles.heroNext}>
-              {(nextThreshold - total).toLocaleString()} steps to level {level + 1}
+              {t("stepsToLevel", {
+                steps: (nextThreshold - total).toLocaleString(),
+                n: level + 1,
+              })}
             </Text>
           ) : (
-            <Text style={styles.heroNext}>Every level cleared</Text>
+            <Text style={styles.heroNext}>{t("everyLevelCleared")}</Text>
           )}
         </LinearGradient>
 
@@ -114,9 +119,9 @@ export function AchievementsScreen() {
           {error ? (
             <EmptyState
               art="offline"
-              title="Could not load your levels"
+              title={t("couldNotLoadLevels")}
               body={error}
-              actionLabel="Try again"
+              actionLabel={t("tryAgain")}
               onAction={() => void load()}
             />
           ) : (
@@ -133,10 +138,10 @@ export function AchievementsScreen() {
                       />
                     </View>
                     <Text style={[styles.badgeLevel, earned && styles.badgeLevelEarned]}>
-                      Level {i + 1}
+                      {t("levelN", { n: i + 1 })}
                     </Text>
                     <Text style={styles.badgeHint} numberOfLines={1}>
-                      {earned ? "Passed" : `${short(threshold)} steps`}
+                      {earned ? t("passed") : t("stepsShort", { n: short(threshold) })}
                     </Text>
                   </View>
                 );

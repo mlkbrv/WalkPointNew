@@ -51,8 +51,20 @@ export function PressableScale({ children, onPress, style, disabled, haptic = tr
         onPressIn={() => spring(0.96)}
         onPressOut={() => spring(1)}
         onPress={() => {
-          if (haptic) void Haptics.selectionAsync();
+          // The handler runs first, and the haptic is isolated behind its own
+          // guard. Called the other way round — `Haptics.selectionAsync()` then
+          // `onPress()` — anything that module throws synchronously (it has no
+          // implementation on every platform this app ships to) takes the real
+          // handler down with it, and the button does nothing at all with no
+          // error visible on screen.
           onPress?.();
+          if (haptic) {
+            try {
+              void Haptics.selectionAsync().catch(() => undefined);
+            } catch {
+              // A device with no haptic engine is not a reason to break a tap.
+            }
+          }
         }}
         style={style}
       >

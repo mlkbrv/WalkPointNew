@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { radii } from "../theme";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { useI18n } from "../contexts/I18nContext";
 import { PressableScale } from "../components/PressableScale";
 import { Avatar } from "../components/Avatar";
 import { GlassCard } from "../components/GlassCard";
@@ -34,7 +35,7 @@ import { useGoalCelebration } from "../hooks/useGoalCelebration";
 import { useServerData } from "../contexts/ServerDataContext";
 import { caloriesFromSteps, distanceFromSteps, minutesFromSteps } from "../utils/metrics";
 
-const PERIODS = ["This Week", "Last Week"] as const;
+const PERIODS = ["thisWeek", "lastWeek"] as const;
 type Period = (typeof PERIODS)[number];
 
 /** "1h 14m", or "14m" below the hour — the reference never shows a bare 0h. */
@@ -46,6 +47,7 @@ function formatMinutes(total: number): string {
 
 export function HomeScreen() {
   const { colors } = useTheme();
+  const { t } = useI18n();
   const styles = useStyles();
   const navigation = useNavigation<{
     navigate: (s: string, p?: object) => void;
@@ -58,7 +60,7 @@ export function HomeScreen() {
   const { seenIds, reload: reloadSeen } = useSeenStories();
   const { storyGroups, stores, unreadCount } = useServerData();
   const week = useStepHistory();
-  const [period, setPeriod] = useState<Period>("This Week");
+  const [period, setPeriod] = useState<Period>("thisWeek");
 
   useGoalCelebration(
     userStats.stepsToday,
@@ -75,28 +77,28 @@ export function HomeScreen() {
   const stepsToday = userStats.stepsToday;
   const stepsGoal = userStats.stepsGoal;
   const unread = unreadCount > 0;
-  const lastWeek = period === "Last Week";
+  const lastWeek = period === "lastWeek";
 
   const stats: Stat[] = [
     {
       key: "time",
       icon: "time-outline",
       value: formatMinutes(minutesFromSteps(stepsToday)),
-      unit: "time",
+      unit: t("time"),
       tone: "time",
     },
     {
       key: "calories",
       icon: "flame",
       value: String(caloriesFromSteps(stepsToday)),
-      unit: "kcal",
+      unit: t("kcal"),
       tone: "calories",
     },
     {
       key: "distance",
       icon: "location",
       value: distanceFromSteps(stepsToday).toFixed(2),
-      unit: "km",
+      unit: t("km"),
       tone: "distance",
     },
   ];
@@ -132,8 +134,8 @@ export function HomeScreen() {
               <View style={styles.onlineDot} />
             </View>
             <View>
-              <Text style={styles.hello}>Hello, {(user?.name || "Walker").split(" ")[0]}!</Text>
-              <Text style={styles.member}>Active Member</Text>
+              <Text style={styles.hello}>{t("helloName", { name: (user?.name || "Walker").split(" ")[0] })}</Text>
+              <Text style={styles.member}>{t("activeMember")}</Text>
             </View>
           </PressableScale>
 
@@ -155,9 +157,9 @@ export function HomeScreen() {
           >
             <Ionicons name="fitness-outline" size={18} color={colors.coralInk} />
             <View style={styles.healthTextWrap}>
-              <Text style={styles.healthTitle}>Health access needed</Text>
+              <Text style={styles.healthTitle}>{t("healthAccessNeeded")}</Text>
               <Text style={styles.healthBody}>
-                Connect sensors to track real steps — metrics stay at 0 until then
+                {t("healthAccessBody")}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={colors.coralInk} />
@@ -165,7 +167,7 @@ export function HomeScreen() {
         ) : null}
 
         <GlassCard style={styles.gaugeCard}>
-          <Gauge value={stepsToday} goal={stepsGoal}>
+          <Gauge value={stepsToday} goal={stepsGoal} label={t("steps")}>
             <PressableScale style={styles.gaugeFab} onPress={openActivity}>
               <Ionicons name="stats-chart" size={22} color={colors.onPrimary} />
             </PressableScale>
@@ -176,8 +178,13 @@ export function HomeScreen() {
 
         <GlassCard style={styles.progressCard}>
           <View style={styles.progressHead}>
-            <Text style={styles.progressTitle}>Your Progress</Text>
-            <DropdownChip value={period} options={PERIODS} onChange={setPeriod} />
+            <Text style={styles.progressTitle}>{t("yourProgress")}</Text>
+            <DropdownChip
+              value={period}
+              options={PERIODS}
+              onChange={setPeriod}
+              labelFor={(p) => t(p)}
+            />
           </View>
           <DayCircleRow
             days={lastWeek ? week.previousDays : week.days}
@@ -186,12 +193,15 @@ export function HomeScreen() {
           />
           <Text style={styles.progressFoot}>
             {lastWeek
-              ? `${week.previousWeek.toLocaleString()} steps that week`
+              ? t("stepsThatWeek", { steps: week.previousWeek.toLocaleString() })
               : week.changePercent === null
-                ? `${week.thisWeek.toLocaleString()} steps in the last 7 days`
-                : `${Math.abs(week.changePercent)}% ${
-                    week.changePercent >= 0 ? "more" : "less"
-                  } active than last week`}
+                ? t("stepsInLast7Days", { steps: week.thisWeek.toLocaleString() })
+                : t(
+                    week.changePercent >= 0
+                      ? "moreActiveThanLastWeek"
+                      : "lessActiveThanLastWeek",
+                    { percent: Math.abs(week.changePercent) },
+                  )}
           </Text>
         </GlassCard>
 
@@ -202,9 +212,9 @@ export function HomeScreen() {
         />
 
         <View style={styles.sectionHead}>
-          <Text style={styles.sectionTitle}>Premium Brand Partners</Text>
+          <Text style={styles.sectionTitle}>{t("premiumBrandPartners")}</Text>
           <PressableScale style={styles.storeLink} onPress={openStore}>
-            <Text style={styles.storeLinkText}>Store</Text>
+            <Text style={styles.storeLinkText}>{t("tabStore")}</Text>
             <Ionicons name="chevron-forward" size={14} color={colors.primary} />
           </PressableScale>
         </View>
@@ -231,7 +241,7 @@ export function HomeScreen() {
                     {store.company_name}
                   </Text>
                   <Text style={styles.brandCat} numberOfLines={1}>
-                    {store.description || "Partner"}
+                    {store.description || t("partner")}
                   </Text>
                 </GlassCard>
               </PressableScale>

@@ -12,6 +12,7 @@ import { HealthProvider } from "./src/contexts/HealthContext";
 import { ServerDataProvider } from "./src/contexts/ServerDataContext";
 import { StrideProvider } from "./src/contexts/StrideContext";
 import { ThemeProvider, makeStyles, useTheme } from "./src/contexts/ThemeContext";
+import { I18nProvider } from "./src/contexts/I18nContext";
 import { RootNavigator } from "./src/navigation/RootNavigator";
 import { AnimatedSplashScreen } from "./src/components/AnimatedSplashScreen";
 import { usePushRegistration } from "./src/hooks/usePushRegistration";
@@ -68,7 +69,12 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ThemeProvider>
-          <AppShell />
+          {/* Above everything that renders text, and beside ThemeProvider
+              rather than under any screen: language changes relabel the tab
+              bar and the navigator too, not only the screen in front. */}
+          <I18nProvider>
+            <AppShell />
+          </I18nProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

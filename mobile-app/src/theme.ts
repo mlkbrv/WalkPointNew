@@ -111,8 +111,8 @@ export const darkColors: Palette = {
   // light enough itself to carry that ink at 4.5:1 (measures 5.39:1).
   primary: "#A78BFA",
   onPrimary: "#1F2937",
-  primarySoft: "#312E4E",
-  // 7.9:1 on #312E4E.
+  primarySoft: "#2A2440",
+  // 7.98:1 on #2A2440.
   onPrimarySoft: "#C4B5FD",
 
   coral: "#FF6B52",
@@ -122,28 +122,30 @@ export const darkColors: Palette = {
   emeraldInk: "#36D38D",
   amberInk: "#FCD34D",
 
-  canvas: "#0F172A",
-  card: "#1E293B",
-  cardDark: "#0F172A",
-  dark: "#07090B",
+  // Neutral near-black, not the blue-grey slate this used to be. The reference's
+  // dark screens are grey-black; a navy cast made every white card above them
+  // read as tinted and was the loudest thing wrong with the dark theme.
+  canvas: "#0C0C10",
+  card: "#17171D",
+  cardDark: "#101015",
+  dark: "#08080B",
 
-  cardTranslucent: "rgba(15,23,42,0.8)",
-  cardTranslucentBorder: "rgba(255,255,255,0.05)",
-  inputSurface: "#1E293B",
+  cardTranslucent: "rgba(23,23,29,0.82)",
+  cardTranslucentBorder: "rgba(255,255,255,0.06)",
+  inputSurface: "#1E1E26",
   primaryTint: "rgba(167,139,250,0.16)",
 
-  border: "#374151",
-  borderDark: "#4B5563",
-  hairline: "#4B5563",
+  border: "#2A2A34",
+  borderDark: "#3A3A46",
+  hairline: "#3A3A46",
 
-  text: "#F8FAFC",
-  charcoal: "#F8FAFC",
-  textLight: "#F8FAFC",
-  // Grey-500 is only 3.03:1 on the dark card. On a dark ground the ramp has
-  // to run the other way, so this is lighter, not darker.
-  slate: "#898F9C",
-  muted: "#9CA3AF",
-  mutedDark: "#D1D5DB",
+  text: "#F5F5F7",
+  charcoal: "#F5F5F7",
+  textLight: "#F5F5F7",
+  // On a dark ground the secondary ramp runs lighter, not darker.
+  slate: "#9A9AA6",
+  muted: "#8E8E9A",
+  mutedDark: "#C9C9D2",
 
   white: "#FFFFFF",
 };

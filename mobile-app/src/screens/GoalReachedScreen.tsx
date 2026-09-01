@@ -21,6 +21,7 @@ import { PillButton } from "../components/PillButton";
 import { StatTileRow, type Stat } from "../components/StatTileRow";
 import { useStride } from "../contexts/StrideContext";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { useI18n } from "../contexts/I18nContext";
 import { caloriesFromSteps, distanceFromSteps, minutesFromSteps } from "../utils/metrics";
 
 /** left %, top %, rotation, size, tone index — fixed so the scatter is stable. */
@@ -34,6 +35,7 @@ const CONFETTI: [number, number, number, number, number][] = [
 
 export function GoalReachedScreen() {
   const { colors } = useTheme();
+  const { t } = useI18n();
   const styles = useStyles();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<{
@@ -50,21 +52,21 @@ export function GoalReachedScreen() {
       key: "time",
       icon: "time-outline",
       value: `${minutesFromSteps(steps)}m`,
-      unit: "time",
+      unit: t("time"),
       tone: "time",
     },
     {
       key: "calories",
       icon: "flame",
       value: String(caloriesFromSteps(steps)),
-      unit: "kcal",
+      unit: t("kcal"),
       tone: "calories",
     },
     {
       key: "distance",
       icon: "location",
       value: distanceFromSteps(steps).toFixed(2),
-      unit: "km",
+      unit: t("km"),
       tone: "distance",
     },
   ];
@@ -95,10 +97,9 @@ export function GoalReachedScreen() {
           <Ionicons name="trophy" size={72} color={colors.amber} />
         </View>
 
-        <Text style={styles.title}>{steps.toLocaleString()} Steps!</Text>
+        <Text style={styles.title}>{t("stepsExclaim", { steps: steps.toLocaleString() })}</Text>
         <Text style={styles.body}>
-          Congratulations! You&apos;ve completed your daily step goal of{" "}
-          {userStats.stepsGoal.toLocaleString()}.
+          {t("goalReachedBody", { goal: userStats.stepsGoal.toLocaleString() })}
         </Text>
 
         <View style={styles.stats}>
@@ -106,9 +107,9 @@ export function GoalReachedScreen() {
         </View>
 
         <View style={styles.actions}>
-          <PillButton label="Not now" variant="soft" flex onPress={() => navigation.goBack()} />
+          <PillButton label={t("notNow")} variant="soft" flex onPress={() => navigation.goBack()} />
           <PillButton
-            label="See report"
+            label={t("seeReport")}
             flex
             onPress={() => navigation.navigate("Main", { screen: "ReportTab" })}
           />

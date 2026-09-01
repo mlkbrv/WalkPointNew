@@ -38,12 +38,13 @@ import { PressableScale } from "../components/PressableScale";
 import { SegmentedChips } from "../components/SegmentedChips";
 import { StatTileRow, type Stat } from "../components/StatTileRow";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { useI18n } from "../contexts/I18nContext";
 import { caloriesFromSteps, distanceFromSteps, minutesFromSteps } from "../utils/metrics";
 
-const PERIODS = ["This Week", "This Month"] as const;
+const PERIODS = ["thisWeek", "thisMonth"] as const;
 type Period = (typeof PERIODS)[number];
 
-const METRICS = ["Steps", "Time", "Calorie", "Distance"] as const;
+const METRICS = ["metricSteps", "metricTime", "metricCalorie", "metricDistance"] as const;
 type Metric = (typeof METRICS)[number];
 
 /** Enough to cover the six rows a month grid can show. */
@@ -56,27 +57,28 @@ function dayLabel(iso: string): string {
 }
 
 function measure(steps: number, metric: Metric): number {
-  if (metric === "Time") return minutesFromSteps(steps);
-  if (metric === "Calorie") return caloriesFromSteps(steps);
-  if (metric === "Distance") return distanceFromSteps(steps);
+  if (metric === "metricTime") return minutesFromSteps(steps);
+  if (metric === "metricCalorie") return caloriesFromSteps(steps);
+  if (metric === "metricDistance") return distanceFromSteps(steps);
   return steps;
 }
 
 function formatMetric(value: number, metric: Metric): string {
-  if (metric === "Time") return `${value} min`;
-  if (metric === "Calorie") return `${value} kcal`;
-  if (metric === "Distance") return `${value.toFixed(2)} km`;
+  if (metric === "metricTime") return `${value} min`;
+  if (metric === "metricCalorie") return `${value} kcal`;
+  if (metric === "metricDistance") return `${value.toFixed(2)} km`;
   return value.toLocaleString();
 }
 
 export function PerformanceReportsScreen() {
   const { colors } = useTheme();
+  const { t } = useI18n();
   const styles = useStyles();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<{ navigate: (s: string) => void }>();
 
-  const [period, setPeriod] = useState<Period>("This Week");
-  const [metric, setMetric] = useState<Metric>("Steps");
+  const [period, setPeriod] = useState<Period>("thisWeek");
+  const [metric, setMetric] = useState<Metric>("metricSteps");
   const [month, setMonth] = useState(() => new Date());
   const [selectedBar, setSelectedBar] = useState<string | null>(null);
 
@@ -116,7 +118,7 @@ export function PerformanceReportsScreen() {
   );
 
   const chartData = useMemo<Bar[]>(() => {
-    if (period === "This Week") {
+    if (period === "thisWeek") {
       return ordered.slice(-7).map((day) => ({
         key: day.date,
         label: dayLabel(day.date),
@@ -151,21 +153,21 @@ export function PerformanceReportsScreen() {
       key: "time",
       icon: "time-outline",
       value: formatDuration(summary?.duration_seconds ?? 0),
-      unit: "time",
+      unit: t("time"),
       tone: "time",
     },
     {
       key: "calories",
       icon: "flame",
       value: String(caloriesFromSteps(totalSteps)),
-      unit: "kcal",
+      unit: t("kcal"),
       tone: "calories",
     },
     {
       key: "distance",
       icon: "location",
       value: (summary?.distance_km ?? 0).toFixed(2),
-      unit: "km",
+      unit: t("km"),
       tone: "distance",
     },
   ];
@@ -181,14 +183,14 @@ export function PerformanceReportsScreen() {
   return (
     <View style={[styles.root, { paddingTop: insets.top + 8 }]}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.screenTitle}>Report</Text>
+        <Text style={styles.screenTitle}>{t("report")}</Text>
 
         {error && ordered.length === 0 ? (
           <EmptyState
             art="offline"
-            title="Could not load your report"
+            title={t("couldNotLoadReport")}
             body={error}
-            actionLabel="Try again"
+            actionLabel={t("tryAgain")}
             onAction={() => void load()}
           />
         ) : (
@@ -196,19 +198,24 @@ export function PerformanceReportsScreen() {
             <GlassCard style={styles.hero}>
               <Ionicons name="footsteps" size={22} color={colors.primary} />
               <Text style={styles.heroValue}>{totalSteps.toLocaleString()}</Text>
-              <Text style={styles.heroLabel}>Total steps recorded</Text>
+              <Text style={styles.heroLabel}>{t("totalStepsRecorded")}</Text>
             </GlassCard>
 
             <StatTileRow stats={heroStats} />
 
             <GlassCard style={styles.card}>
               <View style={styles.cardHead}>
-                <Text style={styles.cardTitle}>Statistics</Text>
-                <DropdownChip value={period} options={PERIODS} onChange={setPeriod} />
+                <Text style={styles.cardTitle}>{t("statistics")}</Text>
+                <DropdownChip
+                  value={period}
+                  options={PERIODS}
+                  onChange={setPeriod}
+                  labelFor={(p) => t(p)}
+                />
               </View>
 
               {chartData.length === 0 ? (
-                <Text style={styles.empty}>No steps recorded in this period yet.</Text>
+                <Text style={styles.empty}>{t("noStepsThisPeriod")}</Text>
               ) : (
                 <BarChart
                   data={chartData}
@@ -216,18 +223,23 @@ export function PerformanceReportsScreen() {
                   onSelect={(key) => setSelectedBar((prev) => (prev === key ? null : key))}
                   formatTooltip={(bar) => formatMetric(bar.value, metric)}
                   formatY={
-                    metric === "Distance"
+                    metric === "metricDistance"
                       ? (n) => n.toFixed(n >= 10 ? 0 : 1)
                       : undefined
                   }
                 />
               )}
 
-              <SegmentedChips options={METRICS} value={metric} onChange={setMetric} />
+              <SegmentedChips
+                options={METRICS}
+                value={metric}
+                onChange={setMetric}
+                labelFor={(m) => t(m)}
+              />
             </GlassCard>
 
             <GlassCard style={styles.card}>
-              <Text style={styles.cardTitle}>Your Progress</Text>
+              <Text style={styles.cardTitle}>{t("yourProgress")}</Text>
               <MonthCalendar
                 month={month}
                 onMonthChange={setMonth}
@@ -236,19 +248,19 @@ export function PerformanceReportsScreen() {
             </GlassCard>
 
             <View style={styles.cardHead}>
-              <Text style={styles.cardTitle}>Recent activity</Text>
+              <Text style={styles.cardTitle}>{t("recentActivity")}</Text>
               <PressableScale
                 style={styles.link}
                 onPress={() => navigation.navigate("History")}
               >
-                <Text style={styles.linkText}>All history</Text>
+                <Text style={styles.linkText}>{t("allHistory")}</Text>
                 <Ionicons name="chevron-forward" size={14} color={colors.primary} />
               </PressableScale>
             </View>
 
             {sessions.length === 0 ? (
               <GlassCard style={styles.card}>
-                <Text style={styles.empty}>No recorded routes yet.</Text>
+                <Text style={styles.empty}>{t("noRoutesYet")}</Text>
               </GlassCard>
             ) : (
               sessions.map((session) => (
@@ -266,7 +278,7 @@ export function PerformanceReportsScreen() {
                     </Text>
                   </View>
                   {session.is_suspicious ? (
-                    <Text style={styles.flagged}>under review</Text>
+                    <Text style={styles.flagged}>{t("underReview")}</Text>
                   ) : null}
                 </GlassCard>
               ))

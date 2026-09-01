@@ -32,6 +32,7 @@ import { RouteTrace } from "../components/RouteTrace";
 import { useHealth } from "../contexts/HealthContext";
 import { useStride, formatDuration } from "../contexts/StrideContext";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { useI18n } from "../contexts/I18nContext";
 import { useRouteRecorder } from "../hooks/useRouteRecorder";
 import { useStepHistory } from "../hooks/useStepHistory";
 import { radii, spacing } from "../theme";
@@ -40,6 +41,7 @@ import { caloriesFromSteps, distanceFromSteps } from "../utils/metrics";
 export function TrackScreen() {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
+  const { t } = useI18n();
   const styles = useStyles();
   const health = useHealth();
   const { showToast } = useStride();
@@ -78,7 +80,7 @@ export function TrackScreen() {
       const route = await recorder.stop();
       if (!route) {
         setSaving(false);
-        showToast("Too short to save");
+        showToast(t("tooShortToSave"));
         return;
       }
       try {
@@ -89,7 +91,7 @@ export function TrackScreen() {
           duration_seconds: route.t[route.t.length - 1] ?? 0,
           route: { v: 1, coordinates: route.coordinates, t: route.t, dist_km: route.distanceKm },
         });
-        showToast(`Route saved — ${route.distanceKm.toFixed(2)} km`);
+        showToast(t("routeSaved", { km: route.distanceKm.toFixed(2) }));
         void load();
       } catch (caught) {
         showToast(describeError(caught));
@@ -100,7 +102,7 @@ export function TrackScreen() {
     }
 
     const ok = await recorder.start();
-    if (ok) showToast("Recording your route");
+    if (ok) showToast(t("recordingYourRoute"));
   }, [recorder, showToast, load]);
 
   const steps = health.stepsToday;
@@ -108,37 +110,37 @@ export function TrackScreen() {
   return (
     <View style={[styles.root, { paddingTop: insets.top + 8 }]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Activity</Text>
+        <Text style={styles.title}>{t("activityTitle")}</Text>
 
         {/* Today, from the system. Nothing here was started by a button. */}
         <GlassCard style={styles.today}>
           <Text style={styles.steps}>{steps.toLocaleString()}</Text>
-          <Text style={styles.stepsLabel}>steps today</Text>
+          <Text style={styles.stepsLabel}>{t("stepsToday")}</Text>
 
           <View style={styles.metrics}>
             <View style={styles.metric}>
               <Text style={styles.metricValue}>{distanceFromSteps(steps).toFixed(2)}</Text>
-              <Text style={styles.metricLabel}>km</Text>
+              <Text style={styles.metricLabel}>{t("km")}</Text>
             </View>
             <View style={styles.metric}>
               <Text style={styles.metricValue}>{caloriesFromSteps(steps)}</Text>
-              <Text style={styles.metricLabel}>kcal</Text>
+              <Text style={styles.metricLabel}>{t("kcal")}</Text>
             </View>
             <View style={styles.metric}>
               <Text style={styles.metricValue}>
                 {week.changePercent === null ? "—" : `${week.changePercent > 0 ? "+" : ""}${week.changePercent}%`}
               </Text>
-              <Text style={styles.metricLabel}>vs last week</Text>
+              <Text style={styles.metricLabel}>{t("vsLastWeek")}</Text>
             </View>
           </View>
 
           {health.status !== "ready" ? (
             <Text style={styles.notice}>
-              STRIDE cannot read your step count yet. Open Profile → Step tracking.
+              {t("cannotReadSteps")}
             </Text>
           ) : !health.countsInBackground ? (
             <Text style={styles.notice}>
-              Steps are counted only while STRIDE is open on this device.
+              {t("onlyWhileOpen")}
             </Text>
           ) : null}
         </GlassCard>
@@ -147,11 +149,11 @@ export function TrackScreen() {
         <GlassCard style={styles.recordCard}>
           <View style={styles.recordRow}>
             <View style={styles.recordText}>
-              <Text style={styles.recordTitle}>Record route</Text>
+              <Text style={styles.recordTitle}>{t("recordRoute")}</Text>
               <Text style={styles.recordBody}>
                 {recorder.recording
-                  ? "Recording. Your phone can stay in your pocket."
-                  : "Uses GPS while you walk. Off by default — steps are counted either way."}
+                  ? t("recordingNow")
+                  : t("recordRouteBody")}
               </Text>
             </View>
             <Switch
@@ -178,7 +180,7 @@ export function TrackScreen() {
           ) : null}
         </GlassCard>
 
-        <Text style={styles.section}>This week</Text>
+        <Text style={styles.section}>{t("thisWeek")}</Text>
         <GlassCard style={styles.weekCard}>
           {loading && !summary ? (
             <ActivityIndicator color={colors.primary} />
@@ -186,17 +188,17 @@ export function TrackScreen() {
             <View style={styles.metrics}>
               <View style={styles.metric}>
                 <Text style={styles.metricValue}>{week.thisWeek.toLocaleString()}</Text>
-                <Text style={styles.metricLabel}>steps</Text>
+                <Text style={styles.metricLabel}>{t("metricSteps")}</Text>
               </View>
               <View style={styles.metric}>
                 <Text style={styles.metricValue}>{summary?.sessions ?? 0}</Text>
-                <Text style={styles.metricLabel}>routes</Text>
+                <Text style={styles.metricLabel}>{t("routes")}</Text>
               </View>
               <View style={styles.metric}>
                 <Text style={styles.metricValue}>
                   {(summary?.distance_km ?? 0).toFixed(1)}
                 </Text>
-                <Text style={styles.metricLabel}>km recorded</Text>
+                <Text style={styles.metricLabel}>{t("kmRecorded")}</Text>
               </View>
             </View>
           )}
@@ -204,7 +206,7 @@ export function TrackScreen() {
 
         {recent.length > 0 ? (
           <>
-            <Text style={styles.section}>Recent routes</Text>
+            <Text style={styles.section}>{t("recentRoutes")}</Text>
             {recent.map((workout) => (
               <GlassCard key={workout.id} style={styles.historyRow}>
                 <View style={styles.historyText}>
@@ -219,7 +221,7 @@ export function TrackScreen() {
                   </Text>
                 </View>
                 {workout.is_suspicious ? (
-                  <Text style={styles.flagged}>under review</Text>
+                  <Text style={styles.flagged}>{t("underReview")}</Text>
                 ) : null}
               </GlassCard>
             ))}
@@ -227,7 +229,7 @@ export function TrackScreen() {
         ) : null}
 
         <PressableScale style={styles.reportsBtn} onPress={() => void load()}>
-          <Text style={styles.reportsText}>Refresh</Text>
+          <Text style={styles.reportsText}>{t("refresh")}</Text>
         </PressableScale>
       </ScrollView>
     </View>

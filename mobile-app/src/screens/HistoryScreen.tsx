@@ -24,18 +24,25 @@ import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { useI18n } from "../contexts/I18nContext";
 import { localDateKey } from "../health/dates";
 import { spacing } from "../theme";
 import type { Palette } from "../theme";
 
 const PAGE = 50;
 
-/** "Today", "Yesterday", or a written-out date. */
-function groupTitle(iso: string): string {
+/**
+ * "Today", "Yesterday", or a written-out date.
+ *
+ * Takes the two relative labels as arguments rather than reaching for the
+ * translation itself: it is a plain function outside the component tree, so it
+ * cannot call a hook.
+ */
+function groupTitle(iso: string, todayLabel: string, yesterdayLabel: string): string {
   const today = localDateKey(new Date());
   const yesterday = localDateKey(new Date(Date.now() - 86_400_000));
-  if (iso === today) return "Today";
-  if (iso === yesterday) return "Yesterday";
+  if (iso === today) return todayLabel;
+  if (iso === yesterday) return yesterdayLabel;
   const [y, m, d] = iso.split("-").map(Number);
   return new Date(y, m - 1, d).toLocaleDateString(undefined, {
     weekday: "long",
@@ -65,6 +72,7 @@ function Metric({
 
 export function HistoryScreen() {
   const { colors } = useTheme();
+  const { t } = useI18n();
   const styles = useStyles();
   const navigation = useNavigation<{ goBack: () => void }>();
 
@@ -112,7 +120,7 @@ export function HistoryScreen() {
   return (
     <View style={styles.root}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="History" onBack={() => navigation.goBack()} />
+        <ScreenHeader title={t("history")} onBack={() => navigation.goBack()} />
 
         {loading && sessions.length === 0 ? (
           <View style={styles.centred}>
@@ -121,21 +129,21 @@ export function HistoryScreen() {
         ) : error && sessions.length === 0 ? (
           <EmptyState
             art="offline"
-            title="Could not load your history"
+            title={t("couldNotLoadHistory")}
             body={error}
-            actionLabel="Try again"
+            actionLabel={t("tryAgain")}
             onAction={() => void load()}
           />
         ) : groups.length === 0 ? (
           <EmptyState
             art="steps"
-            title="Nothing recorded yet"
-            body="Sessions you record with the route switch on the Track tab show up here."
+            title={t("nothingRecordedYet")}
+            body={t("nothingRecordedBody")}
           />
         ) : (
           groups.map((group) => (
             <View key={group.date} style={styles.group}>
-              <Text style={styles.groupTitle}>{groupTitle(group.date)}</Text>
+              <Text style={styles.groupTitle}>{groupTitle(group.date, t("today"), t("yesterday"))}</Text>
               {group.rows.map((session) => (
                 <GlassCard key={session.id} style={styles.row}>
                   <Metric
