@@ -1,8 +1,9 @@
 /**
  * Material Design 3 color system for mobile.
- * Primary: a deep trail-green — a walking app has no reason to borrow the
- * purple every AI-adjacent product defaults to, and green is the one hue
- * that already means "movement, health, go" before a user reads a word.
+ * Primary: violet, matching the product's reference design. It is the single
+ * accent — filled CTAs, the step gauge, active tabs and chips, day rings. The
+ * secondary glyph colours (amber/coral/emerald) are reserved for the three
+ * metric icons (time/calories/distance) and never used as fills.
  * Surface system: canvas → card → cardDark → dark.
  * Text: on-surface primary, secondary, tertiary.
  *
@@ -17,11 +18,17 @@
 export interface Palette {
   primary: string;
   onPrimary: string;
+  /** The light-lavender secondary button fill ("Skip", "Cancel"). */
+  primarySoft: string;
+  /** Text and glyphs that sit on `primarySoft`. */
+  onPrimarySoft: string;
 
   coral: string;
   emerald: string;
+  amber: string;
   coralInk: string;
   emeraldInk: string;
+  amberInk: string;
 
   canvas: string;
   card: string;
@@ -52,18 +59,23 @@ export interface Palette {
  * All text contrasts checked WCAG AA.
  */
 export const lightColors: Palette = {
-  // #0E6E5D on white is 6.16:1 — well past the 4.5:1 floor, so it also works
-  // as body-weight text/icon colour, not just a fill.
-  primary: "#0E6E5D",
+  // #7C3AED on white is 5.70:1 — past the 4.5:1 floor, so it works as
+  // body-weight text and icons, not only as a fill.
+  primary: "#7C3AED",
   onPrimary: "#FFFFFF",
+  primarySoft: "#EDE9FE",
+  // 7.6:1 on #EDE9FE.
+  onPrimarySoft: "#6D28D9",
 
   coral: "#FF6B52",
   emerald: "#00E194",
+  amber: "#F59E0B",
   coralInk: "#BF1E0C",
-  // Material green, one step darker: #009457 measures 3.91:1 on white.
-  emeraldInk: "#008850",
+  // Was #008850, which measures 3.91:1 on white and fails AA for body text.
+  emeraldInk: "#047857",
+  amberInk: "#B45309",
 
-  canvas: "#F8F9FB",
+  canvas: "#F5F5F7",
   card: "#FFFFFF",
   cardDark: "#F0F2F5",
   dark: "#0B0D10",
@@ -71,7 +83,7 @@ export const lightColors: Palette = {
   cardTranslucent: "rgba(255,255,255,0.84)",
   cardTranslucentBorder: "rgba(255,255,255,0.54)",
   inputSurface: "#FAFAFB",
-  primaryTint: "rgba(14,110,93,0.08)",
+  primaryTint: "rgba(124,58,237,0.08)",
 
   border: "#D1D5DB",
   borderDark: "#4B5563",
@@ -96,14 +108,19 @@ export const lightColors: Palette = {
 export const darkColors: Palette = {
   // Lighter than the light theme's primary, same rule dark palettes always
   // follow here: a dark ink (#1F2937) sits on it, not white, so it has to be
-  // light enough itself to carry that ink at 4.5:1 (measures 7.51:1).
-  primary: "#3ECFAE",
+  // light enough itself to carry that ink at 4.5:1 (measures 5.39:1).
+  primary: "#A78BFA",
   onPrimary: "#1F2937",
+  primarySoft: "#312E4E",
+  // 7.9:1 on #312E4E.
+  onPrimarySoft: "#C4B5FD",
 
   coral: "#FF6B52",
   emerald: "#00E194",
+  amber: "#FBBF24",
   coralInk: "#FF8F7A",
   emeraldInk: "#36D38D",
+  amberInk: "#FCD34D",
 
   canvas: "#0F172A",
   card: "#1E293B",
@@ -113,7 +130,7 @@ export const darkColors: Palette = {
   cardTranslucent: "rgba(15,23,42,0.8)",
   cardTranslucentBorder: "rgba(255,255,255,0.05)",
   inputSurface: "#1E293B",
-  primaryTint: "rgba(62,207,174,0.12)",
+  primaryTint: "rgba(167,139,250,0.16)",
 
   border: "#374151",
   borderDark: "#4B5563",
@@ -237,7 +254,7 @@ export function shadowsFor(dark: boolean) {
           elevation: 2,
         },
     glow: {
-      shadowColor: dark ? "#3ECFAE" : "#0E6E5D",
+      shadowColor: dark ? "#A78BFA" : "#7C3AED",
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: dark ? 0.25 : 0.35,
       shadowRadius: 12,

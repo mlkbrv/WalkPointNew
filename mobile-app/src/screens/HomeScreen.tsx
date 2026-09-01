@@ -2,7 +2,6 @@
 import {
   Image,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -10,7 +9,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import Svg, { Circle } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { radii, spacing, type, shadows } from "../theme";
+import { radii, shadows } from "../theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { PressableScale } from "../components/PressableScale";
 import { Avatar } from "../components/Avatar";
@@ -35,15 +34,15 @@ function weekdayInitial(iso: string): string {
 }
 
 export function HomeScreen() {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const styles = useStyles();
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<{ navigate: (s: string, p?: object) => void; getParent?: () => { navigate: (s: string) => void } | undefined }>();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const health = useHealth();
   const { userStats } = useStride();
   const { seenIds, reload: reloadSeen } = useSeenStories();
-  const { storyGroups, stores, wallet, unreadCount } = useServerData();
+  const { storyGroups, stores, unreadCount } = useServerData();
   const week = useStepHistory();
 
   useFocusEffect(
@@ -171,10 +170,7 @@ export function HomeScreen() {
               { key: "duration", icon: "timer-outline", value: durationMins, unit: "min", accent: false },
             ] as const
           ).map((stat) => (
-            <GlassCard
-              key={stat.key}
-              style={stat.accent ? [styles.statCard, styles.statHighlight] : styles.statCard}
-            >
+            <GlassCard key={stat.key} style={styles.statCard}>
               <View
                 style={[
                   styles.statIcon,
@@ -375,8 +371,11 @@ const useStyles = makeStyles((colors) => ({
   },
   trackCtaText: { color: colors.onPrimary, fontSize: 17, fontWeight: "600" },
   statsRow: { flexDirection: "row", gap: 12 },
-  statCard: { flex: 1, padding: 12, alignItems: "center", gap: 6, ...shadows.card },
-  statHighlight: { borderBottomWidth: 2, borderBottomColor: colors.primary },
+  // GlassCard already provides the elevation; a second shadow spread here
+  // used to override it with a flatter one, which is why the accented middle
+  // tile's shadow and its bottom-border accent looked like they didn't agree
+  // with the card's own rounded corner.
+  statCard: { flex: 1, padding: 12, alignItems: "center", gap: 6 },
   statIcon: { padding: 8, borderRadius: radii.md },
   statValue: { fontSize: 17, fontWeight: "600", color: colors.charcoal },
   statLabel: { fontSize: 12, fontWeight: "400", color: colors.muted },

@@ -40,7 +40,7 @@ export function RegisterScreen() {
   };
 
   return (
-    <LinearGradient colors={["#0B0D10", "#0D2620", "#0B0D10"]} style={styles.root}>
+    <LinearGradient colors={["#0B0D10", "#1B0F33", "#0B0D10"]} style={styles.root}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Join STRIDE</Text>
@@ -77,5 +77,5 @@ const useStyles = makeStyles((colors) => ({
   error: { color: colors.coralInk, marginTop: 12, fontWeight: "400" },
   primaryBtn: { marginTop: 20, backgroundColor: colors.primary, borderRadius: radii.full, paddingVertical: 16, alignItems: "center", ...shadows.fab },
   primaryText: { color: colors.onPrimary, fontWeight: "600", letterSpacing: 1 },
-  link: { color: colors.emeraldInk, textAlign: "center", fontWeight: "400" },
+  link: { color: colors.primary, textAlign: "center", fontWeight: "400" },
 }));

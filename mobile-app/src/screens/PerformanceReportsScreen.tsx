@@ -200,7 +200,7 @@ export function PerformanceReportsScreen() {
                 <Text style={styles.metricLabel}>km</Text>
               </GlassCard>
               <GlassCard style={styles.metric}>
-                <Ionicons name="flame-outline" size={16} color={colors.emeraldInk} />
+                <Ionicons name="flame-outline" size={16} color={colors.coralInk} />
                 <Text style={styles.metricValue}>{summary?.calories_kcal ?? 0}</Text>
                 <Text style={styles.metricLabel}>kcal</Text>
               </GlassCard>

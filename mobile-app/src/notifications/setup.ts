@@ -41,7 +41,7 @@ export async function configureNotificationChannel(): Promise<void> {
       name: "STRIDE",
       importance: Notifications.AndroidImportance.DEFAULT,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: "#3ECFAE",
+      lightColor: "#A78BFA",
     });
   } catch {
     // A channel that cannot be created is not worth blocking startup over;

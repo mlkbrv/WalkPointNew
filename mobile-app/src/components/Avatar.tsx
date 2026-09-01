@@ -1,4 +1,4 @@
-import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { makeStyles } from "../contexts/ThemeContext";
 /**
  * A person's avatar.
  *
@@ -13,7 +13,7 @@ import { makeStyles, useTheme } from "../contexts/ThemeContext";
  */
 
 import { useState } from "react";
-import { Image, StyleSheet, Text, View, type ImageStyle } from "react-native";
+import { Image, Text, View, type ImageStyle } from "react-native";
 
 
 
@@ -23,7 +23,9 @@ import { Image, StyleSheet, Text, View, type ImageStyle } from "react-native";
  * screens and sessions.
  */
 const TINTS = [
-  "#6D28D9", // violet
+  // Deliberately no violet here: that is the brand colour, and an initials
+  // disc in it reads as app chrome rather than as a person.
+  "#0F766E", // teal
   "#0E7490", // cyan
   "#B45309", // amber
   "#15803D", // green

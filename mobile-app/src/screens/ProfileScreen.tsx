@@ -1,7 +1,5 @@
-import React from "react";
 import {
   ScrollView,
-  StyleSheet,
   Switch,
   Text,
   View,
@@ -9,24 +7,27 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { radii, spacing, type, shadows } from "../theme";
+import { radii, spacing, shadows } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { Avatar } from "../components/Avatar";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { useStride } from "../contexts/StrideContext";
 import { useAuth } from "../contexts/AuthContext";
-import { useHealth } from "../contexts/HealthContext";
 import { makeStyles, useTheme, Appearance } from "../contexts/ThemeContext";
 
 export function ProfileScreen() {
   const { colors, preference, setPreference, scheme } = useTheme();
   const styles = useStyles();
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<{
+    navigate: (s: string) => void;
+    canGoBack: () => boolean;
+    goBack: () => void;
+    getParent?: () => { navigate: (s: string) => void } | undefined;
+  }>();
   const insets = useSafeAreaInsets();
   const { user, prefs, updatePrefs, logout } = useAuth();
   const { userStats, setUserStats } = useStride();
-  const health = useHealth();
 
   const goBack = () => {
     if (navigation.canGoBack()) navigation.goBack();
@@ -98,7 +99,7 @@ export function ProfileScreen() {
       <Switch
         value={value}
         onValueChange={onValueChange}
-        trackColor={{ false: colors.border, true: colors.emeraldInk }}
+        trackColor={{ false: colors.border, true: colors.primary }}
         thumbColor={colors.white}
       />
     </View>
@@ -174,7 +175,7 @@ export function ProfileScreen() {
           <View style={styles.divider} />
           <Row
             icon="help-circle-outline"
-            iconColor={colors.emeraldInk}
+            iconColor={colors.primary}
             iconBg={colors.primaryTint}
             title="Help & Support"
             subtitle="FAQs and member helpdesk"
@@ -316,7 +317,8 @@ const useStyles = makeStyles((colors) => ({
     color: colors.muted,
   },
   stats: { flexDirection: "row", gap: 10 },
-  statTile: { flex: 1, padding: 12, alignItems: "center", gap: 8, ...shadows.card },
+  // GlassCard already provides its own elevation now.
+  statTile: { flex: 1, padding: 12, alignItems: "center", gap: 8 },
   statLabel: {
     fontSize: 11,
     fontWeight: "600",

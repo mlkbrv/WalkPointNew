@@ -100,7 +100,7 @@ export function HelpSupportScreen() {
 
         <PressableScale style={styles.action} onPress={() => navigation.navigate("SupportChat")}>
           <View style={[styles.actionIcon, { backgroundColor: "rgba(0,225,148,0.12)" }]}>
-            <Ionicons name="chatbubbles-outline" size={18} color={colors.emeraldInk} />
+            <Ionicons name="chatbubbles-outline" size={18} color={colors.primary} />
           </View>
           <View style={styles.actionMeta}>
             <Text style={styles.actionTitle}>Message support</Text>

@@ -54,9 +54,9 @@ export function InboxScreen() {
 
   const categoryIcon = (type: string) => {
     if (type === "steps_missed")
-      return { name: "warning" as const, bg: "rgba(255,107,82,0.12)", color: colors.coralInk };
+      return { name: "warning" as const, bg: `${colors.coralInk}1F`, color: colors.coralInk };
     if (type === "coins_awarded")
-      return { name: "sparkles" as const, bg: "rgba(0,225,148,0.12)", color: colors.emeraldInk };
+      return { name: "sparkles" as const, bg: `${colors.emeraldInk}1F`, color: colors.emeraldInk };
     if (type === "new_coupon" || type === "moderation_result")
       return { name: "bag-handle" as const, bg: `${colors.primary}1F`, color: colors.primary };
     if (type === "support_reply")

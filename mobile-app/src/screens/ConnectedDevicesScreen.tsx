@@ -48,7 +48,7 @@ export function ConnectedDevicesScreen() {
               <Switch
                 value={device.connected}
                 onValueChange={() => toggleDevice(device.id)}
-                trackColor={{ false: "#CBD5E1", true: colors.emeraldInk }}
+                trackColor={{ false: colors.border, true: colors.primary }}
                 thumbColor={colors.white}
               />
             </View>
