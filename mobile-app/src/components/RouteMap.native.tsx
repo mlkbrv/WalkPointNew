@@ -19,7 +19,8 @@
  */
 
 import { useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import {
   Camera,
   GeoJSONSource,
@@ -40,11 +41,19 @@ export function RouteMap({
   points,
   height = 260,
   follow = false,
+  center = null,
+  onLocate,
+  locating = false,
 }: {
   points: Point[];
   height?: number;
   /** True while recording: keep the newest position centred instead of fitting. */
   follow?: boolean;
+  /** Where to look when there is no route yet — usually the device. */
+  center?: Point | null;
+  /** Shows the locate button when given. */
+  onLocate?: () => void;
+  locating?: boolean;
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
@@ -95,6 +104,11 @@ export function RouteMap({
         // a little performance, which for a route on a card is not a concern.
         androidView="texture"
       >
+        {/* Ordered by how much the camera actually knows. The last case used to
+            be the only fallback, and a Camera with no centre sits at [0, 0] —
+            open Atlantic. Before the first GPS fix that is what filled the
+            screen, which read as "the map is broken" rather than "waiting for a
+            position". */}
         {follow && last ? (
           <Camera center={last} zoom={16} duration={600} />
         ) : bounds ? (
@@ -103,11 +117,15 @@ export function RouteMap({
             padding={{ top: 44, bottom: 44, left: 44, right: 44 }}
             duration={600}
           />
+        ) : center ? (
+          <Camera center={center} zoom={15} duration={600} />
         ) : (
           <Camera zoom={11} />
         )}
 
-        {follow ? <UserLocation /> : null}
+        {/* Not only while recording: standing on the map before starting is
+            how you check it found you. */}
+        <UserLocation />
 
         {points.length >= 2 ? (
           <GeoJSONSource id="route" data={line}>
@@ -136,6 +154,21 @@ export function RouteMap({
         ) : null}
       </Map>
 
+      {onLocate ? (
+        <Pressable
+          style={styles.locate}
+          onPress={onLocate}
+          accessibilityRole="button"
+          accessibilityLabel="Centre the map on my location"
+        >
+          {locating ? (
+            <ActivityIndicator size="small" color={colors.white} />
+          ) : (
+            <Ionicons name="locate" size={20} color={colors.white} />
+          )}
+        </Pressable>
+      ) : null}
+
       {/* Drawn here rather than left to the map's own attribution control,
           which can be panned out of view — and ODbL wants it visible. */}
       <View style={styles.attribution} pointerEvents="none">
@@ -152,6 +185,17 @@ const useStyles = makeStyles((colors) => ({
     backgroundColor: colors.cardDark,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
+  },
+  locate: {
+    position: "absolute",
+    right: 12,
+    bottom: 26,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.primary,
   },
   attribution: {
     position: "absolute",

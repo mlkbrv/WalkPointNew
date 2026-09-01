@@ -21,8 +21,12 @@ export function RouteMap({
 }: {
   points: Point[];
   height?: number;
-  /** Accepted for parity with the native map, unused here. */
+  /** Accepted for parity with the native map, unused here — there is no
+   *  basemap to move and nothing to centre on. */
   follow?: boolean;
+  center?: Point | null;
+  onLocate?: () => void;
+  locating?: boolean;
 }) {
   return <RouteTrace points={points} height={height} />;
 }

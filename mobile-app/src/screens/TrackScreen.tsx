@@ -29,6 +29,7 @@ import { workoutsApi, type ApiWeeklySummary, type ApiWorkout } from "../api/endp
 import { GlassCard } from "../components/GlassCard";
 import { PressableScale } from "../components/PressableScale";
 import { RouteMap } from "../components/RouteMap";
+import { useDeviceLocation } from "../hooks/useDeviceLocation";
 import { useHealth } from "../contexts/HealthContext";
 import { useStepoint, formatDuration } from "../contexts/StepointContext";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
@@ -47,6 +48,7 @@ export function TrackScreen() {
   const { showToast } = useStepoint();
   const week = useStepHistory();
   const recorder = useRouteRecorder();
+  const location = useDeviceLocation();
 
   const [summary, setSummary] = useState<ApiWeeklySummary | null>(null);
   const [recent, setRecent] = useState<ApiWorkout[]>([]);
@@ -167,19 +169,26 @@ export function TrackScreen() {
 
           {recorder.error ? <Text style={styles.error}>{recorder.error}</Text> : null}
 
+          {/* Always drawn. It used to appear only once recording had started,
+              so the tab that exists to show a walk on a map opened with no map
+              on it — which looked exactly like a map that had failed to load. */}
+          {/* `follow` while recording: the route grows point by point, so a
+              fitted camera would keep zooming out. Once stopped the whole
+              shape is what matters and the map fits it instead. */}
+          <RouteMap
+            points={recorder.points}
+            follow={recorder.recording}
+            center={location.point}
+            onLocate={() => void location.locate()}
+            locating={location.locating}
+          />
           {recorder.recording || recorder.points.length > 0 ? (
-            <>
-              {/* `follow` while recording: the route grows point by point, so a
-                  fitted camera would keep zooming out. Once stopped the whole
-                  shape is what matters and the map fits it instead. */}
-              <RouteMap points={recorder.points} follow={recorder.recording} />
-              <View style={styles.liveRow}>
-                <Ionicons name="navigate-outline" size={16} color={colors.primary} />
-                <Text style={styles.liveText}>
-                  {recorder.distanceKm.toFixed(2)} km · {recorder.points.length} points
-                </Text>
-              </View>
-            </>
+            <View style={styles.liveRow}>
+              <Ionicons name="navigate-outline" size={16} color={colors.primary} />
+              <Text style={styles.liveText}>
+                {recorder.distanceKm.toFixed(2)} km · {recorder.points.length} points
+              </Text>
+            </View>
           ) : null}
         </GlassCard>
 
