@@ -61,7 +61,7 @@ export async function configureNotificationChannel(): Promise<void> {
 export type NotificationTarget =
   | { kind: "tab"; name: keyof MainTabParamList }
   /** Only routes that take no parameters — a push carries no ids to fill them with. */
-  | { kind: "screen"; name: "Wallet" | "SupportChat" };
+  | { kind: "screen"; name: "Wallet" | "SupportChat" | "Inbox" };
 
 export function routeForNotification(data: Record<string, unknown>): NotificationTarget {
   const type = typeof data.notification_type === "string" ? data.notification_type : "";
@@ -75,10 +75,10 @@ export function routeForNotification(data: Record<string, unknown>): Notificatio
       return { kind: "screen", name: "SupportChat" };
     case "moderation_result":
       // Partners work in the web console; in this app the row is all there is.
-      return { kind: "tab", name: "InboxTab" };
+      return { kind: "screen", name: "Inbox" };
     case "steps_missed":
       return { kind: "tab", name: "HomeTab" };
     default:
-      return { kind: "tab", name: "InboxTab" };
+      return { kind: "screen", name: "Inbox" };
   }
 }

@@ -29,14 +29,6 @@ export function ProfileScreen() {
   const { user, prefs, updatePrefs, logout } = useAuth();
   const { userStats, setUserStats } = useStride();
 
-  const goBack = () => {
-    if (navigation.canGoBack()) navigation.goBack();
-    else {
-      const parent = navigation.getParent?.();
-      if (parent) parent.navigate("HomeTab");
-    }
-  };
-
   const bump = (key: "weightKg" | "heightCm" | "stepsGoal", delta: number) => {
     setUserStats((prev) => ({
       ...prev,
@@ -108,7 +100,8 @@ export function ProfileScreen() {
   return (
     <View style={[styles.root, { paddingTop: insets.top + 8 }]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="My Profile" onBack={goBack} />
+        {/* No back button: this is a tab root, so there is nothing to go back to. */}
+        <ScreenHeader title="Account" />
 
         <View style={styles.hero}>
           <View style={styles.avatarWrap}>
@@ -161,6 +154,38 @@ export function ProfileScreen() {
             </View>
           </GlassCard>
         </View>
+
+        {/* Inbox, Board and History are reached from here now: they gave up their
+            tab slots to Report and Account. */}
+        <Text style={styles.sectionLabel}>Activity</Text>
+        <GlassCard style={styles.group}>
+          <Row
+            icon="notifications-outline"
+            iconColor={colors.primary}
+            iconBg={colors.primaryTint}
+            title="Notifications"
+            subtitle="Coins earned and partner news"
+            onPress={() => navigation.navigate("Inbox")}
+          />
+          <View style={styles.divider} />
+          <Row
+            icon="time-outline"
+            iconColor={colors.primary}
+            iconBg={colors.primaryTint}
+            title="History"
+            subtitle="Every session you have recorded"
+            onPress={() => navigation.navigate("History")}
+          />
+          <View style={styles.divider} />
+          <Row
+            icon="trophy-outline"
+            iconColor={colors.primary}
+            iconBg={colors.primaryTint}
+            title="Leaderboard"
+            subtitle="How you rank this week"
+            onPress={() => navigation.navigate("Scoreboard")}
+          />
+        </GlassCard>
 
         <Text style={styles.sectionLabel}>Account</Text>
         <GlassCard style={styles.group}>

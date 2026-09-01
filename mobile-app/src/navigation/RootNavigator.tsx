@@ -9,8 +9,8 @@ import {
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../contexts/AuthContext";
-import { useServerData } from "../contexts/ServerDataContext";
 import { useNotificationHandlers } from "../hooks/useNotificationHandlers";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
 import { AuthStackParamList, MainTabParamList, RootStackParamList } from "../types";
@@ -35,6 +35,7 @@ import { SecureVerificationScreen } from "../screens/SecureVerificationScreen";
 import { WalletScreen } from "../screens/WalletScreen";
 import { WorkoutSummaryScreen } from "../screens/WorkoutSummaryScreen";
 import { PerformanceReportsScreen } from "../screens/PerformanceReportsScreen";
+import { HistoryScreen } from "../screens/HistoryScreen";
 import { EditProfileScreen } from "../screens/EditProfileScreen";
 import { HealthSetupScreen } from "../screens/HealthSetupScreen";
 import { StoriesScreen } from "../screens/StoriesScreen";
@@ -60,11 +61,26 @@ function AuthNavigator() {
   );
 }
 
+/**
+ * Typed as a total map over the tab routes on purpose. The lookup below cannot
+ * fail at runtime — an unlisted tab would have rendered `<Ionicons
+ * name={undefined}>`, which draws a blank square and reports nothing — so a
+ * missing entry has to be a compile error instead.
+ */
+const TAB_ICON: Record<
+  keyof MainTabParamList,
+  { on: keyof typeof Ionicons.glyphMap; off: keyof typeof Ionicons.glyphMap }
+> = {
+  HomeTab: { on: "home", off: "home-outline" },
+  TrackTab: { on: "walk", off: "walk-outline" },
+  ReportTab: { on: "bar-chart", off: "bar-chart-outline" },
+  StoreTab: { on: "bag", off: "bag-outline" },
+  AccountTab: { on: "person", off: "person-outline" },
+};
+
 function MainTabs() {
-  // The badge counts what the server says is unread, so it matches the inbox
-  // even when a notification was read on another device.
-  const { unreadCount: unread } = useServerData();
   const { colors, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -73,38 +89,31 @@ function MainTabs() {
         tabBarStyle: {
           backgroundColor: isDark ? "rgba(22,26,33,0.97)" : "rgba(255,255,255,0.96)",
           borderTopColor: colors.border,
-          height: 64,
-          paddingBottom: 8,
+          // Without the inset the bar sits under the gesture indicator on a
+          // phone with no home button, and the last row of every tab is
+          // unreachable behind it.
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom + 6,
           paddingTop: 8,
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.slate,
         tabBarLabelStyle: { fontSize: 10, fontWeight: "700" },
         tabBarIcon: ({ color, size, focused }) => {
-          const map: Record<string, keyof typeof Ionicons.glyphMap> = {
-            HomeTab: focused ? "home" : "home-outline",
-            TrackTab: focused ? "compass" : "compass-outline",
-            InboxTab: focused ? "notifications" : "notifications-outline",
-            ScoreboardTab: focused ? "trophy" : "trophy-outline",
-            StoreTab: focused ? "bag" : "bag-outline",
-          };
-          return <Ionicons name={map[route.name]} size={size} color={color} />;
+          const icon = TAB_ICON[route.name as keyof MainTabParamList];
+          return <Ionicons name={focused ? icon.on : icon.off} size={size} color={color} />;
         },
       })}
     >
       <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: "Home" }} />
       <Tab.Screen name="TrackTab" component={TrackScreen} options={{ title: "Track" }} />
       <Tab.Screen
-        name="InboxTab"
-        component={InboxScreen}
-        options={{
-          title: "Inbox",
-          tabBarBadge: unread > 0 ? unread : undefined,
-          tabBarBadgeStyle: { backgroundColor: colors.coralInk, fontSize: 10 },
-        }}
+        name="ReportTab"
+        component={PerformanceReportsScreen}
+        options={{ title: "Report" }}
       />
-      <Tab.Screen name="ScoreboardTab" component={ScoreboardScreen} options={{ title: "Board" }} />
       <Tab.Screen name="StoreTab" component={StoreScreen} options={{ title: "Store" }} />
+      <Tab.Screen name="AccountTab" component={ProfileScreen} options={{ title: "Account" }} />
     </Tab.Navigator>
   );
 }
@@ -120,7 +129,9 @@ function AppStack() {
       }}
     >
       <RootStack.Screen name="Main" component={MainTabs} />
-      <RootStack.Screen name="Profile" component={ProfileScreen} />
+      <RootStack.Screen name="Inbox" component={InboxScreen} />
+      <RootStack.Screen name="Scoreboard" component={ScoreboardScreen} />
+      <RootStack.Screen name="History" component={HistoryScreen} />
       <RootStack.Screen name="ConnectedDevices" component={ConnectedDevicesScreen} />
       <RootStack.Screen name="HelpSupport" component={HelpSupportScreen} />
       <RootStack.Screen name="SupportChat" component={SupportChatScreen} />
@@ -134,7 +145,6 @@ function AppStack() {
       <RootStack.Screen name="SecureVerification" component={SecureVerificationScreen} />
       <RootStack.Screen name="Wallet" component={WalletScreen} />
       <RootStack.Screen name="WorkoutSummary" component={WorkoutSummaryScreen} />
-      <RootStack.Screen name="PerformanceReport" component={PerformanceReportsScreen} />
       <RootStack.Screen name="EditProfile" component={EditProfileScreen} />
       <RootStack.Screen name="HealthSetup" component={HealthSetupScreen} />
     </RootStack.Navigator>

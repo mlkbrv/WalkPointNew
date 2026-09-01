@@ -23,7 +23,10 @@ import { makeStyles, useTheme } from "../contexts/ThemeContext";
 export function WorkoutSummaryScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
-  const navigation = useNavigation<{ goBack: () => void; navigate: (s: string) => void }>();
+  const navigation = useNavigation<{
+    goBack: () => void;
+    navigate: (s: string, p?: object) => void;
+  }>();
 
   const [workout, setWorkout] = useState<ApiWorkout | null>(null);
   const [route, setRoute] = useState<ApiWorkoutRoute | null>(null);
@@ -80,9 +83,10 @@ export function WorkoutSummaryScreen() {
     }
   };
 
-  // The server already saved it; this button just moves on.
+  // The server already saved it; this button just moves on. Report is a tab
+  // now, so it is reached through the tab navigator rather than pushed.
   const handleSave = () => {
-    navigation.navigate("PerformanceReport");
+    navigation.navigate("Main", { screen: "ReportTab" });
   };
 
   if (loading) {

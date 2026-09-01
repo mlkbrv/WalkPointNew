@@ -1,31 +1,9 @@
 import type { NavigatorScreenParams } from "@react-navigation/native";
 
-export enum ScreenId {
-  Home = "Home",
-  Track = "Track",
-  Scoreboard = "Scoreboard",
-  Store = "Store",
-  Profile = "Profile",
-  ConnectedDevices = "ConnectedDevices",
-  HelpSupport = "HelpSupport",
-  SupportChat = "SupportChat",
-  Inbox = "Inbox",
-  BrandStore = "BrandStore",
-  CouponDetail = "CouponDetail",
-  SecureVerification = "SecureVerification",
-  WorkoutSummary = "WorkoutSummary",
-  Wallet = "Wallet",
-  PerformanceReport = "PerformanceReport",
-  Login = "Login",
-  Register = "Register",
-  ForgotPassword = "ForgotPassword",
-  EditProfile = "EditProfile",
-  CreateCoupon = "CreateCoupon",
-  MerchantManager = "MerchantManager",
-  MerchantScanner = "MerchantScanner",
-  HealthSetup = "HealthSetup",
-  Stories = "Stories",
-}
+// `ScreenId` used to live here: a parallel list of route names that nothing
+// imported, still naming three merchant screens deleted when partners moved to
+// the web console, and using un-suffixed tab names that never matched the real
+// routes. The param lists below are the only route names.
 
 export type UserRole = "consumer" | "merchant";
 
@@ -155,10 +133,14 @@ export interface DeviceConnection {
 }
 
 export type RootStackParamList = {
-  Auth: undefined;
   /** Nested: the tab navigator, so callers can target a specific tab. */
   Main: NavigatorScreenParams<MainTabParamList>;
-  Profile: undefined;
+  // Inbox and Scoreboard used to be tabs. They moved off the bar to make room
+  // for Report and Account: the inbox is reached from the bell in Home's header
+  // and a row in Account, the board from Account.
+  Inbox: undefined;
+  Scoreboard: undefined;
+  History: undefined;
   ConnectedDevices: undefined;
   HelpSupport: undefined;
   SupportChat: undefined;
@@ -167,7 +149,6 @@ export type RootStackParamList = {
   SecureVerification: { voucherId: string };
   Wallet: undefined;
   WorkoutSummary: undefined;
-  PerformanceReport: undefined;
   EditProfile: undefined;
   HealthSetup: undefined;
   Stories: { startId: string };
@@ -182,7 +163,7 @@ export type AuthStackParamList = {
 export type MainTabParamList = {
   HomeTab: undefined;
   TrackTab: undefined;
-  InboxTab: undefined;
-  ScoreboardTab: undefined;
+  ReportTab: undefined;
   StoreTab: undefined;
+  AccountTab: undefined;
 };

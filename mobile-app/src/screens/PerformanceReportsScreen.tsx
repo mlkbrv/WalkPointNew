@@ -1,16 +1,23 @@
 /**
- * Performance reports.
+ * Report.
  *
- * Every number here comes from the server: the chart from `daily_steps`, the
- * totals and the session list from finished workouts. The old hourly "Day" view
- * was dropped rather than kept — the API records steps per day, so an hourly
- * breakdown could only have been invented from the daily total.
+ * Laid out after the reference: an all-time hero, a statistics card with a
+ * selectable chart and metric filters, a month calendar, and a short tail of
+ * recent sessions that links out to the full history.
+ *
+ * Every number still comes from the server — the chart and the calendar from
+ * `daily_steps`, the totals and the sessions from finished workouts. The metric
+ * chips switch what the same days are *measured* in rather than fetching
+ * anything new: distance and calories are derived from the step count by the
+ * same conversions the rest of the app uses, so the four views cannot disagree
+ * with each other or with Home.
  */
 
-import React, { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useCallback, useMemo, useState } from "react";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { describeError } from "../api/client";
 import {
@@ -20,17 +27,27 @@ import {
   type ApiWeeklySummary,
   type ApiWorkout,
 } from "../api/endpoints";
-import { useStride, formatDuration } from "../contexts/StrideContext";
+import { formatDuration } from "../contexts/StrideContext";
 import { radii, spacing } from "../theme";
-import { PressableScale } from "../components/PressableScale";
+import { BarChart, type Bar } from "../components/BarChart";
+import { DropdownChip } from "../components/DropdownChip";
 import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
-import { ScreenHeader } from "../components/ScreenHeader";
+import { MonthCalendar } from "../components/MonthCalendar";
+import { PressableScale } from "../components/PressableScale";
+import { SegmentedChips } from "../components/SegmentedChips";
+import { StatTileRow, type Stat } from "../components/StatTileRow";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { caloriesFromSteps, distanceFromSteps, minutesFromSteps } from "../utils/metrics";
 
-type Tab = "Week" | "Month";
+const PERIODS = ["This Week", "This Month"] as const;
+type Period = (typeof PERIODS)[number];
 
-const DAYS: Record<Tab, number> = { Week: 7, Month: 28 };
+const METRICS = ["Steps", "Time", "Calorie", "Distance"] as const;
+type Metric = (typeof METRICS)[number];
+
+/** Enough to cover the six rows a month grid can show. */
+const HISTORY_DAYS = 42;
 
 /** Weekday initial for a `YYYY-MM-DD` date, parsed as local time. */
 function dayLabel(iso: string): string {
@@ -38,25 +55,43 @@ function dayLabel(iso: string): string {
   return ["S", "M", "T", "W", "T", "F", "S"][new Date(year, month - 1, day).getDay()];
 }
 
+function measure(steps: number, metric: Metric): number {
+  if (metric === "Time") return minutesFromSteps(steps);
+  if (metric === "Calorie") return caloriesFromSteps(steps);
+  if (metric === "Distance") return distanceFromSteps(steps);
+  return steps;
+}
+
+function formatMetric(value: number, metric: Metric): string {
+  if (metric === "Time") return `${value} min`;
+  if (metric === "Calorie") return `${value} kcal`;
+  if (metric === "Distance") return `${value.toFixed(2)} km`;
+  return value.toLocaleString();
+}
+
 export function PerformanceReportsScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
-  const navigation = useNavigation<any>();
-  const { showToast } = useStride();
+  const insets = useSafeAreaInsets();
+  const navigation = useNavigation<{ navigate: (s: string) => void }>();
 
-  const [activeTab, setActiveTab] = useState<Tab>("Week");
+  const [period, setPeriod] = useState<Period>("This Week");
+  const [metric, setMetric] = useState<Metric>("Steps");
+  const [month, setMonth] = useState(() => new Date());
+  const [selectedBar, setSelectedBar] = useState<string | null>(null);
+
   const [days, setDays] = useState<ApiDailySteps[]>([]);
   const [sessions, setSessions] = useState<ApiWorkout[]>([]);
   const [summary, setSummary] = useState<ApiWeeklySummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (tab: Tab) => {
+  const load = useCallback(async () => {
     setError(null);
     try {
       const [history, workouts, totals] = await Promise.all([
-        stepsApi.history(DAYS[tab]),
-        workoutsApi.history(20),
+        stepsApi.history(HISTORY_DAYS),
+        workoutsApi.history(5),
         workoutsApi.summary(),
       ]);
       setDays(history.days);
@@ -71,168 +106,168 @@ export function PerformanceReportsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      void load(activeTab);
-    }, [load, activeTab]),
+      void load();
+    }, [load]),
   );
 
-  const chartData = useMemo(() => {
-    // Oldest first, so the chart reads left to right like a calendar.
-    const ordered = [...days].sort((a, b) => a.date.localeCompare(b.date));
+  const ordered = useMemo(
+    () => [...days].sort((a, b) => a.date.localeCompare(b.date)),
+    [days],
+  );
 
-    if (activeTab === "Week") {
-      return ordered.map((day) => ({
+  const chartData = useMemo<Bar[]>(() => {
+    if (period === "This Week") {
+      return ordered.slice(-7).map((day) => ({
+        key: day.date,
         label: dayLabel(day.date),
-        steps: day.steps,
-        active: day.date === new Date().toISOString().slice(0, 10),
+        value: measure(day.steps, metric),
       }));
     }
 
-    // A month of daily bars is unreadable, so fold it into four weekly totals.
-    const weeks: { label: string; steps: number; active: boolean }[] = [];
-    for (let index = 0; index < ordered.length; index += 7) {
-      const chunk = ordered.slice(index, index + 7);
+    // A month of daily bars is unreadable at this width, so fold it into weeks.
+    const recent = ordered.slice(-28);
+    const weeks: Bar[] = [];
+    for (let i = 0; i < recent.length; i += 7) {
+      const chunk = recent.slice(i, i + 7);
+      const steps = chunk.reduce((sum, d) => sum + d.steps, 0);
       weeks.push({
+        key: chunk[0]?.date ?? `w${i}`,
         label: `W${weeks.length + 1}`,
-        steps: chunk.reduce((total, day) => total + day.steps, 0),
-        active: index + 7 >= ordered.length,
+        value: measure(steps, metric),
       });
     }
     return weeks;
-  }, [days, activeTab]);
+  }, [ordered, period, metric]);
 
-  const maxSteps = Math.max(...chartData.map((d) => d.steps), 1);
-  const totalSteps = days.reduce((total, day) => total + day.steps, 0);
+  const activeDates = useMemo(
+    () => new Set(ordered.filter((d) => d.steps > 0).map((d) => d.date)),
+    [ordered],
+  );
+
+  const totalSteps = ordered.reduce((sum, day) => sum + day.steps, 0);
+
+  const heroStats: Stat[] = [
+    {
+      key: "time",
+      icon: "time-outline",
+      value: formatDuration(summary?.duration_seconds ?? 0),
+      unit: "time",
+      tone: "time",
+    },
+    {
+      key: "calories",
+      icon: "flame",
+      value: String(caloriesFromSteps(totalSteps)),
+      unit: "kcal",
+      tone: "calories",
+    },
+    {
+      key: "distance",
+      icon: "location",
+      value: (summary?.distance_km ?? 0).toFixed(2),
+      unit: "km",
+      tone: "distance",
+    },
+  ];
+
+  if (loading && ordered.length === 0) {
+    return (
+      <View style={[styles.root, styles.centred]}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { paddingTop: insets.top + 8 }]}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader
-          title="Performance Reports"
-          onBack={() => navigation.goBack()}
-          right={
-            <PressableScale
-              style={styles.calBtn}
-              onPress={() =>
-                showToast(
-                  new Date().toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  }),
-                  "\u{1F4C5}",
-                )
-              }
-            >
-              <Ionicons name="calendar-outline" size={18} color={colors.primary} />
-            </PressableScale>
-          }
-        />
+        <Text style={styles.screenTitle}>Report</Text>
 
-        <View style={styles.tabs}>
-          {(["Week", "Month"] as Tab[]).map((tab) => (
-            <PressableScale
-              key={tab}
-              style={[styles.tab, activeTab === tab && styles.tabActive]}
-              onPress={() => {
-                setActiveTab(tab);
-                setLoading(true);
-              }}
-            >
-              <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-                {tab}
-              </Text>
-            </PressableScale>
-          ))}
-        </View>
-
-        {loading && days.length === 0 ? (
-          <View style={styles.loadingBox}>
-            <ActivityIndicator color={colors.primary} />
-          </View>
-        ) : error && days.length === 0 ? (
+        {error && ordered.length === 0 ? (
           <EmptyState
             art="offline"
-            title="Could not load your reports"
-            body={error ?? undefined}
+            title="Could not load your report"
+            body={error}
             actionLabel="Try again"
-            onAction={() => void load(activeTab)}
+            onAction={() => void load()}
           />
         ) : (
           <>
-            <GlassCard style={styles.chartCard}>
-              {chartData.length === 0 ? (
-                <View style={styles.chartEmpty}>
-                  <Text style={styles.empty}>No steps recorded in this period yet.</Text>
-                </View>
-              ) : (
-                <View style={styles.chartRow}>
-                  {chartData.map((d, i) => (
-                    <View key={`${d.label}-${i}`} style={styles.barCol}>
-                      <View style={styles.barTrack}>
-                        <View
-                          style={[
-                            styles.barFill,
-                            {
-                              height: `${Math.max(8, (d.steps / maxSteps) * 100)}%`,
-                              backgroundColor: d.active
-                                ? colors.primary
-                                : `${colors.primary}59`,
-                            },
-                          ]}
-                        />
-                      </View>
-                      <Text style={styles.barLabel}>{d.label}</Text>
-                    </View>
-                  ))}
-                </View>
-              )}
+            <GlassCard style={styles.hero}>
+              <Ionicons name="footsteps" size={22} color={colors.primary} />
+              <Text style={styles.heroValue}>{totalSteps.toLocaleString()}</Text>
+              <Text style={styles.heroLabel}>Total steps recorded</Text>
             </GlassCard>
 
-            <View style={styles.metrics}>
-              <GlassCard style={styles.metric}>
-                <Ionicons name="footsteps-outline" size={16} color={colors.primary} />
-                <Text style={styles.metricValue}>{totalSteps.toLocaleString()}</Text>
-                <Text style={styles.metricLabel}>Steps</Text>
-              </GlassCard>
-              <GlassCard style={styles.metric}>
-                <Ionicons name="navigate-outline" size={16} color={colors.coralInk} />
-                <Text style={styles.metricValue}>{summary?.distance_km.toFixed(1) ?? "0.0"}</Text>
-                <Text style={styles.metricLabel}>km</Text>
-              </GlassCard>
-              <GlassCard style={styles.metric}>
-                <Ionicons name="flame-outline" size={16} color={colors.coralInk} />
-                <Text style={styles.metricValue}>{summary?.calories_kcal ?? 0}</Text>
-                <Text style={styles.metricLabel}>kcal</Text>
-              </GlassCard>
+            <StatTileRow stats={heroStats} />
+
+            <GlassCard style={styles.card}>
+              <View style={styles.cardHead}>
+                <Text style={styles.cardTitle}>Statistics</Text>
+                <DropdownChip value={period} options={PERIODS} onChange={setPeriod} />
+              </View>
+
+              {chartData.length === 0 ? (
+                <Text style={styles.empty}>No steps recorded in this period yet.</Text>
+              ) : (
+                <BarChart
+                  data={chartData}
+                  selectedKey={selectedBar}
+                  onSelect={(key) => setSelectedBar((prev) => (prev === key ? null : key))}
+                  formatTooltip={(bar) => formatMetric(bar.value, metric)}
+                  formatY={
+                    metric === "Distance"
+                      ? (n) => n.toFixed(n >= 10 ? 0 : 1)
+                      : undefined
+                  }
+                />
+              )}
+
+              <SegmentedChips options={METRICS} value={metric} onChange={setMetric} />
+            </GlassCard>
+
+            <GlassCard style={styles.card}>
+              <Text style={styles.cardTitle}>Your Progress</Text>
+              <MonthCalendar
+                month={month}
+                onMonthChange={setMonth}
+                activeDates={activeDates}
+              />
+            </GlassCard>
+
+            <View style={styles.cardHead}>
+              <Text style={styles.cardTitle}>Recent activity</Text>
+              <PressableScale
+                style={styles.link}
+                onPress={() => navigation.navigate("History")}
+              >
+                <Text style={styles.linkText}>All history</Text>
+                <Ionicons name="chevron-forward" size={14} color={colors.primary} />
+              </PressableScale>
             </View>
 
-            <Text style={styles.section}>Workout History</Text>
             {sessions.length === 0 ? (
-              <EmptyState
-                art="steps"
-                title="No workouts yet"
-                body="Start a session on the Track tab and it will appear here."
-              />
+              <GlassCard style={styles.card}>
+                <Text style={styles.empty}>No recorded routes yet.</Text>
+              </GlassCard>
             ) : (
-              sessions.map((w) => (
-                <GlassCard key={w.id} style={styles.histItem}>
-                  <View style={styles.histTop}>
-                    <Text style={styles.histDate}>
-                      {new Date(w.finished_at ?? w.started_at).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
+              sessions.map((session) => (
+                <GlassCard key={session.id} style={styles.session}>
+                  <View style={styles.sessionText}>
+                    <Text style={styles.sessionDate}>
+                      {new Date(session.finished_at ?? session.started_at).toLocaleDateString(
+                        undefined,
+                        { weekday: "short", month: "short", day: "numeric" },
+                      )}
                     </Text>
-                    {w.is_suspicious ? (
-                      <Text style={styles.histHeld}>under review</Text>
-                    ) : null}
+                    <Text style={styles.sessionMeta}>
+                      {session.distance_km.toFixed(2)} km ·{" "}
+                      {formatDuration(session.duration_seconds)}
+                    </Text>
                   </View>
-                  <View style={styles.histRow}>
-                    <Text style={styles.histStat}>{w.steps.toLocaleString()} steps</Text>
-                    <Text style={styles.histStat}>{w.distance_km.toFixed(2)} km</Text>
-                    <Text style={styles.histStat}>{formatDuration(w.duration_seconds)}</Text>
-                  </View>
+                  {session.is_suspicious ? (
+                    <Text style={styles.flagged}>under review</Text>
+                  ) : null}
                 </GlassCard>
               ))
             )}
@@ -245,66 +280,31 @@ export function PerformanceReportsScreen() {
 
 const useStyles = makeStyles((colors) => ({
   root: { flex: 1, backgroundColor: colors.canvas },
-  content: { padding: spacing.xl, paddingTop: 56, paddingBottom: 40 },
-  calBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  tabs: {
+  centred: { alignItems: "center", justifyContent: "center" },
+  content: { paddingHorizontal: 20, paddingBottom: 120, gap: 16 },
+  screenTitle: { fontSize: 28, fontWeight: "700", color: colors.charcoal, marginTop: 4 },
+
+  hero: { paddingVertical: 22, alignItems: "center", gap: 4 },
+  heroValue: { fontSize: 34, fontWeight: "700", color: colors.charcoal },
+  heroLabel: { fontSize: 13, color: colors.muted },
+
+  // overflow visible so the chart tooltip and the period menu are not clipped.
+  card: { padding: 18, gap: 16, overflow: "visible" },
+  cardHead: {
     flexDirection: "row",
-    backgroundColor: colors.card,
-    borderRadius: radii.full,
-    padding: 4,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.lg,
+    alignItems: "center",
+    justifyContent: "space-between",
+    zIndex: 20,
   },
-  tab: { flex: 1, paddingVertical: 10, borderRadius: radii.full, alignItems: "center" },
-  tabActive: { backgroundColor: colors.primary },
-  tabText: { color: colors.slate, fontWeight: "600", fontSize: 13 },
-  tabTextActive: { color: colors.white },
-  loadingBox: { paddingVertical: 48, alignItems: "center" },
-  errorCard: { padding: 24, alignItems: "center", gap: 8 },
-  errorTitle: { fontSize: 17, fontWeight: "600", color: colors.charcoal },
-  errorBody: { fontSize: 13, color: colors.slate, textAlign: "center" },
-  retry: {
-    marginTop: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: radii.full,
-    backgroundColor: colors.primary,
-  },
-  retryText: { color: colors.white, fontWeight: "600", fontSize: 13 },
-  chartCard: { padding: 16, height: 180 },
-  chartEmpty: { flex: 1, alignItems: "center", justifyContent: "center" },
-  chartRow: { flex: 1, flexDirection: "row", alignItems: "flex-end", gap: 8 },
-  barCol: { flex: 1, alignItems: "center", height: "100%", justifyContent: "flex-end" },
-  barTrack: { flex: 1, width: "70%", justifyContent: "flex-end", marginBottom: 6 },
-  barFill: { width: "100%", borderRadius: 6, minHeight: 8 },
-  barLabel: { color: colors.muted, fontSize: 12, fontWeight: "600" },
-  metrics: { flexDirection: "row", gap: 10, marginTop: spacing.lg },
-  metric: { flex: 1, padding: 14, alignItems: "center", gap: 4 },
-  metricValue: { color: colors.charcoal, fontWeight: "600", fontSize: 15 },
-  metricLabel: { color: colors.muted, fontSize: 12, fontWeight: "400", textTransform: "uppercase" },
-  section: {
-    marginTop: spacing.xl,
-    marginBottom: spacing.md,
-    color: colors.muted,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  empty: { color: colors.slate, fontSize: 13 },
-  histItem: { padding: 14, marginBottom: spacing.md },
-  histTop: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
-  histDate: { color: colors.charcoal, fontWeight: "600", fontSize: 13 },
-  histTokens: { color: colors.primary, fontWeight: "600", fontSize: 13 },
-  histHeld: { color: colors.muted, fontWeight: "600", fontSize: 13, fontStyle: "italic" },
-  histRow: { flexDirection: "row", gap: 12 },
-  histStat: { color: colors.slate, fontSize: 13, fontWeight: "400" },
+  cardTitle: { fontSize: 16, fontWeight: "700", color: colors.charcoal },
+  empty: { fontSize: 13, color: colors.muted, paddingVertical: spacing.lg, textAlign: "center" },
+
+  link: { flexDirection: "row", alignItems: "center", gap: 2 },
+  linkText: { fontSize: 13, fontWeight: "600", color: colors.primary },
+
+  session: { padding: 16, flexDirection: "row", alignItems: "center", borderRadius: radii.lg },
+  sessionText: { flex: 1, gap: 2 },
+  sessionDate: { fontSize: 14, fontWeight: "600", color: colors.charcoal },
+  sessionMeta: { fontSize: 12, color: colors.muted },
+  flagged: { fontSize: 12, color: colors.muted, fontStyle: "italic" },
 }));

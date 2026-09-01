@@ -106,17 +106,20 @@ export function HomeScreen() {
     else navigation.navigate("StoreTab");
   };
 
-  const openInbox = () => {
-    const parent = navigation.getParent?.();
-    if (parent) parent.navigate("InboxTab");
-    else navigation.navigate("InboxTab");
-  };
+  // Inbox is a stack route now, not a tab, so it is pushed rather than switched to.
+  const openInbox = () => navigation.navigate("Inbox");
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + 8 }]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <PressableScale style={styles.greeting} onPress={() => navigation.navigate("Profile")}>
+          <PressableScale
+            style={styles.greeting}
+            onPress={() => {
+              const parent = navigation.getParent?.();
+              if (parent) parent.navigate("AccountTab");
+            }}
+          >
             <View style={styles.avatarWrap}>
               <Avatar uri={user?.avatar} name={user?.name} size={40} />
               <View style={styles.onlineDot} />

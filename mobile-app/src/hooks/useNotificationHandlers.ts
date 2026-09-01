@@ -54,6 +54,9 @@ export function useNotificationHandlers(navigationRef: React.RefObject<Navigator
         case "SupportChat":
           nav.navigate("SupportChat");
           break;
+        case "Inbox":
+          nav.navigate("Inbox");
+          break;
       }
     };
 
