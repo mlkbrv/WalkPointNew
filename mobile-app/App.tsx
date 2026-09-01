@@ -10,7 +10,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "./src/contexts/AuthContext";
 import { HealthProvider } from "./src/contexts/HealthContext";
 import { ServerDataProvider } from "./src/contexts/ServerDataContext";
-import { StrideProvider } from "./src/contexts/StrideContext";
+import { StepointProvider } from "./src/contexts/StepointContext";
 import { ThemeProvider, makeStyles, useTheme } from "./src/contexts/ThemeContext";
 import { I18nProvider } from "./src/contexts/I18nContext";
 import { RootNavigator } from "./src/navigation/RootNavigator";
@@ -43,7 +43,7 @@ function AppShell() {
     <AuthProvider>
       <HealthProvider>
         <ServerDataProvider>
-          <StrideProvider>
+          <StepointProvider>
             <DeviceSync />
             {/* Hidden, but the style still governs the icons if it is ever shown. */}
             <StatusBar
@@ -57,7 +57,7 @@ function AppShell() {
                 <AnimatedSplashScreen onFinish={() => setIsSplashFinished(true)} />
               ) : null}
             </View>
-          </StrideProvider>
+          </StepointProvider>
         </ServerDataProvider>
       </HealthProvider>
     </AuthProvider>

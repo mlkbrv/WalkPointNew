@@ -19,7 +19,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { describeError } from "../api/client";
 import { workoutsApi, type ApiWorkout } from "../api/endpoints";
-import { formatDuration } from "../contexts/StrideContext";
+import { formatDuration } from "../contexts/StepointContext";
 import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";

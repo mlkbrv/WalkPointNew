@@ -30,7 +30,7 @@ import { GlassCard } from "../components/GlassCard";
 import { PressableScale } from "../components/PressableScale";
 import { RouteTrace } from "../components/RouteTrace";
 import { useHealth } from "../contexts/HealthContext";
-import { useStride, formatDuration } from "../contexts/StrideContext";
+import { useStepoint, formatDuration } from "../contexts/StepointContext";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
 import { useI18n } from "../contexts/I18nContext";
 import { useRouteRecorder } from "../hooks/useRouteRecorder";
@@ -44,7 +44,7 @@ export function TrackScreen() {
   const { t } = useI18n();
   const styles = useStyles();
   const health = useHealth();
-  const { showToast } = useStride();
+  const { showToast } = useStepoint();
   const week = useStepHistory();
   const recorder = useRouteRecorder();
 

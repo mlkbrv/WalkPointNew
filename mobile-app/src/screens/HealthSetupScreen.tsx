@@ -3,7 +3,7 @@
  *
  * This replaces a full-screen wall that blocked the whole app behind
  * instructions describing a screen the user could never reach: it told them to
- * find STRIDE in Health Connect's app list, which was impossible because the
+ * find Stepoint in Health Connect's app list, which was impossible because the
  * app never registered the permissions-rationale activity Health Connect
  * requires. Now it is reachable from Profile, it reports what is actually in
  * use, and it never claims Health Connect when the raw sensor is standing in.
@@ -15,7 +15,7 @@ import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useHealth } from "../contexts/HealthContext";
-import { useStride } from "../contexts/StrideContext";
+import { useStepoint } from "../contexts/StepointContext";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
 import { radii, spacing } from "../theme";
 import { GlassCard } from "../components/GlassCard";
@@ -27,7 +27,7 @@ export function HealthSetupScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
   const health = useHealth();
-  const { showToast } = useStride();
+  const { showToast } = useStepoint();
   const [busy, setBusy] = useState(false);
 
   const onGrant = useCallback(async () => {
@@ -50,15 +50,15 @@ export function HealthSetupScreen() {
         tone: colors.emeraldInk,
         label: "Counting steps",
         detail: health.countsInBackground
-          ? "Steps are counted even when STRIDE is closed."
-          : "Steps are counted only while STRIDE is open.",
+          ? "Steps are counted even when Stepoint is closed."
+          : "Steps are counted only while Stepoint is open.",
       };
     }
     if (health.status === "needs_permission") {
       return {
         tone: colors.coralInk,
         label: "Access needed",
-        detail: "STRIDE cannot read your step count until you allow it.",
+        detail: "Stepoint cannot read your step count until you allow it.",
       };
     }
     if (health.status === "needs_update") {
@@ -71,7 +71,7 @@ export function HealthSetupScreen() {
     return {
       tone: colors.muted,
       label: "No step source",
-      detail: "This device has no step counter STRIDE can read.",
+      detail: "This device has no step counter Stepoint can read.",
     };
   })();
 
@@ -100,9 +100,9 @@ export function HealthSetupScreen() {
             <View style={styles.warn}>
               <Ionicons name="alert-circle-outline" size={16} color={colors.coralInk} />
               <Text style={styles.warnText}>
-                Health Connect is not available on this device, so STRIDE is using the
+                Health Connect is not available on this device, so Stepoint is using the
                 phone&apos;s own step sensor. That only counts while the app is open —
-                steps taken with STRIDE closed are not recorded.
+                steps taken with Stepoint closed are not recorded.
               </Text>
             </View>
           ) : null}
@@ -125,8 +125,8 @@ export function HealthSetupScreen() {
 
         <Text style={styles.footnote}>
           {Platform.OS === "android"
-            ? "STRIDE only reads your step count. It never writes to Health Connect."
-            : "STRIDE only reads your step count."}
+            ? "Stepoint only reads your step count. It never writes to Health Connect."
+            : "Stepoint only reads your step count."}
         </Text>
       </ScrollView>
     </View>

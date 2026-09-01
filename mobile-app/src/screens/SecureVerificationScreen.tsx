@@ -21,7 +21,7 @@ import QRCode from "react-native-qrcode-svg";
 
 import { describeError } from "../api/client";
 import { walletApi, type ApiVoucher } from "../api/endpoints";
-import { useStride } from "../contexts/StrideContext";
+import { useStepoint } from "../contexts/StepointContext";
 import { radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { GlassCard } from "../components/GlassCard";
@@ -43,7 +43,7 @@ export function SecureVerificationScreen() {
   const styles = useStyles();
   const navigation = useNavigation<{ canGoBack: () => boolean; goBack: () => void; navigate: (s: string) => void }>();
   const route = useRoute<RouteProp<RootStackParamList, "SecureVerification">>();
-  const { showToast } = useStride();
+  const { showToast } = useStepoint();
 
   const [voucher, setVoucher] = useState<ApiVoucher | null>(null);
   const [loading, setLoading] = useState(true);

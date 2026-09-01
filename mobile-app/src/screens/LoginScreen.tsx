@@ -42,7 +42,7 @@ export function LoginScreen() {
     <LinearGradient colors={["#0B0D10", "#1B0F33", "#0B0D10"]} style={styles.root}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Text style={styles.brand}>STRIDE</Text>
+          <Text style={styles.brand}>Stepoint</Text>
           <Text style={styles.sub}>Move more. Earn more. Live better.</Text>
 
           <View style={styles.card}>

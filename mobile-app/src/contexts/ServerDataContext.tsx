@@ -1,7 +1,7 @@
 /**
  * Everything the app reads from the server.
  *
- * This is the migration seam. `StrideContext` keeps the local UI concerns it was
+ * This is the migration seam. `StepointContext` keeps the local UI concerns it was
  * always about — the active workout, toasts, the selected brand — while anything
  * the server owns (balance, catalogue, vouchers, stories, inbox) is read here.
  * Screens move across one at a time; nothing has to be converted in one go.

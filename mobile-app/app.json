@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "STRIDE",
+    "name": "Stepoint",
     "slug": "stride-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -12,8 +12,8 @@
       "infoPlist": {
         "UIStatusBarHidden": true,
         "UIViewControllerBasedStatusBarAppearance": false,
-        "NSMotionUsageDescription": "STRIDE uses motion data to count your steps and award tokens.",
-        "NSPhotoLibraryUsageDescription": "STRIDE uses your photos for profile and merchant logos."
+        "NSMotionUsageDescription": "Stepoint uses motion data to count your steps and award tokens.",
+        "NSPhotoLibraryUsageDescription": "Stepoint uses your photos for profile and merchant logos."
       }
     },
     "android": {
@@ -45,7 +45,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow STRIDE to update your profile photo."
+          "photosPermission": "Allow Stepoint to update your profile photo."
         }
       ],
       [
@@ -65,7 +65,7 @@
         {
           "isAndroidForegroundServiceEnabled": true,
           "isAndroidBackgroundLocationEnabled": false,
-          "locationWhenInUsePermission": "STRIDE records your walking route only while you switch it on."
+          "locationWhenInUsePermission": "Stepoint records your walking route only while you switch it on."
         }
       ],
       [

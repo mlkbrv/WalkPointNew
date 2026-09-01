@@ -33,7 +33,7 @@ type Props = { onFinish: () => void };
  * viewBox — so the splash and the launcher icon are the same shape, not two
  * drawings that merely resemble each other.
  */
-function StrideMark({ size = 104 }: { size?: number }) {
+function StepointMark({ size = 104 }: { size?: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 120 120">
       <Defs>
@@ -118,7 +118,7 @@ export function AnimatedSplashScreen({ onFinish }: Props) {
           ],
         }}
       >
-        <StrideMark />
+        <StepointMark />
       </Animated.View>
 
       <Animated.View
@@ -129,7 +129,7 @@ export function AnimatedSplashScreen({ onFinish }: Props) {
           ],
         }}
       >
-        <Text style={styles.brand}>STRIDE</Text>
+        <Text style={styles.brand}>Stepoint</Text>
         <Text style={styles.tagline}>Move more. Earn more.</Text>
       </Animated.View>
     </Animated.View>

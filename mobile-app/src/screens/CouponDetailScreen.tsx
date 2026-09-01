@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { RootStackParamList } from "../types";
 import { useServerData } from "../contexts/ServerDataContext";
-import { useStride } from "../contexts/StrideContext";
+import { useStepoint } from "../contexts/StepointContext";
 import { radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { GlassCard } from "../components/GlassCard";
@@ -27,7 +27,7 @@ export function CouponDetailScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<RootStackParamList, "CouponDetail">>();
   const { coupons, stores, wallet, purchaseCoupon } = useServerData();
-  const { showToast } = useStride();
+  const { showToast } = useStepoint();
 
   const [buying, setBuying] = useState(false);
   const [error, setError] = useState<string | null>(null);

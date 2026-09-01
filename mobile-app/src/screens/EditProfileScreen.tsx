@@ -13,7 +13,7 @@ import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../contexts/AuthContext";
-import { useStride } from "../contexts/StrideContext";
+import { useStepoint } from "../contexts/StepointContext";
 import { radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { GlassCard } from "../components/GlassCard";
@@ -25,7 +25,7 @@ export function EditProfileScreen() {
   const styles = useStyles();
   const navigation = useNavigation<any>();
   const { user, updateProfile } = useAuth();
-  const { userStats, setUserStats, showToast } = useStride();
+  const { userStats, setUserStats, showToast } = useStepoint();
 
   const [name, setName] = useState(user?.name || "");
   const [weight, setWeight] = useState(String(userStats.weightKg));

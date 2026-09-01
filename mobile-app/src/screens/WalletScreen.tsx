@@ -43,7 +43,7 @@ export function WalletScreen() {
         <View style={styles.topRow}>
           <View style={styles.brandRow}>
             <Avatar uri={user?.avatar} name={user?.name} size={36} />
-            <Text style={styles.brand}>STRIDE</Text>
+            <Text style={styles.brand}>Stepoint</Text>
           </View>
           <View style={styles.tokenChip}>
             <Text style={styles.tokenLabel}>Balance</Text>
@@ -117,7 +117,7 @@ export function WalletScreen() {
         <GlassCard style={styles.nudge}>
           <Ionicons name="trending-up" size={22} color={colors.primary} />
           <Text style={styles.nudgeText}>
-            Walk 5,000 more steps today to unlock your next exclusive reward voucher on STRIDE!
+            Walk 5,000 more steps today to unlock your next exclusive reward voucher on Stepoint!
           </Text>
         </GlassCard>
       </ScrollView>

@@ -69,7 +69,7 @@ export function useRouteRecorder(): RouteRecorder {
         // and a walk recorded with the phone in a pocket would be a few points
         // long. With it, no background-location permission is required.
         foregroundService: {
-          notificationTitle: "STRIDE is recording your route",
+          notificationTitle: "Stepoint is recording your route",
           notificationBody: "Tap to open. Turn off recording to stop.",
           notificationColor: "#7C3AED",
         },

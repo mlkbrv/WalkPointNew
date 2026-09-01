@@ -7,6 +7,8 @@ import {
   View,
 } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { ScreenHeader } from "../components/ScreenHeader";
+import { useI18n } from "../contexts/I18nContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { radii } from "../theme";
@@ -19,8 +21,9 @@ import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
 export function InboxScreen() {
   const { colors } = useTheme();
+  const { t } = useI18n();
   const styles = useStyles();
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<{ navigate: (s: string) => void; goBack: () => void }>();
   const insets = useSafeAreaInsets();
   const {
     inbox,
@@ -103,30 +106,31 @@ export function InboxScreen() {
   return (
     <View style={[styles.root, { paddingTop: insets.top + 8 }]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        {/* This screen was a tab; as a stack route it had no way out at all. */}
+        <ScreenHeader title={t("inboxTitle")} onBack={() => navigation.goBack()} />
         <View style={styles.header}>
           <View>
-            <Text style={styles.heading}>Inbox Notifications</Text>
             <Text style={styles.sub}>
-              {unreadCount > 0 ? `${unreadCount} unread actions` : "All caught up!"}
+              {unreadCount > 0 ? t("unreadActions", { n: unreadCount }) : t("allCaughtUp")}
             </Text>
           </View>
           {unreadCount > 0 ? (
             <PressableScale style={styles.clearBtn} onPress={() => void markAllNotificationsRead()}>
-              <Text style={styles.clearText}>Clear all</Text>
+              <Text style={styles.clearText}>{t("markAllRead")}</Text>
             </PressableScale>
           ) : null}
         </View>
 
         {today.length > 0 ? (
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Today</Text>
+            <Text style={styles.sectionLabel}>{t("today")}</Text>
             <View style={styles.list}>{today.map(renderItem)}</View>
           </View>
         ) : null}
 
         {earlier.length > 0 ? (
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Earlier</Text>
+            <Text style={styles.sectionLabel}>{t("earlier")}</Text>
             <View style={styles.list}>{earlier.map(renderItem)}</View>
           </View>
         ) : null}
@@ -138,16 +142,16 @@ export function InboxScreen() {
         ) : inbox.error && notifications.length === 0 ? (
           <EmptyState
             art="offline"
-            title="Could not load your inbox"
+            title={t("couldNotLoadInbox")}
             body={inbox.error ?? undefined}
-            actionLabel="Try again"
+            actionLabel={t("tryAgain")}
             onAction={() => void refreshInbox()}
           />
         ) : notifications.length === 0 ? (
           <EmptyState
             art="inbox"
-            title="Nothing here yet"
-            body="Coins you earn and news from partners will land here."
+            title={t("nothingHereYet")}
+            body={t("inboxEmptyBody")}
           />
         ) : null}
       </ScrollView>

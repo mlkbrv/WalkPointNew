@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { useStride } from "../contexts/StrideContext";
+import { useStepoint } from "../contexts/StepointContext";
 import { radii, spacing } from "../theme";
 import { PressableScale } from "../components/PressableScale";
 import { GlassCard } from "../components/GlassCard";
@@ -13,7 +13,7 @@ export function ConnectedDevicesScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
   const navigation = useNavigation<any>();
-  const { devices, toggleDevice, syncDevice } = useStride();
+  const { devices, toggleDevice, syncDevice } = useStepoint();
   const [syncingId, setSyncingId] = useState<string | null>(null);
 
   const onSync = async (id: string) => {

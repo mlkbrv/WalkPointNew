@@ -32,7 +32,7 @@ export function ForgotPasswordScreen() {
     <LinearGradient colors={["#0B0D10", "#1B0F33", "#0B0D10"]} style={styles.root}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.inner}>
         <ScreenHeader title="Reset Password" onBack={() => navigation.goBack()} light />
-        <Text style={styles.sub}>We'll email you a secure reset link for your STRIDE account.</Text>
+        <Text style={styles.sub}>We'll email you a secure reset link for your Stepoint account.</Text>
         <View style={styles.card}>
           <Text style={styles.label}>Email</Text>
           <TextInput

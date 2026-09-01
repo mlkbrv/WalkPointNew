@@ -1,6 +1,6 @@
 {
-  "name": "STRIDE",
-  "description": "STRIDE - Premium Move-to-Earn fitness tracker with glassmorphism visual design, real-time tracking, leaderboards, and rewards.",
+  "name": "Stepoint",
+  "description": "Stepoint - Premium Move-to-Earn fitness tracker with glassmorphism visual design, real-time tracking, leaderboards, and rewards.",
   "requestFramePermissions": ["geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

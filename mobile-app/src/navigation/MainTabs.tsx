@@ -16,8 +16,24 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useI18n } from "../contexts/I18nContext";
 import type { MainTabParamList } from "../types";
 import { TABS } from "./tabs";
+import { TabSwipeArea } from "./TabSwipeArea";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
+
+/**
+ * Each screen wrapped in its swipe area, built once. Wrapping inside render
+ * would hand React a new component type every pass and remount the screen.
+ */
+const SWIPEABLE = TABS.map((spec, index) => {
+  const Screen = spec.component;
+  const Wrapped = () => (
+    <TabSwipeArea index={index}>
+      <Screen />
+    </TabSwipeArea>
+  );
+  Wrapped.displayName = `Swipeable(${spec.name})`;
+  return { ...spec, component: Wrapped };
+});
 
 export function MainTabs() {
   const { colors } = useTheme();
@@ -48,7 +64,7 @@ export function MainTabs() {
         };
       }}
     >
-      {TABS.map((spec) => (
+      {SWIPEABLE.map((spec) => (
         <Tab.Screen
           key={spec.name}
           name={spec.name}

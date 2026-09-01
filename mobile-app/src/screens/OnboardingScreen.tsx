@@ -7,7 +7,7 @@
  * control between them, so six navigator entries would be six copies of the
  * chrome and a param list threading half-collected answers between them.
  *
- * Answers land in `useStride().userStats`, which is device-local and already
+ * Answers land in `useStepoint().userStats`, which is device-local and already
  * persisted — the server has no column for height, weight or gender. Skipping
  * a step is allowed and simply leaves that field at its default; only the goal
  * meaningfully changes the app, and it has a sensible one.
@@ -26,7 +26,7 @@ import { PillButton } from "../components/PillButton";
 import { PressableScale } from "../components/PressableScale";
 import { SegmentedChips } from "../components/SegmentedChips";
 import { WheelPicker } from "../components/WheelPicker";
-import { useStride } from "../contexts/StrideContext";
+import { useStepoint } from "../contexts/StepointContext";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
 import { useI18n } from "../contexts/I18nContext";
 import type { Gender } from "../types";
@@ -66,7 +66,7 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
   const { t } = useI18n();
   const styles = useStyles();
   const insets = useSafeAreaInsets();
-  const { userStats, setUserStats } = useStride();
+  const { userStats, setUserStats } = useStepoint();
 
   const [step, setStep] = useState(0);
   const [units, setUnits] = useState<"cm" | "ft">("cm");

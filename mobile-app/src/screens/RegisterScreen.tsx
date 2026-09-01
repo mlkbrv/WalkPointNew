@@ -43,7 +43,7 @@ export function RegisterScreen() {
     <LinearGradient colors={["#0B0D10", "#1B0F33", "#0B0D10"]} style={styles.root}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Text style={styles.title}>Join STRIDE</Text>
+          <Text style={styles.title}>Join Stepoint</Text>
           <Text style={styles.sub}>Start earning coins for the steps you already take</Text>
           <View style={styles.card}>
             <Text style={styles.label}>Full name</Text>

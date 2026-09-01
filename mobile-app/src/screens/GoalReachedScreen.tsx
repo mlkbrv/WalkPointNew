@@ -19,7 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PillButton } from "../components/PillButton";
 import { StatTileRow, type Stat } from "../components/StatTileRow";
-import { useStride } from "../contexts/StrideContext";
+import { useStepoint } from "../contexts/StepointContext";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
 import { useI18n } from "../contexts/I18nContext";
 import { caloriesFromSteps, distanceFromSteps, minutesFromSteps } from "../utils/metrics";
@@ -42,7 +42,7 @@ export function GoalReachedScreen() {
     goBack: () => void;
     navigate: (s: string, p?: object) => void;
   }>();
-  const { userStats } = useStride();
+  const { userStats } = useStepoint();
 
   const steps = userStats.stepsToday;
   const tones = [colors.primary, colors.coral, colors.amber, colors.emerald];

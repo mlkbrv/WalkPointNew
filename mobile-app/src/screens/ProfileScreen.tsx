@@ -12,7 +12,7 @@ import { PressableScale } from "../components/PressableScale";
 import { Avatar } from "../components/Avatar";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
-import { useStride } from "../contexts/StrideContext";
+import { useStepoint } from "../contexts/StepointContext";
 import { useAuth } from "../contexts/AuthContext";
 import { makeStyles, useTheme, Appearance } from "../contexts/ThemeContext";
 import { useI18n, type LanguagePreference } from "../contexts/I18nContext";
@@ -31,7 +31,7 @@ export function ProfileScreen() {
   }>();
   const insets = useSafeAreaInsets();
   const { user, prefs, updatePrefs, logout } = useAuth();
-  const { userStats, setUserStats } = useStride();
+  const { userStats, setUserStats } = useStepoint();
 
   const bump = (key: "weightKg" | "heightCm" | "stepsGoal", delta: number) => {
     setUserStats((prev) => ({

@@ -4,7 +4,7 @@
  * There are three, and they are genuinely different in what they can promise:
  *
  * * **Health Connect** (Android) — the system keeps the total whether or not
- *   STRIDE is running, so a single read on resume recovers everything missed.
+ *   Stepoint is running, so a single read on resume recovers everything missed.
  * * **Core Motion** (iOS) — `CMPedometer` likewise counts in the background and
  *   can be queried for a historical range.
  * * **Foreground pedometer** — the raw step-counter sensor, subscribed to while

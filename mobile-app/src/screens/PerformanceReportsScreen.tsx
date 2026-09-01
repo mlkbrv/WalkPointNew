@@ -27,7 +27,7 @@ import {
   type ApiWeeklySummary,
   type ApiWorkout,
 } from "../api/endpoints";
-import { formatDuration } from "../contexts/StrideContext";
+import { formatDuration } from "../contexts/StepointContext";
 import { radii, spacing } from "../theme";
 import { BarChart, type Bar } from "../components/BarChart";
 import { DropdownChip } from "../components/DropdownChip";

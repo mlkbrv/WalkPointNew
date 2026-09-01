@@ -26,7 +26,7 @@ import { DayCircleRow } from "../components/DayCircleRow";
 import { DropdownChip } from "../components/DropdownChip";
 import { StatTileRow, type Stat } from "../components/StatTileRow";
 import { StoriesRail } from "../components/StoriesRail";
-import { useStride } from "../contexts/StrideContext";
+import { useStepoint } from "../contexts/StepointContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useHealth } from "../contexts/HealthContext";
 import { useSeenStories } from "../hooks/useSeenStories";
@@ -56,7 +56,7 @@ export function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const health = useHealth();
-  const { userStats } = useStride();
+  const { userStats } = useStepoint();
   const { seenIds, reload: reloadSeen } = useSeenStories();
   const { storyGroups, stores, unreadCount } = useServerData();
   const week = useStepHistory();

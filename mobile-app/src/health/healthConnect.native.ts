@@ -1,7 +1,7 @@
 /**
  * Android Health Connect.
  *
- * The system counts steps whether or not STRIDE is running, so this provider
+ * The system counts steps whether or not Stepoint is running, so this provider
  * only has to *read* an accumulated total. That is why no background service is
  * needed: one read when the app comes back to the foreground recovers every
  * step taken while it was closed.

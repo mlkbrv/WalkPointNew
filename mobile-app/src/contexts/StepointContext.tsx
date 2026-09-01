@@ -50,7 +50,7 @@ export interface DeviceLink {
   lastSync?: string;
 }
 
-type StrideContextValue = {
+type StepointContextValue = {
   userStats: UserStats;
   setUserStats: React.Dispatch<React.SetStateAction<UserStats>>;
   toast: Toast;
@@ -61,7 +61,7 @@ type StrideContextValue = {
   syncDevice: (id: string) => Promise<void>;
 };
 
-const StrideContext = createContext<StrideContextValue | null>(null);
+const StepointContext = createContext<StepointContextValue | null>(null);
 
 /** Body measurements and the goal are per-device settings, not server records. */
 // Every field needs a default here as well as in `UserStats`: hydration merges
@@ -83,7 +83,7 @@ const DEFAULT_DEVICES: DeviceLink[] = [
   { id: "apple", name: "Apple Health", connected: false },
 ];
 
-export function StrideProvider({ children }: { children: React.ReactNode }) {
+export function StepointProvider({ children }: { children: React.ReactNode }) {
   const health = useHealth();
   const [hydrated, setHydrated] = useState(false);
   const [userStats, setUserStats] = useState<UserStats>(DEFAULT_STATS);
@@ -169,7 +169,7 @@ export function StrideProvider({ children }: { children: React.ReactNode }) {
     [devices, health, syncDevice],
   );
 
-  const value = useMemo<StrideContextValue>(
+  const value = useMemo<StepointContextValue>(
     () => ({
       userStats,
       setUserStats,
@@ -183,11 +183,11 @@ export function StrideProvider({ children }: { children: React.ReactNode }) {
     [userStats, toast, showToast, dismissToast, devices, toggleDevice, syncDevice],
   );
 
-  return <StrideContext.Provider value={value}>{children}</StrideContext.Provider>;
+  return <StepointContext.Provider value={value}>{children}</StepointContext.Provider>;
 }
 
-export function useStride() {
-  const ctx = useContext(StrideContext);
-  if (!ctx) throw new Error("useStride must be used within StrideProvider");
+export function useStepoint() {
+  const ctx = useContext(StepointContext);
+  if (!ctx) throw new Error("useStepoint must be used within StepointProvider");
   return ctx;
 }

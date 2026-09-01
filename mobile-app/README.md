@@ -1,4 +1,4 @@
-# STRIDE mobile app
+# Stepoint mobile app
 
 Expo SDK 57 · React Native 0.86 · React 19 · TypeScript.
 
@@ -41,7 +41,7 @@ plugin, and React deduplication. Each is commented with what breaks without it.
 | Path | Role |
 |---|---|
 | `src/api/` | the only place that talks HTTP — auth header, error envelope, refresh |
-| `src/contexts/` | `AuthContext` (session), `ServerDataContext` (server state), `HealthContext`, `StrideContext` (local UI state) |
+| `src/contexts/` | `AuthContext` (session), `ServerDataContext` (server state), `HealthContext`, `StepointContext` (local UI state) |
 | `src/hooks/` | step sync, push registration |
 | `src/screens/` | one file per screen |
 | `src/components/` | shared UI |

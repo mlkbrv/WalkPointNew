@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import { Animated, Text, View } from "react-native";
 
 import { radii } from "../theme";
-import { useStride } from "../contexts/StrideContext";
+import { useStepoint } from "../contexts/StepointContext";
 import { makeStyles } from "../contexts/ThemeContext";
 
 const FADE_MS = 220;
@@ -19,7 +19,7 @@ const VISIBLE_MS = 2200;
 
 export function FeedbackToast() {
   const styles = useStyles();
-  const { toast, dismissToast } = useStride();
+  const { toast, dismissToast } = useStepoint();
 
   const opacity = useRef(new Animated.Value(0)).current;
   const offset = useRef(new Animated.Value(-16)).current;

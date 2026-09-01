@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { useStride } from "../contexts/StrideContext";
+import { useStepoint } from "../contexts/StepointContext";
 import { describeError } from "../api/client";
 import { supportApi, type ApiFaqEntry } from "../api/endpoints";
 import { radii, spacing } from "../theme";
@@ -15,7 +15,7 @@ export function HelpSupportScreen() {
   const { colors } = useTheme();
   const styles = useStyles();
   const navigation = useNavigation<any>();
-  const { showToast } = useStride();
+  const { showToast } = useStepoint();
   const [openIds, setOpenIds] = useState<string[]>([]);
   const [faqs, setFaqs] = useState<ApiFaqEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,7 +47,7 @@ export function HelpSupportScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="Help & Support" onBack={() => navigation.goBack()} />
 
-        <Text style={styles.sub}>Find answers quickly or reach the STRIDE member helpdesk.</Text>
+        <Text style={styles.sub}>Find answers quickly or reach the Stepoint member helpdesk.</Text>
 
         <Text style={styles.section}>FAQ</Text>
 
