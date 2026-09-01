@@ -32,6 +32,7 @@ import {
 import type { ReactNode } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 
+import logo from '@/assets/logo.png';
 import { adminApi } from '@/api/endpoints';
 import { useAuth } from '@/auth/AuthContext';
 import { useAsync } from '@/components/useAsync';
@@ -146,27 +147,46 @@ export function Layout() {
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+      {/* The two consoles are deliberately not the same surface. A moderator
+          acting on someone else's business and a business acting on its own
+          should never have to read a small chip to work out which one they are
+          in, so the whole bar changes: dark and neutral for the console that
+          moderates, brand violet for the one a partner owns. */}
       <AppBar
         position="fixed"
         color="inherit"
         elevation={0}
-        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, borderBottom: 1, borderColor: 'divider' }}
+        sx={{
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          borderBottom: 1,
+          borderColor: isSuperadmin ? 'transparent' : 'divider',
+          bgcolor: isSuperadmin ? '#111827' : 'primary.main',
+          color: '#fff',
+        }}
       >
         <Toolbar>
-          <Typography variant="h6" fontWeight={800} sx={{ flexGrow: 1 }}>
-            STRIDE
+          <Box
+            component="img"
+            src={logo}
+            alt=""
+            sx={{ width: 28, height: 28, borderRadius: 1.2, mr: 1.25 }}
+          />
+          <Typography variant="h6" fontWeight={800} sx={{ flexGrow: 1, letterSpacing: 0.2 }}>
+            Stepoint{' '}
+            <Box component="span" sx={{ opacity: 0.62, fontWeight: 600 }}>
+              {isSuperadmin ? 'Console' : 'for Business'}
+            </Box>
           </Typography>
           <Chip
             size="small"
-            label={isSuperadmin ? 'Superadmin' : 'Partner'}
-            color={isSuperadmin ? 'secondary' : 'primary'}
-            sx={{ mr: 2 }}
+            label={isSuperadmin ? 'Модерация' : 'Партнёр'}
+            sx={{ mr: 2, bgcolor: 'rgba(255,255,255,0.18)', color: '#fff', fontWeight: 700 }}
           />
-          <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
+          <Typography variant="body2" sx={{ mr: 1, opacity: 0.85 }}>
             {user?.email}
           </Typography>
           <Tooltip title="Sign out">
-            <IconButton onClick={() => void signOut()} size="small">
+            <IconButton onClick={() => void signOut()} size="small" sx={{ color: '#fff' }}>
               <LogoutIcon fontSize="small" />
             </IconButton>
           </Tooltip>

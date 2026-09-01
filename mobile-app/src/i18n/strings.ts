@@ -18,7 +18,6 @@ export const en = {
   tabTrack: "Track",
   tabReport: "Report",
   tabStore: "Store",
-  tabAccount: "Account",
 
   // Home
   helloName: "Hello, {name}!",
@@ -200,7 +199,6 @@ export const ru: Strings = {
   tabTrack: "Маршрут",
   tabReport: "Отчёт",
   tabStore: "Магазин",
-  tabAccount: "Профиль",
 
   helloName: "Привет, {name}!",
   activeMember: "Активный участник",
@@ -369,7 +367,6 @@ export const tr: Strings = {
   tabTrack: "Rota",
   tabReport: "Rapor",
   tabStore: "Magaza",
-  tabAccount: "Hesap",
 
   helloName: "Merhaba, {name}!",
   activeMember: "Aktif uye",

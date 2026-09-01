@@ -146,9 +146,11 @@ export interface DeviceConnection {
 export type RootStackParamList = {
   /** Nested: the tab navigator, so callers can target a specific tab. */
   Main: NavigatorScreenParams<MainTabParamList>;
-  // Inbox and Scoreboard used to be tabs. They moved off the bar to make room
-  // for Report and Account: the inbox is reached from the bell in Home's header
-  // and a row in Account, the board from Account.
+  // Inbox and Scoreboard used to be tabs, and so was Account. The bar is down to
+  // the four things people switch between constantly; everything else is pushed
+  // from where it is needed — the inbox from the bell in Home's header and a row
+  // in Account, the board from Account, Account itself from Home's avatar.
+  Account: undefined;
   Inbox: undefined;
   Scoreboard: undefined;
   Achievements: undefined;
@@ -177,5 +179,4 @@ export type MainTabParamList = {
   TrackTab: undefined;
   ReportTab: undefined;
   StoreTab: undefined;
-  AccountTab: undefined;
 };

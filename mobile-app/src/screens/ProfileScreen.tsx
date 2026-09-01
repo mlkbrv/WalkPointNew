@@ -104,8 +104,9 @@ export function ProfileScreen() {
   return (
     <View style={[styles.root, { paddingTop: insets.top + 8 }]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* No back button: this is a tab root, so there is nothing to go back to. */}
-        <ScreenHeader title={t("account")} />
+        {/* Account left the tab bar and is pushed from Home's avatar, so it needs
+            its own way back — the stack header is hidden app-wide. */}
+        <ScreenHeader title={t("account")} onBack={() => navigation.goBack()} />
 
         <View style={styles.hero}>
           <View style={styles.avatarWrap}>

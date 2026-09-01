@@ -19,41 +19,35 @@
  */
 
 import { useEffect, useRef } from "react";
-import { Animated, Easing, Text, View } from "react-native";
-import Svg, { Circle, Defs, Path, RadialGradient, Stop } from "react-native-svg";
+import { Animated, Easing, Image, Text, View } from "react-native";
 
 import { makeStyles } from "../contexts/ThemeContext";
+// A static import, not require(): Metro resolves this to an asset ref and
+// Vite to a URL, whereas `require` simply does not exist in the ESM web
+// build and throws at module scope, taking the whole app down on load.
+import icon from "../../assets/icon.png";
 
 type Props = { onFinish: () => void };
 
 /**
- * The stride mark from the app icon.
+ * The app icon itself, not a redrawing of it.
  *
- * Same control points as `deploy`-time icon generation, mapped into a 120x120
- * viewBox — so the splash and the launcher icon are the same shape, not two
- * drawings that merely resemble each other.
+ * This used to be a hand-built SVG that had to be kept in step with whatever
+ * the launcher icon looked like — two drawings that merely resembled each
+ * other, and they had already drifted apart. Rendering `assets/icon.png`
+ * means the splash cannot disagree with the icon, because it is the icon.
  */
-function StepointMark({ size = 104 }: { size?: number }) {
+function StepointMark({ size = 116 }: { size?: number }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 120 120">
-      <Defs>
-        <RadialGradient id="splashGlow" cx="50%" cy="50%" r="50%">
-          <Stop offset="0%" stopColor="#A78BFA" stopOpacity="0.40" />
-          <Stop offset="100%" stopColor="#A78BFA" stopOpacity="0" />
-        </RadialGradient>
-      </Defs>
-      <Circle cx="60" cy="60" r="58" fill="url(#splashGlow)" />
-      <Path
-        d="M85.1 28.0 C53.0 18.2 34.9 40.5 61.4 56.5 C87.8 73.9 69.7 99.0 36.3 90.6"
-        stroke="#A78BFA"
-        strokeWidth={12.2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-      {/* The next step, ahead of the path. */}
-      <Circle cx="87.8" cy="87.8" r="5.6" fill="#A78BFA" />
-    </Svg>
+    <Image
+      // The two bundlers hand back different things for the same import: Vite a
+      // URL string, Metro a numeric asset ref. Image takes the ref directly but
+      // needs the string wrapped, so the shape is normalised here rather than
+      // splitting this component by platform for one prop.
+      source={typeof icon === "string" ? { uri: icon } : icon}
+      style={{ width: size, height: size, borderRadius: size * 0.24 }}
+      resizeMode="contain"
+    />
   );
 }
 

@@ -66,7 +66,7 @@ export function PartnerRedeemPage() {
     setDone(null);
 
     if (!UUID.test(token)) {
-      setError('That does not look like a STRIDE code. It is 32 characters.');
+      setError('That does not look like a Stepoint code. It is 32 characters.');
       return;
     }
 

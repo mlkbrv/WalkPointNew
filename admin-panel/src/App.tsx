@@ -11,6 +11,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { useAuth } from '@/auth/AuthContext';
 import { Layout } from '@/components/Layout';
+import { JoinPage } from '@/pages/JoinPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { BroadcastPage } from '@/pages/admin/BroadcastPage';
 import { DashboardPage } from '@/pages/admin/DashboardPage';
@@ -46,6 +47,8 @@ export function App() {
   if (!user) {
     return (
       <Routes>
+        {/* The one page here a visitor with no account is meant to reach. */}
+        <Route path="/join" element={<JoinPage />} />
         <Route path="*" element={<LoginPage />} />
       </Routes>
     );

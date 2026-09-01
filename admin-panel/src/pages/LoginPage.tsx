@@ -1,4 +1,5 @@
-import { Alert, Box, Button, Paper, Stack, TextField, Typography } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
+import { Alert, Box, Button, Divider, Paper, Stack, TextField, Typography } from '@mui/material';
 import { useState } from 'react';
 
 import { useAuth } from '@/auth/AuthContext';
@@ -36,7 +37,7 @@ export function LoginPage() {
     >
       <Paper variant="outlined" sx={{ p: 4, width: '100%', maxWidth: 400 }}>
         <Typography variant="h5" fontWeight={800}>
-          STRIDE Admin
+          Stepoint Admin
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 3 }}>
           For partners and staff. App accounts cannot sign in here.
@@ -63,6 +64,14 @@ export function LoginPage() {
             />
             <Button type="submit" variant="contained" size="large" disabled={busy}>
               {busy ? 'Signing in…' : 'Sign in'}
+            </Button>
+            <Divider sx={{ pt: 1 }}>
+              <Typography variant="caption" color="text.secondary">
+                Не партнёр?
+              </Typography>
+            </Divider>
+            <Button component={RouterLink} to="/join" variant="outlined" size="large">
+              Разместить свои купоны
             </Button>
           </Stack>
         </form>

@@ -74,7 +74,7 @@ function PushPreview({ title, body }: { title: string; body: string }) {
       </Box>
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Typography sx={{ fontSize: 11, opacity: 0.6, letterSpacing: 0.4 }}>
-          STRIDE · now
+          Stepoint · now
         </Typography>
         <Typography
           sx={{

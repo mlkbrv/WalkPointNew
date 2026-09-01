@@ -1,5 +1,5 @@
 /**
- * What the five tabs are, shared by both implementations of the bar.
+ * What the four tabs are, shared by both implementations of the bar.
  *
  * The bar itself is split by platform (`MainTabs.native.tsx` / `MainTabs.tsx`),
  * because only the native one can swipe. This is everything that must stay
@@ -13,7 +13,6 @@ import { HomeScreen } from "../screens/HomeScreen";
 import { TrackScreen } from "../screens/TrackScreen";
 import { PerformanceReportsScreen } from "../screens/PerformanceReportsScreen";
 import { StoreScreen } from "../screens/StoreScreen";
-import { ProfileScreen } from "../screens/ProfileScreen";
 import type { MainTabParamList } from "../types";
 import type { Strings } from "../i18n/strings";
 
@@ -40,11 +39,4 @@ export const TABS: TabSpec[] = [
     off: "bar-chart-outline",
   },
   { name: "StoreTab", component: StoreScreen, titleKey: "tabStore", on: "bag", off: "bag-outline" },
-  {
-    name: "AccountTab",
-    component: ProfileScreen,
-    titleKey: "tabAccount",
-    on: "person",
-    off: "person-outline",
-  },
 ];

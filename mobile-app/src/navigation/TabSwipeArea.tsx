@@ -23,7 +23,7 @@ import {
   State,
   type PanGestureHandlerStateChangeEvent,
 } from "react-native-gesture-handler";
-import { useNavigation } from "@react-navigation/native";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
 
 import { TABS } from "./tabs";
 
@@ -34,10 +34,17 @@ const VELOCITY = 500;
 
 export function TabSwipeArea({ index, children }: { index: number; children: ReactNode }) {
   const navigation = useNavigation<{ navigate: (name: string) => void }>();
+  const isFocused = useIsFocused();
   // Guards against a single gesture firing twice as the handler settles.
   const handled = useRef(false);
 
   const onStateChange = (e: PanGestureHandlerStateChangeEvent) => {
+    // Every tab visited so far keeps its own mounted handler, and the one that
+    // just came into view can be handed the same gesture's end event — which
+    // navigated again, walking the swipe across several tabs at once. `handled`
+    // only guards one instance, so the focus check is what stops the chain.
+    if (!isFocused) return;
+
     const { state, translationX, translationY, velocityX } = e.nativeEvent;
 
     if (state === State.BEGAN || state === State.ACTIVE) {

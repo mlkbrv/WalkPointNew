@@ -122,13 +122,7 @@ export function HomeScreen() {
     <View style={[styles.root, { paddingTop: insets.top + 8 }]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <PressableScale
-            style={styles.greeting}
-            onPress={() => {
-              const parent = navigation.getParent?.();
-              if (parent) parent.navigate("AccountTab");
-            }}
-          >
+          <PressableScale style={styles.greeting} onPress={() => navigation.navigate("Account")}>
             <View style={styles.avatarWrap}>
               <Avatar uri={user?.avatar} name={user?.name} size={40} />
               <View style={styles.onlineDot} />

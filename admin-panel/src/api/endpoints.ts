@@ -147,3 +147,18 @@ export const businessApi = {
   redeemCode: (qr_token: string) =>
     api.post<ScanResult>('/v1/redemptions/scan', { qr_token }),
 };
+
+/**
+ * Public: no token, and deliberately outside `businessApi` — a business that is
+ * applying does not have an account yet, so nothing here may assume one.
+ */
+export const onboardingApi = {
+  registerPartner: (body: {
+    email: string;
+    password: string;
+    company_name: string;
+    contact_name?: string;
+    contact_phone?: string;
+    description?: string;
+  }) => api.post<{ partner: Partner }>('/v1/partners/register', body),
+};

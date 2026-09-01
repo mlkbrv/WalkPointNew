@@ -34,6 +34,7 @@ import { HealthSetupScreen } from "../screens/HealthSetupScreen";
 import { StoriesScreen } from "../screens/StoriesScreen";
 import { OnboardingScreen } from "../screens/OnboardingScreen";
 import { AchievementsScreen } from "../screens/AchievementsScreen";
+import { ProfileScreen } from "../screens/ProfileScreen";
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -66,6 +67,7 @@ function AppStack() {
       }}
     >
       <RootStack.Screen name="Main" component={MainTabs} />
+      <RootStack.Screen name="Account" component={ProfileScreen} />
       <RootStack.Screen name="Inbox" component={InboxScreen} />
       <RootStack.Screen name="Scoreboard" component={ScoreboardScreen} />
       <RootStack.Screen name="Achievements" component={AchievementsScreen} />
