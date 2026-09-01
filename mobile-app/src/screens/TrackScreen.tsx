@@ -28,7 +28,7 @@ import { describeError } from "../api/client";
 import { workoutsApi, type ApiWeeklySummary, type ApiWorkout } from "../api/endpoints";
 import { GlassCard } from "../components/GlassCard";
 import { PressableScale } from "../components/PressableScale";
-import { RouteTrace } from "../components/RouteTrace";
+import { RouteMap } from "../components/RouteMap";
 import { useHealth } from "../contexts/HealthContext";
 import { useStepoint, formatDuration } from "../contexts/StepointContext";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
@@ -169,7 +169,10 @@ export function TrackScreen() {
 
           {recorder.recording || recorder.points.length > 0 ? (
             <>
-              <RouteTrace points={recorder.points} />
+              {/* `follow` while recording: the route grows point by point, so a
+                  fitted camera would keep zooming out. Once stopped the whole
+                  shape is what matters and the map fits it instead. */}
+              <RouteMap points={recorder.points} follow={recorder.recording} />
               <View style={styles.liveRow}>
                 <Ionicons name="navigate-outline" size={16} color={colors.primary} />
                 <Text style={styles.liveText}>
