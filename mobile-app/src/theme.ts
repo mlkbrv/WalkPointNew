@@ -83,7 +83,13 @@ export const lightColors: Palette = {
   cardTranslucent: "rgba(255,255,255,0.84)",
   cardTranslucentBorder: "rgba(255,255,255,0.54)",
   inputSurface: "#FAFAFB",
-  primaryTint: "rgba(124,58,237,0.08)",
+  // 0.14, not 0.08. At 8% this composites to rgb(245,239,254) on a white card —
+  // 1.125:1, which is not a faint plate but no plate at all: every icon chip,
+  // active pill and badge that uses it simply disappeared in the light theme.
+  // 0.14 matches the accent plates that already read (coral sits at 1.227) and
+  // still leaves the violet glyph on top at 4.62:1, above the AA floor; 0.16
+  // would push that glyph under it.
+  primaryTint: "rgba(124,58,237,0.14)",
 
   border: "#D1D5DB",
   borderDark: "#4B5563",

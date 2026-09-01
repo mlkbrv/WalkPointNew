@@ -25,6 +25,13 @@ const useStyles = makeStyles((colors) => ({
       ? {
           backgroundColor: colors.card,
           borderRadius: radii.lg,
+          // Border *and* shadow. A white card on the near-white canvas measures
+          // 1.089:1 — its whole edge is the shadow, and how strongly a platform
+          // paints a soft shadow varies enough that on some devices the cards
+          // dissolve into the page. The hairline guarantees an edge exists; the
+          // shadow still does the lifting where it renders well.
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: colors.border,
           shadowColor: "#0F172A",
           shadowOffset: { width: 0, height: 6 },
           shadowOpacity: 0.06,
