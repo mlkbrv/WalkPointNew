@@ -87,6 +87,13 @@ export function RouteMap({
         mapStyle={STYLE_URL}
         logo={false}
         attribution={false}
+        // TextureView, not the default GLSurfaceView. A GL surface is punched
+        // through the view hierarchy rather than composited into it, so on
+        // Android it ignores a rounded, `overflow: hidden` parent — which this
+        // card is — and the map comes out blank or spills past the corners. A
+        // TextureView draws like an ordinary view and clips correctly. It costs
+        // a little performance, which for a route on a card is not a concern.
+        androidView="texture"
       >
         {follow && last ? (
           <Camera center={last} zoom={16} duration={600} />

@@ -39,6 +39,7 @@ import { SegmentedChips } from "../components/SegmentedChips";
 import { StatTileRow, type Stat } from "../components/StatTileRow";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
 import { useI18n } from "../contexts/I18nContext";
+import { localDateKey } from "../health/dates";
 import { caloriesFromSteps, distanceFromSteps, minutesFromSteps } from "../utils/metrics";
 
 const PERIODS = ["thisWeek", "thisMonth"] as const;
@@ -119,11 +120,24 @@ export function PerformanceReportsScreen() {
 
   const chartData = useMemo<Bar[]>(() => {
     if (period === "thisWeek") {
-      return ordered.slice(-7).map((day) => ({
-        key: day.date,
-        label: dayLabel(day.date),
-        value: measure(day.steps, metric),
-      }));
+      // Built from a date range, not from the rows the server returned. The
+      // server has a row only for a day that was actually synced, so mapping
+      // its response drops any missing day entirely — including today, until
+      // the first sync of the morning lands. That reads as "today's statistics
+      // are missing" when the truth is "today is not synced yet", and it also
+      // silently shifts every weekday label along by one.
+      const byDate = new Map(ordered.map((d) => [d.date, d.steps]));
+      return Array.from({ length: 7 }, (_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (6 - i));
+        d.setHours(0, 0, 0, 0);
+        const iso = localDateKey(d);
+        return {
+          key: iso,
+          label: dayLabel(iso),
+          value: measure(byDate.get(iso) ?? 0, metric),
+        };
+      });
     }
 
     // A month of daily bars is unreadable at this width, so fold it into weeks.
