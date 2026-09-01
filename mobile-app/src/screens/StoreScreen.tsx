@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { radii } from "../theme";
 import { PressableScale } from "../components/PressableScale";
+import { Avatar } from "../components/Avatar";
 import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
 import { useServerData } from "../contexts/ServerDataContext";
@@ -82,26 +83,48 @@ export function StoreScreen() {
           </PressableScale>
         </View>
 
-        <Text style={styles.blurb}>
-          {t("storeBlurb")}
-        </Text>
-
+        {/* Brands lead, because a coupon is worth what the name on it is worth.
+            The filter used to be a row of text chips, which gave a partner no
+            more presence than the word "All". */}
+        <Text style={styles.railLabel}>{t("premiumBrandPartners")}</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chips}
+          contentContainerStyle={styles.rail}
         >
-          {filters.map((cat) => (
-            <PressableScale
-              key={cat}
-              style={[styles.chip, storeFilter === cat && styles.chipActive]}
-              onPress={() => setStoreFilter(cat)}
-            >
-              <Text style={[styles.chipText, storeFilter === cat && styles.chipTextActive]}>
-                {cat === ALL ? t("all") : cat}
-              </Text>
-            </PressableScale>
-          ))}
+          {filters.map((cat) => {
+            const active = storeFilter === cat;
+            const store = stores.data.find((x) => x.company_name === cat);
+            return (
+              <View key={cat} style={styles.brandSlot}>
+                <PressableScale style={styles.brandItem} onPress={() => setStoreFilter(cat)}>
+                  <View style={[styles.brandRing, active && styles.brandRingActive]}>
+                    {cat === ALL ? (
+                      <View style={styles.brandAll}>
+                        <Ionicons
+                          name="sparkles"
+                          size={20}
+                          color={active ? colors.onPrimary : colors.primary}
+                        />
+                      </View>
+                    ) : store?.logo_path ? (
+                      <Image source={{ uri: store.logo_path }} style={styles.brandLogo} />
+                    ) : (
+                      // Partners without a logo still need to look like themselves,
+                      // so the initials disc stands in rather than a blank circle.
+                      <Avatar name={cat} size={52} />
+                    )}
+                  </View>
+                  <Text
+                    style={[styles.brandName, active && styles.brandNameActive]}
+                    numberOfLines={1}
+                  >
+                    {cat === ALL ? t("all") : cat}
+                  </Text>
+                </PressableScale>
+              </View>
+            );
+          })}
         </ScrollView>
 
         {coldLoading ? (
@@ -154,7 +177,12 @@ export function StoreScreen() {
                         </View>
                       </View>
                       <View style={styles.cardBody}>
-                        <Text style={styles.brand}>{storeName(perk.partner_id)}</Text>
+                        <View style={styles.cardBrand}>
+                          <Avatar name={storeName(perk.partner_id)} size={18} />
+                          <Text style={styles.cardBrandName} numberOfLines={1}>
+                            {storeName(perk.partner_id)}
+                          </Text>
+                        </View>
                         <Text style={styles.perkTitle} numberOfLines={2}>{perk.title}</Text>
                         <View style={affordable ? styles.costBtn : [styles.costBtn, styles.costBtnMuted]}>
                           <Text
@@ -222,7 +250,36 @@ const useStyles = makeStyles((colors) => ({
   },
   tokenValue: { fontSize: 13, fontWeight: "600", color: colors.primary, marginTop: 2 },
   blurb: { fontSize: 13, color: colors.slate, lineHeight: 18, maxWidth: 320 },
-  chips: { gap: 8, paddingVertical: 4 },
+  railLabel: { fontSize: 16, fontWeight: "700", color: colors.charcoal },
+  rail: { gap: 16, paddingVertical: 2, paddingRight: 8 },
+  // The width lives on this View, never on PressableScale — it styles its inner
+  // Pressable and leaves its own wrapper unsized.
+  brandSlot: { width: 68 },
+  brandItem: { alignItems: "center", gap: 7 },
+  brandRing: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "transparent",
+    overflow: "hidden",
+  },
+  brandRingActive: { borderColor: colors.primary },
+  brandAll: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.primaryTint,
+  },
+  brandLogo: { width: 52, height: 52, borderRadius: 26 },
+  brandName: { fontSize: 11, color: colors.muted, textAlign: "center" },
+  brandNameActive: { color: colors.primary, fontWeight: "700" },
+  cardBrand: { flexDirection: "row", alignItems: "center", gap: 6 },
+  cardBrandName: { flex: 1, fontSize: 11, fontWeight: "600", color: colors.muted },
   chip: {
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -257,11 +314,6 @@ const useStyles = makeStyles((colors) => ({
     fontWeight: "600",
   },
   cardBody: { padding: 14, gap: 6 },
-  brand: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.muted,
-  },
   perkTitle: { fontSize: 15, fontWeight: "600", color: colors.charcoal, minHeight: 34 },
   costBtn: {
     marginTop: 6,
