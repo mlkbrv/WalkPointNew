@@ -16,11 +16,14 @@ import { useCallback } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 
 import { useServerData } from "../contexts/ServerDataContext";
+import { localDateKey } from "../health/dates";
 import type { ApiDailySteps } from "../api/endpoints";
 
 export interface WeekComparison {
   /** Last seven days, oldest first, one entry per day the server reported. */
   days: ApiDailySteps[];
+  /** The seven days before those — what "Last Week" shows. */
+  previousDays: ApiDailySteps[];
   thisWeek: number;
   previousWeek: number;
   /** Percentage change against the previous seven days, or null when there is nothing to compare. */
@@ -40,7 +43,9 @@ export function useStepHistory(): WeekComparison {
   );
 
   const ordered = [...stepsHistory.data].sort((a, b) => a.date.localeCompare(b.date));
-  const cutoff = new Date(Date.now() - 7 * DAY_MS).toISOString().slice(0, 10);
+  // Local, not `toISOString()`: that is UTC, so for anyone west of Greenwich it
+  // moves the week boundary by a day for part of every evening.
+  const cutoff = localDateKey(new Date(Date.now() - 7 * DAY_MS));
 
   const recent = ordered.filter((day) => day.date > cutoff);
   const older = ordered.filter((day) => day.date <= cutoff);
@@ -51,6 +56,7 @@ export function useStepHistory(): WeekComparison {
 
   return {
     days: recent,
+    previousDays: older,
     thisWeek,
     previousWeek,
     // Dividing by zero would report an infinite improvement on a first week.
