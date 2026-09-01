@@ -32,11 +32,22 @@ export interface UserPreferences {
  * and a second copy on the device could only ever be a stale guess. Read it from
  * `useServerData().wallet`. Weekly steps come from `GET /v1/steps/history`.
  */
+/** How lengths and masses are shown. Stored values are always metric. */
+export type UnitSystem = "metric" | "imperial";
+
+export type Gender = "man" | "woman" | "unspecified";
+
 export interface UserStats {
   stepsToday: number;
   stepsGoal: number;
   weightKg: number;
   heightCm: number;
+  // Collected during onboarding. They live on the device, like the rest of this
+  // object — the server has no column for any of them.
+  gender: Gender;
+  ageYears: number;
+  sedentary: boolean;
+  unitSystem: UnitSystem;
 }
 
 export interface LeaderboardUser {

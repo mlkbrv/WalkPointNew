@@ -15,7 +15,7 @@ import { useNotificationHandlers } from "../hooks/useNotificationHandlers";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
 import { AuthStackParamList, MainTabParamList, RootStackParamList } from "../types";
 import { FeedbackToast } from "../components/FeedbackToast";
-import { useHealth } from "../contexts/HealthContext";
+import { useOnboarding } from "../hooks/useOnboarding";
 
 import { LoginScreen } from "../screens/LoginScreen";
 import { RegisterScreen } from "../screens/RegisterScreen";
@@ -39,6 +39,7 @@ import { HistoryScreen } from "../screens/HistoryScreen";
 import { EditProfileScreen } from "../screens/EditProfileScreen";
 import { HealthSetupScreen } from "../screens/HealthSetupScreen";
 import { StoriesScreen } from "../screens/StoriesScreen";
+import { OnboardingScreen } from "../screens/OnboardingScreen";
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -153,16 +154,19 @@ function AppStack() {
 
 export function RootNavigator() {
   const { user, loading } = useAuth();
-  const health = useHealth();
   // Notification taps arrive outside the React tree, so they need a handle on
   // the navigator rather than a `useNavigation` inside some screen.
   const navigationRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
   const { colors, isDark } = useTheme();
   const styles = useStyles();
+  const { onboarded, complete } = useOnboarding();
 
   useNotificationHandlers(navigationRef);
 
-  if (loading) {
+  // `onboarded` is undefined until storage has been read. Waiting on it as well
+  // as on auth is what stops the intake questions flashing up for a moment on
+  // every cold start for someone who finished them months ago.
+  if (loading || onboarded === undefined) {
     return (
       <View style={styles.boot}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -185,7 +189,15 @@ export function RootNavigator() {
   return (
     <View style={styles.flex}>
       <NavigationContainer ref={navigationRef} theme={navigationTheme}>
-        {user ? <AppStack /> : <AuthNavigator />}
+        {!user ? (
+          <AuthNavigator />
+        ) : !onboarded ? (
+          // Outside any navigator: it owns the whole screen, has its own back
+          // handling between steps, and there is nowhere else to go from it.
+          <OnboardingScreen onDone={complete} />
+        ) : (
+          <AppStack />
+        )}
       </NavigationContainer>
       {user ? <FeedbackToast /> : null}
     </View>

@@ -64,12 +64,18 @@ type StrideContextValue = {
 const StrideContext = createContext<StrideContextValue | null>(null);
 
 /** Body measurements and the goal are per-device settings, not server records. */
+// Every field needs a default here as well as in `UserStats`: hydration merges
+// `{ ...DEFAULT_STATS, ...stored }`, so a field added to the type but not to
+// this object arrives as `undefined` on every install that already has state.
 const DEFAULT_STATS: UserStats = {
   stepsToday: 0,
   stepsGoal: 10_000,
   weightKg: 70,
   heightCm: 175,
-
+  gender: "unspecified",
+  ageYears: 30,
+  sedentary: false,
+  unitSystem: "metric",
 };
 
 const DEFAULT_DEVICES: DeviceLink[] = [
