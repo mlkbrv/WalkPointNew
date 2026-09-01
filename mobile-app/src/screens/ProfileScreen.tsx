@@ -16,7 +16,8 @@ import { useStride } from "../contexts/StrideContext";
 import { useAuth } from "../contexts/AuthContext";
 import { makeStyles, useTheme, Appearance } from "../contexts/ThemeContext";
 import { useI18n, type LanguagePreference } from "../contexts/I18nContext";
-import { LANGUAGES } from "../i18n/strings";
+import { LANGUAGES, type LanguageCode } from "../i18n/strings";
+import { SelectRow } from "../components/SelectRow";
 
 export function ProfileScreen() {
   const { colors, preference, setPreference, scheme } = useTheme();
@@ -126,7 +127,7 @@ export function ProfileScreen() {
               <PressableScale onPress={() => bump("weightKg", -1)}>
                 <Ionicons name="remove-circle-outline" size={18} color={colors.primary} />
               </PressableScale>
-              <Text style={styles.statValue}>{userStats.weightKg} kg</Text>
+              <Text style={styles.statValue}>{userStats.weightKg} {t("kgUnit")}</Text>
               <PressableScale onPress={() => bump("weightKg", 1)}>
                 <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
               </PressableScale>
@@ -138,7 +139,7 @@ export function ProfileScreen() {
               <PressableScale onPress={() => bump("heightCm", -1)}>
                 <Ionicons name="remove-circle-outline" size={18} color={colors.primary} />
               </PressableScale>
-              <Text style={styles.statValue}>{userStats.heightCm} cm</Text>
+              <Text style={styles.statValue}>{userStats.heightCm} {t("cmUnit")}</Text>
               <PressableScale onPress={() => bump("heightCm", 1)}>
                 <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
               </PressableScale>
@@ -254,25 +255,27 @@ export function ProfileScreen() {
               };
               const active = preference === value;
               return (
-                <PressableScale
-                  key={value}
-                  style={[styles.appearanceOption, active && styles.appearanceOptionActive]}
-                  onPress={() => setPreference(value as Appearance)}
-                >
-                  <Ionicons
-                    name={iconMap[value] as keyof typeof Ionicons.glyphMap}
-                    size={18}
-                    color={active ? colors.primary : colors.muted}
-                  />
-                  <Text
-                    style={[
-                      styles.appearanceLabel,
-                      active && styles.appearanceLabelActive,
-                    ]}
+                <View key={value} style={styles.appearanceSlot}>
+                  <PressableScale
+                    style={[styles.appearanceOption, active && styles.appearanceOptionActive]}
+                    onPress={() => setPreference(value as Appearance)}
                   >
-                    {labelMap[value]}
-                  </Text>
-                </PressableScale>
+                    <Ionicons
+                      name={iconMap[value] as keyof typeof Ionicons.glyphMap}
+                      size={18}
+                      color={active ? colors.primary : colors.muted}
+                    />
+                    <Text
+                      numberOfLines={1}
+                      style={[
+                        styles.appearanceLabel,
+                        active && styles.appearanceLabelActive,
+                      ]}
+                    >
+                      {labelMap[value]}
+                    </Text>
+                  </PressableScale>
+                </View>
               );
             })}
           </View>
@@ -289,24 +292,22 @@ export function ProfileScreen() {
 
         <Text style={styles.sectionLabel}>{t("language")}</Text>
         <GlassCard style={styles.group}>
-          <View style={styles.appearanceRow}>
-            {(["system", ...Object.keys(LANGUAGES)] as LanguagePreference[]).map((value) => {
-              const active = langPref === value;
-              return (
-                <PressableScale
-                  key={value}
-                  style={[styles.appearanceOption, active && styles.appearanceOptionActive]}
-                  onPress={() => setLangPref(value)}
-                >
-                  <Text
-                    style={[styles.appearanceLabel, active && styles.appearanceLabelActive]}
-                  >
-                    {value === "system" ? t("auto") : LANGUAGES[value].label}
-                  </Text>
-                </PressableScale>
-              );
-            })}
-          </View>
+          {/* A list, not a row of pills: language names differ in length between
+              translations, so pills sharing one line either overflow or squash
+              each other the moment a longer name appears. */}
+          <SelectRow
+            title={t("language")}
+            value={langPref}
+            onChange={setLangPref}
+            options={[
+              { value: "system" as LanguagePreference, label: t("auto"), icon: "🌐" },
+              ...(Object.keys(LANGUAGES) as LanguageCode[]).map((code) => ({
+                value: code as LanguagePreference,
+                label: LANGUAGES[code].label,
+                icon: LANGUAGES[code].flag,
+              })),
+            ]}
+          />
         </GlassCard>
 
         <Text style={styles.sectionLabel}>{t("preferences")}</Text>
@@ -388,11 +389,15 @@ const useStyles = makeStyles((colors) => ({
   statEdit: { flexDirection: "row", alignItems: "center", gap: 4 },
   statValue: { fontSize: 15, fontWeight: "600", color: colors.primary, minWidth: 48, textAlign: "center" },
   appearanceRow: { flexDirection: "row", gap: 8, padding: 12 },
+  // The flex lives on `appearanceSlot`, never here: PressableScale styles its
+  // inner Pressable and leaves its own wrapper unsized, so a flex passed in
+  // measures against nothing and the pill shrinks to its text.
+  appearanceSlot: { flex: 1 },
   appearanceOption: {
-    flex: 1,
     alignItems: "center",
     gap: 6,
     paddingVertical: 14,
+    paddingHorizontal: 6,
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,

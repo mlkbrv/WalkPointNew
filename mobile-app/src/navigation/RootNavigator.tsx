@@ -7,26 +7,19 @@ import {
   type NavigationContainerRef,
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Ionicons } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../contexts/AuthContext";
 import { useNotificationHandlers } from "../hooks/useNotificationHandlers";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
-import { AuthStackParamList, MainTabParamList, RootStackParamList } from "../types";
+import { AuthStackParamList, RootStackParamList } from "../types";
+import { MainTabs } from "./MainTabs";
 import { FeedbackToast } from "../components/FeedbackToast";
 import { useOnboarding } from "../hooks/useOnboarding";
-import { useI18n } from "../contexts/I18nContext";
 
 import { LoginScreen } from "../screens/LoginScreen";
 import { RegisterScreen } from "../screens/RegisterScreen";
 import { ForgotPasswordScreen } from "../screens/ForgotPasswordScreen";
-import { HomeScreen } from "../screens/HomeScreen";
-import { TrackScreen } from "../screens/TrackScreen";
 import { InboxScreen } from "../screens/InboxScreen";
 import { ScoreboardScreen } from "../screens/ScoreboardScreen";
-import { StoreScreen } from "../screens/StoreScreen";
-import { ProfileScreen } from "../screens/ProfileScreen";
 import { ConnectedDevicesScreen } from "../screens/ConnectedDevicesScreen";
 import { HelpSupportScreen } from "../screens/HelpSupportScreen";
 import { SupportChatScreen } from "../screens/SupportChatScreen";
@@ -35,7 +28,6 @@ import { CouponDetailScreen } from "../screens/CouponDetailScreen";
 import { SecureVerificationScreen } from "../screens/SecureVerificationScreen";
 import { WalletScreen } from "../screens/WalletScreen";
 import { GoalReachedScreen } from "../screens/GoalReachedScreen";
-import { PerformanceReportsScreen } from "../screens/PerformanceReportsScreen";
 import { HistoryScreen } from "../screens/HistoryScreen";
 import { EditProfileScreen } from "../screens/EditProfileScreen";
 import { HealthSetupScreen } from "../screens/HealthSetupScreen";
@@ -44,7 +36,6 @@ import { OnboardingScreen } from "../screens/OnboardingScreen";
 import { AchievementsScreen } from "../screens/AchievementsScreen";
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
-const Tab = createBottomTabNavigator<MainTabParamList>();
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 
 function AuthNavigator() {
@@ -61,67 +52,6 @@ function AuthNavigator() {
       <AuthStack.Screen name="Register" component={RegisterScreen} />
       <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
     </AuthStack.Navigator>
-  );
-}
-
-/**
- * Typed as a total map over the tab routes on purpose. The lookup below cannot
- * fail at runtime — an unlisted tab would have rendered `<Ionicons
- * name={undefined}>`, which draws a blank square and reports nothing — so a
- * missing entry has to be a compile error instead.
- */
-const TAB_ICON: Record<
-  keyof MainTabParamList,
-  { on: keyof typeof Ionicons.glyphMap; off: keyof typeof Ionicons.glyphMap }
-> = {
-  HomeTab: { on: "home", off: "home-outline" },
-  TrackTab: { on: "walk", off: "walk-outline" },
-  ReportTab: { on: "bar-chart", off: "bar-chart-outline" },
-  StoreTab: { on: "bag", off: "bag-outline" },
-  AccountTab: { on: "person", off: "person-outline" },
-};
-
-function MainTabs() {
-  const { colors } = useTheme();
-  const { t } = useI18n();
-  const insets = useSafeAreaInsets();
-
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarStyle: {
-          // From the palette, not a literal: this used to be a hardcoded
-          // slate-blue that stayed put when the dark surfaces moved to neutral
-          // black, leaving the bar a different colour from the app above it.
-          backgroundColor: colors.card,
-          borderTopColor: colors.border,
-          // Without the inset the bar sits under the gesture indicator on a
-          // phone with no home button, and the last row of every tab is
-          // unreachable behind it.
-          height: 60 + insets.bottom,
-          paddingBottom: insets.bottom + 6,
-          paddingTop: 8,
-        },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.slate,
-        tabBarLabelStyle: { fontSize: 10, fontWeight: "700" },
-        tabBarIcon: ({ color, size, focused }) => {
-          const icon = TAB_ICON[route.name as keyof MainTabParamList];
-          return <Ionicons name={focused ? icon.on : icon.off} size={size} color={color} />;
-        },
-      })}
-    >
-      <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: t("tabHome") }} />
-      <Tab.Screen name="TrackTab" component={TrackScreen} options={{ title: t("tabTrack") }} />
-      <Tab.Screen
-        name="ReportTab"
-        component={PerformanceReportsScreen}
-        options={{ title: t("tabReport") }}
-      />
-      <Tab.Screen name="StoreTab" component={StoreScreen} options={{ title: t("tabStore") }} />
-      <Tab.Screen name="AccountTab" component={ProfileScreen} options={{ title: t("tabAccount") }} />
-    </Tab.Navigator>
   );
 }
 

@@ -3,6 +3,7 @@ import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import type { StoryGroup } from "../contexts/ServerDataContext";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { useI18n } from "../contexts/I18nContext";
 
 import { PressableScale } from "./PressableScale";
 
@@ -16,9 +17,12 @@ type Props = {
 export function StoriesRail({ stories, seenIds, onOpen }: Props) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useI18n();
+  if (stories.length === 0) return null;
+
   return (
     <View>
-      <Text style={styles.title}>Nearby stories</Text>
+      <Text style={styles.title}>{t("nearbyStories")}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
         {stories.map((story) => {
           const seen = seenIds.includes(story.partnerId);

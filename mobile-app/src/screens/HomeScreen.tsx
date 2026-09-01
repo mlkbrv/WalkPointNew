@@ -140,15 +140,18 @@ export function HomeScreen() {
           </PressableScale>
 
           <View style={styles.headerActions}>
-            <PressableScale style={styles.iconBtn} onPress={openStore}>
-              <Ionicons name="bag-outline" size={19} color={colors.charcoal} />
-            </PressableScale>
             <PressableScale style={styles.iconBtn} onPress={openInbox}>
               <Ionicons name="notifications-outline" size={19} color={colors.charcoal} />
               {unread ? <View style={styles.badge} /> : null}
             </PressableScale>
           </View>
         </View>
+
+        <StoriesRail
+          stories={storyGroups}
+          seenIds={seenIds}
+          onOpen={(id) => navigation.navigate("Stories", { startId: id })}
+        />
 
         {health.needsPermission ? (
           <PressableScale
@@ -204,12 +207,6 @@ export function HomeScreen() {
                   )}
           </Text>
         </GlassCard>
-
-        <StoriesRail
-          stories={storyGroups}
-          seenIds={seenIds}
-          onOpen={(id) => navigation.navigate("Stories", { startId: id })}
-        />
 
         <View style={styles.sectionHead}>
           <Text style={styles.sectionTitle}>{t("premiumBrandPartners")}</Text>
