@@ -178,6 +178,15 @@ export function ProfileScreen() {
           />
           <View style={styles.divider} />
           <Row
+            icon="medal-outline"
+            iconColor={colors.primary}
+            iconBg={colors.primaryTint}
+            title="Achievements"
+            subtitle="Levels you have reached"
+            onPress={() => navigation.navigate("Achievements")}
+          />
+          <View style={styles.divider} />
+          <Row
             icon="trophy-outline"
             iconColor={colors.primary}
             iconBg={colors.primaryTint}

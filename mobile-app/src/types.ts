@@ -151,6 +151,7 @@ export type RootStackParamList = {
   // and a row in Account, the board from Account.
   Inbox: undefined;
   Scoreboard: undefined;
+  Achievements: undefined;
   History: undefined;
   ConnectedDevices: undefined;
   HelpSupport: undefined;
@@ -159,7 +160,7 @@ export type RootStackParamList = {
   CouponDetail: { couponId: string };
   SecureVerification: { voucherId: string };
   Wallet: undefined;
-  WorkoutSummary: undefined;
+  GoalReached: undefined;
   EditProfile: undefined;
   HealthSetup: undefined;
   Stories: { startId: string };

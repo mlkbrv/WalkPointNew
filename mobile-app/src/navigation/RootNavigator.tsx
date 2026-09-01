@@ -33,13 +33,14 @@ import { BrandStoreScreen } from "../screens/BrandStoreScreen";
 import { CouponDetailScreen } from "../screens/CouponDetailScreen";
 import { SecureVerificationScreen } from "../screens/SecureVerificationScreen";
 import { WalletScreen } from "../screens/WalletScreen";
-import { WorkoutSummaryScreen } from "../screens/WorkoutSummaryScreen";
+import { GoalReachedScreen } from "../screens/GoalReachedScreen";
 import { PerformanceReportsScreen } from "../screens/PerformanceReportsScreen";
 import { HistoryScreen } from "../screens/HistoryScreen";
 import { EditProfileScreen } from "../screens/EditProfileScreen";
 import { HealthSetupScreen } from "../screens/HealthSetupScreen";
 import { StoriesScreen } from "../screens/StoriesScreen";
 import { OnboardingScreen } from "../screens/OnboardingScreen";
+import { AchievementsScreen } from "../screens/AchievementsScreen";
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -132,6 +133,7 @@ function AppStack() {
       <RootStack.Screen name="Main" component={MainTabs} />
       <RootStack.Screen name="Inbox" component={InboxScreen} />
       <RootStack.Screen name="Scoreboard" component={ScoreboardScreen} />
+      <RootStack.Screen name="Achievements" component={AchievementsScreen} />
       <RootStack.Screen name="History" component={HistoryScreen} />
       <RootStack.Screen name="ConnectedDevices" component={ConnectedDevicesScreen} />
       <RootStack.Screen name="HelpSupport" component={HelpSupportScreen} />
@@ -145,7 +147,7 @@ function AppStack() {
       <RootStack.Screen name="CouponDetail" component={CouponDetailScreen} />
       <RootStack.Screen name="SecureVerification" component={SecureVerificationScreen} />
       <RootStack.Screen name="Wallet" component={WalletScreen} />
-      <RootStack.Screen name="WorkoutSummary" component={WorkoutSummaryScreen} />
+      <RootStack.Screen name="GoalReached" component={GoalReachedScreen} />
       <RootStack.Screen name="EditProfile" component={EditProfileScreen} />
       <RootStack.Screen name="HealthSetup" component={HealthSetupScreen} />
     </RootStack.Navigator>

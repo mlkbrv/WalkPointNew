@@ -30,6 +30,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useHealth } from "../contexts/HealthContext";
 import { useSeenStories } from "../hooks/useSeenStories";
 import { useStepHistory } from "../hooks/useStepHistory";
+import { useGoalCelebration } from "../hooks/useGoalCelebration";
 import { useServerData } from "../contexts/ServerDataContext";
 import { caloriesFromSteps, distanceFromSteps, minutesFromSteps } from "../utils/metrics";
 
@@ -58,6 +59,12 @@ export function HomeScreen() {
   const { storyGroups, stores, unreadCount } = useServerData();
   const week = useStepHistory();
   const [period, setPeriod] = useState<Period>("This Week");
+
+  useGoalCelebration(
+    userStats.stepsToday,
+    userStats.stepsGoal,
+    React.useCallback(() => navigation.navigate("GoalReached"), [navigation]),
+  );
 
   useFocusEffect(
     React.useCallback(() => {
