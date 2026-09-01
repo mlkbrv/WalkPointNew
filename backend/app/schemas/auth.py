@@ -56,6 +56,20 @@ class UserPublic(ORMModel):
     is_active: bool
 
 
+class ProfileUpdate(BaseModel):
+    """Everything a consumer may change about themselves.
+
+    Every field is optional and `None` means "leave alone", so a client that
+    only edits the name never has to send — or risk clobbering — the rest.
+    Role, email and referral code are deliberately absent: those are not the
+    account holder's to edit.
+    """
+
+    full_name: str | None = Field(default=None, min_length=1, max_length=150)
+    city: str | None = Field(default=None, max_length=120)
+    country: str | None = Field(default=None, max_length=120)
+
+
 class AuthResponse(BaseModel):
     user: UserPublic
     tokens: TokenPair

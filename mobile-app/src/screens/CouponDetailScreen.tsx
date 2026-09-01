@@ -20,6 +20,7 @@ import { PressableScale } from "../components/PressableScale";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { mediaUrl } from "../api/client";
 
 export function CouponDetailScreen() {
   const { colors } = useTheme();
@@ -92,7 +93,7 @@ export function CouponDetailScreen() {
 
         <View style={styles.hero}>
           {selectedCoupon.image_path ? (
-            <Image source={{ uri: selectedCoupon.image_path }} style={styles.heroImg} />
+            <Image source={{ uri: mediaUrl(selectedCoupon.image_path) }} style={styles.heroImg} />
           ) : (
             <View style={[styles.heroImg, styles.heroFallback]}>
               <Ionicons name="gift-outline" size={40} color={colors.white} />

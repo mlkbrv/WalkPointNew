@@ -28,6 +28,7 @@ import { useServerData } from "../contexts/ServerDataContext";
 import { useSeenStories } from "../hooks/useSeenStories";
 import { radii } from "../theme";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { mediaUrl } from "../api/client";
 
 const { width, height } = Dimensions.get("window");
 const DURATION = 5000;
@@ -137,7 +138,7 @@ export function StoriesScreen() {
 
   return (
     <View style={styles.root}>
-      <Image source={{ uri: frame.media_path }} style={styles.media} resizeMode="cover" />
+      <Image source={{ uri: mediaUrl(frame.media_path) }} style={styles.media} resizeMode="cover" />
       <LinearGradient
         colors={["rgba(0,0,0,0.55)", "transparent", "rgba(0,0,0,0.75)"]}
         style={StyleSheet.absoluteFill}

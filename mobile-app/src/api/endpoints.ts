@@ -239,6 +239,23 @@ export const authApi = {
     ),
   logout: (refresh_token: string) => api.post<unknown>("/v1/auth/logout", { refresh_token }),
   me: () => api.get<ApiUser>("/v1/auth/me"),
+  updateProfile: (patch: { full_name?: string; city?: string; country?: string }) =>
+    api.patch<ApiUser>("/v1/auth/me", patch),
+
+  /**
+   * `uri` is the local file the image picker handed back.
+   *
+   * React Native's FormData takes this `{ uri, name, type }` shape rather than
+   * a Blob — the file is never read into JS, the native layer streams it. The
+   * cast is unavoidable: the DOM typings for FormData know nothing about it.
+   */
+  uploadAvatar: (uri: string) => {
+    const extension = (uri.split(".").pop() || "jpg").toLowerCase();
+    const type = extension === "png" ? "image/png" : extension === "webp" ? "image/webp" : "image/jpeg";
+    const form = new FormData();
+    form.append("file", { uri, name: `avatar.${extension}`, type } as unknown as Blob);
+    return api.put<ApiUser>("/v1/auth/me/avatar", form);
+  },
 };
 
 export const stepsApi = {

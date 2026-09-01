@@ -12,6 +12,8 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+
+import { describeError, mediaUrl } from "../api/client";
 import { useAuth } from "../contexts/AuthContext";
 import { useStepoint } from "../contexts/StepointContext";
 import { radii, spacing } from "../theme";
@@ -54,17 +56,30 @@ export function EditProfileScreen() {
     }
   };
 
+  const [saving, setSaving] = useState(false);
+
   const onSave = async () => {
     const w = Number(weight) || userStats.weightKg;
     const h = Number(height) || userStats.heightCm;
     const g = Number(stepsGoal) || userStats.stepsGoal;
-    await updateProfile({ name: name.trim() || user?.name || "Walker", avatar: avatar || user?.avatar });
-    setUserStats((prev) => ({
-      ...prev,
-      weightKg: w,
-      heightCm: h,
-      stepsGoal: g,
-    }));
+
+    // The body measurements are local settings and cannot fail. Name and photo
+    // now go to the server, so the screen has to survive that failing —
+    // previously the toast claimed success before anything had been saved.
+    setSaving(true);
+    try {
+      await updateProfile({
+        name: name.trim() || user?.name || "Walker",
+        avatar: avatar || user?.avatar,
+      });
+    } catch (caught) {
+      setSaving(false);
+      showToast(describeError(caught), "⚠️");
+      return;
+    }
+    setSaving(false);
+
+    setUserStats((prev) => ({ ...prev, weightKg: w, heightCm: h, stepsGoal: g }));
     showToast("Profile updated", "✅");
     navigation.goBack();
   };
@@ -76,14 +91,7 @@ export function EditProfileScreen() {
           <ScreenHeader title="Edit Profile" onBack={() => navigation.goBack()} />
 
           <PressableScale style={styles.avatarWrap} onPress={pickImage}>
-            <Image
-              source={{
-                uri:
-                  avatar ||
-                  undefined,
-              }}
-              style={styles.avatar}
-            />
+            <Image source={{ uri: mediaUrl(avatar) }} style={styles.avatar} />
             <View style={styles.editBadge}>
               <Ionicons name="camera" size={14} color={colors.white} />
             </View>
@@ -131,8 +139,17 @@ export function EditProfileScreen() {
             />
           </GlassCard>
 
-          <PressableScale style={styles.saveBtn} onPress={onSave}>
-            <Text style={styles.saveText}>SAVE CHANGES</Text>
+          {/* Disabled while in flight: the photo upload takes long enough on a
+              slow connection to invite a second tap, which would upload it
+              twice and leave the second copy orphaned on the server. */}
+          <PressableScale
+            style={styles.saveBtn}
+            onPress={onSave}
+            disabled={saving}
+          >
+            <Text style={styles.saveText}>
+              {saving ? "SAVING…" : "SAVE CHANGES"}
+            </Text>
           </PressableScale>
         </ScrollView>
       </KeyboardAvoidingView>

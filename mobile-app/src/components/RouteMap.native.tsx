@@ -18,7 +18,7 @@
  * plain SVG trace.
  */
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -34,8 +34,16 @@ import { makeStyles, useTheme } from "../contexts/ThemeContext";
 import { radii } from "../theme";
 import type { Point } from "../utils/geo";
 
-/** Positron: muted greys, so a violet route line is the loudest thing on it. */
-const STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
+/** Liberty: coloured roads, parks and POI labels — the look people expect from
+ *  a map. Positron, the previous choice, is deliberately near-monochrome; it
+ *  flattered the violet route line but read as washed out on its own.
+ *  OpenFreeMap serves all of its styles without a key or an account. */
+const STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
+
+/** How far the basemap has got. A map that fails silently is indistinguishable
+ *  from a map that is merely slow, and both look like a grey box — which is
+ *  exactly how this arrived as a bug report with nothing to act on. */
+type Stage = "loading" | "styled" | "ready" | "failed";
 
 export function RouteMap({
   points,
@@ -57,6 +65,7 @@ export function RouteMap({
 }) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const [stage, setStage] = useState<Stage>("loading");
 
   const line = useMemo(
     () => ({
@@ -103,6 +112,9 @@ export function RouteMap({
         // TextureView draws like an ordinary view and clips correctly. It costs
         // a little performance, which for a route on a card is not a concern.
         androidView="texture"
+        onDidFinishLoadingStyle={() => setStage((s) => (s === "failed" ? s : "styled"))}
+        onDidFinishLoadingMap={() => setStage("ready")}
+        onDidFailLoadingMap={() => setStage("failed")}
       >
         {/* Ordered by how much the camera actually knows. The last case used to
             be the only fallback, and a Camera with no centre sits at [0, 0] —
@@ -154,6 +166,21 @@ export function RouteMap({
         ) : null}
       </Map>
 
+      {/* Says which step is stuck. "Loading" that never changes means the
+          native view came up but the style request never returned; "styled"
+          without "ready" means the style parsed and the tiles did not. */}
+      {stage !== "ready" ? (
+        <View style={styles.status} pointerEvents="none">
+          <Text style={styles.statusText}>
+            {stage === "failed"
+              ? "Map failed to load"
+              : stage === "styled"
+                ? "Loading tiles…"
+                : "Loading map…"}
+          </Text>
+        </View>
+      ) : null}
+
       {onLocate ? (
         <Pressable
           style={styles.locate}
@@ -186,6 +213,16 @@ const useStyles = makeStyles((colors) => ({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
   },
+  status: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: "rgba(0,0,0,0.55)",
+  },
+  statusText: { color: colors.white, fontSize: 11, fontWeight: "600" },
   locate: {
     position: "absolute",
     right: 12,

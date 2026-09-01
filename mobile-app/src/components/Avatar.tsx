@@ -15,6 +15,8 @@ import { makeStyles } from "../contexts/ThemeContext";
 import { useState } from "react";
 import { Image, Text, View, type ImageStyle } from "react-native";
 
+import { mediaUrl } from "../api/client";
+
 
 
 /**
@@ -68,10 +70,14 @@ export function Avatar({
 
   const shape = { width: size, height: size, borderRadius: size / 2 };
 
-  if (uri && !failed) {
+  // Resolved here rather than at each call site: the API hands back a storage
+  // key, and every screen that showed a face was passing it to Image raw.
+  const source = mediaUrl(uri);
+
+  if (source && !failed) {
     return (
       <Image
-        source={{ uri }}
+        source={{ uri: source }}
         style={[shape, style] as ImageStyle[]}
         onError={() => setFailed(true)}
       />

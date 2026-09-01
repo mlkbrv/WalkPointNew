@@ -29,6 +29,13 @@ const defaultPrefs: UserPreferences = {
   marketingPush: false,
 };
 
+/** A path the picker just produced, as opposed to one the server already has.
+ *  Only the former needs uploading; re-sending a stored key would upload the
+ *  string itself. */
+function isLocalFile(path: string): boolean {
+  return path.startsWith("file:") || path.startsWith("content:") || path.startsWith("ph:");
+}
+
 /** The API's user shape is not the app's; this is the single translation point. */
 function toAuthUser(apiUser: ApiUser): AuthUser {
   return {
@@ -192,10 +199,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateProfile = useCallback(
     async (patch: Partial<AuthUser>) => {
-      // Local-only until the profile endpoint lands; keeps the edit screen usable.
-      setUser((current) => (current ? { ...current, ...patch } : current));
+      // This used to set state and stop there, with a note saying it would do
+      // until the endpoint existed. The edit screen looked like it worked and
+      // the change was gone by the next launch. It now writes to the server
+      // and takes the saved record back as the truth.
+      //
+      // The avatar goes first and separately: it is a file upload, and if it
+      // fails there is no reason to lose the name edit as well.
+      let saved: AuthUser | null = null;
+
+      if (patch.avatar && patch.avatar !== user?.avatar && isLocalFile(patch.avatar)) {
+        saved = toAuthUser(await authApi.uploadAvatar(patch.avatar));
+      }
+
+      if (patch.name && patch.name !== user?.name) {
+        saved = toAuthUser(await authApi.updateProfile({ full_name: patch.name }));
+      }
+
+      if (saved) setUser(saved);
     },
-    [],
+    [user?.avatar, user?.name],
   );
 
   const updatePrefs = useCallback(

@@ -32,6 +32,7 @@ from app.core.security import (
 )
 from app.core.time import as_aware, utcnow
 from app.models.enums import UserRole
+from app.models.media import Media
 from app.models.partner import Partner
 from app.models.user import RefreshToken, SMSVerification, User
 from app.schemas.auth import TokenPair
@@ -218,3 +219,42 @@ async def revoke_all_sessions(db: AsyncSession, *, user_id: uuid.UUID) -> None:
     for token in tokens:
         token.revoked_at = now
     await db.commit()
+
+
+async def update_profile(
+    db: AsyncSession,
+    *,
+    user: User,
+    full_name: str | None = None,
+    city: str | None = None,
+    country: str | None = None,
+) -> User:
+    """Apply the fields a user is allowed to change about themselves.
+
+    `None` means "not sent", which is why this cannot be a blind `setattr`
+    loop over the payload: a PATCH that omits a field must leave it alone,
+    while a PATCH that sends an empty string is a real edit.
+    """
+    if full_name is not None:
+        user.full_name = full_name.strip() or user.full_name
+    if city is not None:
+        user.city = city.strip()
+    if country is not None:
+        user.country = country.strip()
+
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+async def set_avatar(db: AsyncSession, *, user: User, media: Media) -> User:
+    """Point the account at an already-stored image.
+
+    Takes the stored `Media` rather than raw bytes so that the upload is
+    validated and persisted by the one service that knows how — this only
+    records which file is now the avatar.
+    """
+    user.avatar_path = media.key
+    await db.commit()
+    await db.refresh(user)
+    return user

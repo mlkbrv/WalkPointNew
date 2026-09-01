@@ -20,6 +20,7 @@ import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { mediaUrl } from "../api/client";
 
 export function BrandStoreScreen() {
   const { colors } = useTheme();
@@ -79,7 +80,7 @@ export function BrandStoreScreen() {
 
         <GlassCard style={styles.brandCard}>
           {store.logo_path ? (
-            <Image source={{ uri: store.logo_path }} style={styles.logo} />
+            <Image source={{ uri: mediaUrl(store.logo_path) }} style={styles.logo} />
           ) : (
             <View style={[styles.logo, styles.logoFallback]}>
               <Ionicons name="storefront" size={24} color={colors.primary} />

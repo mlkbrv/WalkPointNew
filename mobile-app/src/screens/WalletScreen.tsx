@@ -12,6 +12,7 @@ import { EmptyState } from "../components/EmptyState";
 import { GlassCard } from "../components/GlassCard";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { mediaUrl } from "../api/client";
 
 export function WalletScreen() {
   const { colors } = useTheme();
@@ -82,7 +83,7 @@ export function WalletScreen() {
             >
               <View style={styles.ticketLeft}>
                 {voucher.coupon.image_path ? (
-                  <Image source={{ uri: voucher.coupon.image_path }} style={styles.ticketImg} />
+                  <Image source={{ uri: mediaUrl(voucher.coupon.image_path) }} style={styles.ticketImg} />
                 ) : (
                   <View style={styles.ticketImg}>
                     <Ionicons name="ticket" size={22} color={colors.primary} />

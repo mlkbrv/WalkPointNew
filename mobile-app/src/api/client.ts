@@ -92,7 +92,7 @@ function refreshOnce(): Promise<boolean> {
 }
 
 export type RequestOptions = {
-  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
   query?: Record<string, string | number | boolean | undefined | null>;
   /** Caller-owned cancellation, e.g. a screen unmounting. */
@@ -128,8 +128,14 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     retry = false,
   } = options;
 
+  // A file upload has to go as multipart. The Content-Type is left unset on
+  // purpose in that case: fetch generates it along with the boundary token,
+  // and a hand-written header would omit the boundary and make the body
+  // unparseable at the other end.
+  const isForm = typeof FormData !== "undefined" && body instanceof FormData;
+
   const headers: Record<string, string> = { Accept: "application/json" };
-  if (body !== undefined) headers["Content-Type"] = "application/json";
+  if (body !== undefined && !isForm) headers["Content-Type"] = "application/json";
 
   const access = getAccessToken();
   if (!anonymous && access) headers.Authorization = `Bearer ${access}`;
@@ -145,7 +151,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     response = await fetch(buildUrl(path, query), {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
       signal: controller.signal,
     });
   } catch (caught) {
@@ -187,9 +193,26 @@ export const api = {
     request<T>(path, { ...options, method: "POST", body }),
   patch: <T>(path: string, body?: unknown, options?: RequestOptions) =>
     request<T>(path, { ...options, method: "PATCH", body }),
+  put: <T>(path: string, body?: unknown, options?: RequestOptions) =>
+    request<T>(path, { ...options, method: "PUT", body }),
   delete: <T>(path: string, options?: RequestOptions) =>
     request<T>(path, { ...options, method: "DELETE" }),
 };
+
+/**
+ * Turn a stored media key into something `Image` can actually fetch.
+ *
+ * The API returns keys — `avatar/3f2a.png`, `coupon/91bd.jpg` — and the files
+ * are served from `{base}/media/{key}`. Screens were passing the raw key
+ * straight to `Image`, which silently renders nothing, and the only reason
+ * this was not obvious is that a partner pasting a full https link works by
+ * accident. Absolute URLs pass through untouched, so both keep working.
+ */
+export function mediaUrl(path: string | null | undefined): string | undefined {
+  if (!path) return undefined;
+  if (/^(https?:|data:|file:|content:|ph:)/.test(path)) return path;
+  return `${BASE_URL}/media/${path.replace(/^\/+/, "")}`;
+}
 
 export function describeError(error: unknown): string {
   if (error instanceof ApiError) return error.message;

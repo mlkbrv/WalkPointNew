@@ -18,6 +18,7 @@ import { useServerData } from "../contexts/ServerDataContext";
 import type { ApiCoupon } from "../api/endpoints";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
+import { mediaUrl } from "../api/client";
 import { useI18n } from "../contexts/I18nContext";
 
 /** Sentinel for the unfiltered view. Not the translated word: the selected
@@ -108,7 +109,7 @@ export function StoreScreen() {
                         />
                       </View>
                     ) : store?.logo_path ? (
-                      <Image source={{ uri: store.logo_path }} style={styles.brandLogo} />
+                      <Image source={{ uri: mediaUrl(store.logo_path) }} style={styles.brandLogo} />
                     ) : (
                       // Partners without a logo still need to look like themselves,
                       // so the initials disc stands in rather than a blank circle.
@@ -162,7 +163,7 @@ export function StoreScreen() {
                     <GlassCard style={styles.card}>
                       <View style={styles.imageWrap}>
                         {perk.image_path ? (
-                          <Image source={{ uri: perk.image_path }} style={styles.image} />
+                          <Image source={{ uri: mediaUrl(perk.image_path) }} style={styles.image} />
                         ) : (
                           <View style={[styles.image, styles.imageFallback]}>
                             <Ionicons name="gift-outline" size={28} color={colors.primary} />

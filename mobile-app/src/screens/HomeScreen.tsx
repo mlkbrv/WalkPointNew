@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { radii } from "../theme";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
+import { mediaUrl } from "../api/client";
 import { useI18n } from "../contexts/I18nContext";
 import { PressableScale } from "../components/PressableScale";
 import { Avatar } from "../components/Avatar";
@@ -222,7 +223,7 @@ export function HomeScreen() {
               >
                 <GlassCard style={styles.brandInner}>
                   {store.logo_path ? (
-                    <Image source={{ uri: store.logo_path }} style={styles.brandLogo} />
+                    <Image source={{ uri: mediaUrl(store.logo_path) }} style={styles.brandLogo} />
                   ) : (
                     <View style={[styles.brandLogo, styles.brandLogoFallback]}>
                       <Ionicons name="storefront" size={18} color={colors.primary} />
