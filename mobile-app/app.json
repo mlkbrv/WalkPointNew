@@ -76,7 +76,8 @@
           }
         }
       ],
-      "@maplibre/maplibre-react-native"
+      "@maplibre/maplibre-react-native",
+      "./plugins/withHealthPrivacyPolicy"
     ],
     "extra": {
       "eas": {

@@ -22,6 +22,18 @@
         "admin-panel"
       ],
       "port": 5173
+    },
+    {
+      "name": "policy-static",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4173",
+        "--directory",
+        "mobile-app/privacy"
+      ],
+      "port": 4173
     }
   ]
 }

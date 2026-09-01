@@ -25,6 +25,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { RootStackParamList } from "../types";
 import { useServerData } from "../contexts/ServerDataContext";
+import { useSeenStories } from "../hooks/useSeenStories";
 import { radii } from "../theme";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
 
@@ -38,6 +39,7 @@ export function StoriesScreen() {
   const route = useRoute<RouteProp<RootStackParamList, "Stories">>();
   const insets = useSafeAreaInsets();
   const { storyGroups, markStorySeen } = useServerData();
+  const { markSeen } = useSeenStories();
 
   const startIndex = Math.max(
     0,
@@ -83,9 +85,21 @@ export function StoriesScreen() {
   }, [frameIndex, storyIndex, storyGroups]);
 
   // Showing a frame is what "seen" means.
+  //
+  // Two records, because they answer different questions. `markStorySeen` tells
+  // the server which frame this account has viewed. `markSeen` is what greys
+  // the ring in the rail, and it is keyed by *partner*, because the rail shows
+  // one ring per brand rather than one per frame. Only the first was being
+  // written, which is why a story stayed unread-looking however often it was
+  // opened.
   useEffect(() => {
-    if (frame) void markStorySeen(frame.id);
+    if (!frame) return;
+    void markStorySeen(frame.id);
   }, [frame, markStorySeen]);
+
+  useEffect(() => {
+    if (story) void markSeen(story.partnerId);
+  }, [story, markSeen]);
 
   useEffect(() => {
     if (!frame) return;

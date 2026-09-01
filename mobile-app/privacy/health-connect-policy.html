@@ -1,0 +1,195 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stepoint — Health Connect</title>
+<!--
+  Shown when someone taps "Read privacy policy" inside Health Connect.
+
+  Deliberately a static local asset with no network and no JavaScript. Health
+  Connect opens this from its own permission sheet, often before the account is
+  signed in and always before the React Native bundle would be ready, so
+  anything that needed the app to start would show the blank white page this
+  file exists to replace.
+
+  Language is chosen with :target rather than script: the activity always loads
+  this file with #en, #ru or #tr, so exactly one section matches.
+-->
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff; --card: #f5f5f7; --ink: #17171d;
+    --muted: #5b5b66; --line: #e3e3e8; --brand: #6d28d9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c0c10; --card: #17171d; --ink: #f2f2f5;
+      --muted: #a0a0ad; --line: #2a2a33; --brand: #a78bfa;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    /* The language nav sits *after* the sections in the markup, because the
+       sibling combinator that highlights the active pill only reaches forward.
+       Flex ordering puts it back at the top visually. */
+    display: flex; flex-direction: column;
+    margin: 0; padding: 24px 20px 56px;
+    background: var(--bg); color: var(--ink);
+    font: 16px/1.6 -apple-system, Roboto, "Segoe UI", sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  h1 { font-size: 22px; line-height: 1.3; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 26px 0 6px; color: var(--brand); }
+  p, li { color: var(--ink); margin: 0 0 10px; }
+  ul { padding-left: 20px; margin: 0 0 10px; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 18px; }
+  .langs {
+    order: -1;
+    /* Kept in reach on a page long enough to need scrolling back. */
+    position: sticky; top: 0; z-index: 1;
+    background: var(--bg);
+    display: flex; gap: 8px; margin: 0 0 22px;
+    border-bottom: 1px solid var(--line); padding: 12px 0 18px;
+  }
+  .langs a {
+    flex: 1; text-align: center; padding: 9px 0; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--card);
+    color: var(--muted); text-decoration: none; font-size: 14px;
+  }
+  .note {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 14px 16px; margin-top: 22px;
+    color: var(--muted); font-size: 14px;
+  }
+  section {
+    display: none;
+    /* Jumping to #ru would scroll that section to the top of the window and
+       carry the language switcher off screen — the switcher is only visually
+       first, via flex order. A scroll margin taller than the viewport makes the
+       browser aim above the start of the document, where it clamps to zero, so
+       the page opens at the top in every language. */
+    scroll-margin-top: 100vh;
+  }
+  section:target { display: block; }
+
+  /* English is also the fallback for "no fragment at all". The activity always
+     appends one, but a stray link, a restored session or a viewer that drops
+     the fragment must not land on the blank page this file exists to replace.
+     Written without :has, whose support in older Android WebViews is not
+     something to bet a legal notice on: English is shown unconditionally and
+     switched off only when another section is actually targeted. That is why
+     #en is the last section in the markup — ~ only reaches forward. */
+  #en { display: block; }
+  #ru:target ~ #en,
+  #tr:target ~ #en { display: none; }
+
+  /* Same trick for the active pill. */
+  .langs .en { background: var(--brand); border-color: var(--brand); color: #ffffff; }
+  #ru:target ~ .langs .en,
+  #tr:target ~ .langs .en {
+    background: var(--card); border-color: var(--line); color: var(--muted);
+  }
+  #ru:target ~ .langs .ru,
+  #tr:target ~ .langs .tr {
+    background: var(--brand); border-color: var(--brand); color: #ffffff;
+  }
+</style>
+</head>
+<body>
+
+
+
+
+<section id="ru">
+  <h1>Stepoint и Health Connect</h1>
+  <p class="sub">Как приложение использует данные о здоровье, которые вы ему разрешили читать.</p>
+
+  <h2>Что мы читаем</h2>
+  <p>Только одно: <strong>количество шагов</strong>, и только на чтение. Stepoint ничего не записывает обратно в Health Connect и не запрашивает пульс, сон, вес, историю местоположений и любые другие типы записей.</p>
+
+  <h2>Зачем</h2>
+  <ul>
+    <li>Чтобы показывать шаги за сегодня и за прошедшие недели.</li>
+    <li>Чтобы начислять монеты Stepoint, которые вы меняете на предложения партнёров.</li>
+    <li>Чтобы показывать вас в рейтинге, если вы это не выключили.</li>
+  </ul>
+
+  <h2>Куда они уходят</h2>
+  <p>Суммы шагов за день уходят на сервер Stepoint и хранятся вместе с вашим аккаунтом: монеты и рейтинг не могут работать только на устройстве. Мы передаём итог за день, а не непрерывный след ваших перемещений.</p>
+  <p>Мы не продаём ваши данные о здоровье и не передаём их рекламодателям. Партнёры-магазины никогда не видят ваши шаги — они видят только то, что их купон был использован.</p>
+
+  <h2>Вы решаете</h2>
+  <ul>
+    <li>Разрешение можно отозвать в любой момент: Health Connect &rsaquo; Разрешения приложений. Чтение прекращается сразу.</li>
+    <li>Отзыв разрешения не удаляет то, что уже синхронизировано, — напишите нам, и мы удалим.</li>
+    <li>Удаление аккаунта Stepoint удаляет и сохранённую историю шагов.</li>
+  </ul>
+
+  <div class="note">Вопросы и запросы на удаление: <strong>support@stepoint.app</strong></div>
+</section>
+
+<section id="tr">
+  <h1>Stepoint ve Health Connect</h1>
+  <p class="sub">Uygulamanin okumasina izin verdiginiz saglik verilerini nasil kullandigi.</p>
+
+  <h2>Ne okuyoruz</h2>
+  <p>Yalnizca tek bir sey: <strong>adim sayiniz</strong> ve yalnizca okuma icin. Stepoint Health Connect'e hicbir sey yazmaz; nabiz, uyku, kilo, konum gecmisi veya baska bir kayit turu istemez.</p>
+
+  <h2>Neden</h2>
+  <ul>
+    <li>Bugunun ve gecmis haftalarin adimlarini gostermek icin.</li>
+    <li>Partner tekliflerine cevirdiginiz Stepoint coinlerini vermek icin.</li>
+    <li>Kapatmadiysaniz sizi siralamada gostermek icin.</li>
+  </ul>
+
+  <h2>Nereye gidiyor</h2>
+  <p>Gunluk adim toplamlari Stepoint sunucusuna gonderilir ve hesabinizla saklanir; coinler ve siralama yalnizca cihazda calisamaz. Hareketinizin surekli izini degil, gunluk toplami gondeririz.</p>
+  <p>Saglik verilerinizi satmayiz ve reklamverenlere vermeyiz. Partner isletmeler adimlarinizi hicbir zaman gormez; yalnizca kendi kuponlarinin kullanildigini gorur.</p>
+
+  <h2>Kontrol sizde</h2>
+  <ul>
+    <li>Izni istediginiz zaman geri alabilirsiniz: Health Connect &rsaquo; Uygulama izinleri. Okuma hemen durur.</li>
+    <li>Izni kapatmak daha once eslenenleri silmez — bize yazin, silelim.</li>
+    <li>Stepoint hesabinizi silmek, onunla saklanan adim gecmisini de siler.</li>
+  </ul>
+
+  <div class="note">Sorular ve silme talepleri: <strong>support@stepoint.app</strong></div>
+</section>
+
+<section id="en">
+  <h1>Stepoint and Health Connect</h1>
+  <p class="sub">How this app uses the health data you allow it to read.</p>
+
+  <h2>What we read</h2>
+  <p>One thing only: your <strong>step count</strong>, and only for reading. Stepoint never writes anything back to Health Connect and does not ask for heart rate, sleep, weight, location history or any other record type.</p>
+
+  <h2>Why we read it</h2>
+  <ul>
+    <li>To show your steps for today and the past weeks in the app.</li>
+    <li>To award Stepoint coins, which you exchange for partner offers.</li>
+    <li>To place you on the leaderboard, if you left that switched on.</li>
+  </ul>
+
+  <h2>Where it goes</h2>
+  <p>Daily step totals are sent to the Stepoint server and stored with your account, because coins and the leaderboard cannot work on the device alone. We send totals per day — not a continuous trace of your movement.</p>
+  <p>We do not sell your health data and do not hand it to advertisers. Partner businesses never see your steps; they see only that a coupon of theirs was redeemed.</p>
+
+  <h2>Staying in control</h2>
+  <ul>
+    <li>You can withdraw the Health Connect permission at any time, in Health Connect &rsaquo; App permissions. Stepoint stops reading immediately.</li>
+    <li>Turning the permission off does not delete what was already synced — ask us and we will delete it.</li>
+    <li>Deleting your Stepoint account deletes the step history stored with it.</li>
+  </ul>
+
+  <div class="note">Questions, or a deletion request: <strong>support@stepoint.app</strong></div>
+</section>
+
+<nav class="langs">
+  <a class="en" href="#en">English</a>
+  <a class="ru" href="#ru">Русский</a>
+  <a class="tr" href="#tr">Türkçe</a>
+</nav>
+
+</body>
+</html>
