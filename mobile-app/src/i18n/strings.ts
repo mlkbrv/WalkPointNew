@@ -15,6 +15,9 @@
 export const en = {
   // Tabs
   tabHome: "Home",
+  chooseLanguageTitle: "Choose your ",
+  chooseLanguageAccent: "language",
+  chooseLanguageSub: "You can change this later in Account.",
   tabTrack: "Track",
   tabReport: "Report",
   tabStore: "Store",
@@ -196,6 +199,9 @@ export type Strings = { [K in keyof typeof en]: string };
 
 export const ru: Strings = {
   tabHome: "Главная",
+  chooseLanguageTitle: "Выберите ",
+  chooseLanguageAccent: "язык",
+  chooseLanguageSub: "Позже это можно изменить в профиле.",
   tabTrack: "Маршрут",
   tabReport: "Отчёт",
   tabStore: "Магазин",
@@ -364,6 +370,9 @@ export const ru: Strings = {
 
 export const tr: Strings = {
   tabHome: "Ana Sayfa",
+  chooseLanguageTitle: "Dilinizi ",
+  chooseLanguageAccent: "secin",
+  chooseLanguageSub: "Bunu daha sonra hesaptan degistirebilirsiniz.",
   tabTrack: "Rota",
   tabReport: "Rapor",
   tabStore: "Magaza",

@@ -26,12 +26,14 @@ import { PillButton } from "../components/PillButton";
 import { PressableScale } from "../components/PressableScale";
 import { SegmentedChips } from "../components/SegmentedChips";
 import { WheelPicker } from "../components/WheelPicker";
+import { FlagIcon } from "../components/FlagIcon";
 import { useStepoint } from "../contexts/StepointContext";
 import { makeStyles, useTheme } from "../contexts/ThemeContext";
 import { useI18n } from "../contexts/I18nContext";
+import { LANGUAGES, type LanguageCode } from "../i18n/strings";
 import type { Gender } from "../types";
 
-const STEPS = 6;
+const STEPS = 7;
 
 const range = (from: number, to: number, step = 1) =>
   Array.from({ length: Math.floor((to - from) / step) + 1 }, (_, i) => from + i * step);
@@ -63,7 +65,7 @@ function Title({ text, accent }: { text: string; accent: string }) {
 
 export function OnboardingScreen({ onDone }: { onDone: () => void }) {
   const { colors } = useTheme();
-  const { t } = useI18n();
+  const { t, language, setPreference: setLanguage } = useI18n();
   const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { userStats, setUserStats } = useStepoint();
@@ -108,6 +110,33 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
       <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
         {step === 0 ? (
           <>
+            <Title text={t("chooseLanguageTitle") + "{}"} accent={t("chooseLanguageAccent")} />
+            <Text style={styles.subtitle}>{t("chooseLanguageSub")}</Text>
+            <View style={styles.langList}>
+              {(Object.keys(LANGUAGES) as LanguageCode[]).map((code) => {
+                const active = language === code;
+                return (
+                  <PressableScale
+                    key={code}
+                    style={[styles.langRow, active && styles.langRowActive]}
+                    onPress={() => setLanguage(code)}
+                  >
+                    <FlagIcon code={code} size={34} />
+                    <Text style={[styles.langLabel, active && styles.langLabelActive]}>
+                      {LANGUAGES[code].label}
+                    </Text>
+                    {active ? (
+                      <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
+                    ) : null}
+                  </PressableScale>
+                );
+              })}
+            </View>
+          </>
+        ) : null}
+
+        {step === 1 ? (
+          <>
             <Title text={t("selectYourGender") + "{}"} accent={t("gender")} />
             <Text style={styles.subtitle}>{t("genderSub")}</Text>
             <View style={styles.genderRow}>
@@ -142,7 +171,7 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
           </>
         ) : null}
 
-        {step === 1 ? (
+        {step === 2 ? (
           <>
             <Title text={t("sedentaryTitle") + "{}" + t("sedentaryTitleEnd")} accent={t("sedentary")} />
             <Text style={styles.subtitle}>{t("sedentarySub")}</Text>
@@ -170,7 +199,7 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
           </>
         ) : null}
 
-        {step === 2 ? (
+        {step === 3 ? (
           <>
             <Title text={t("howOldTitle") + "{}" + t("howOldTitleEnd")} accent={t("old")} />
             <Text style={styles.subtitle}>{t("ageSub")}</Text>
@@ -183,7 +212,7 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
           </>
         ) : null}
 
-        {step === 3 ? (
+        {step === 4 ? (
           <>
             <Title text={t("heightTitle") + "{}?"} accent={t("heightWord")} />
             <Text style={styles.subtitle}>{t("heightSub")}</Text>
@@ -207,7 +236,7 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
           </>
         ) : null}
 
-        {step === 4 ? (
+        {step === 5 ? (
           <>
             <Title text={t("weightTitle") + "{}?"} accent={t("weightWord")} />
             <Text style={styles.subtitle}>{t("weightSub")}</Text>
@@ -230,7 +259,7 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
           </>
         ) : null}
 
-        {step === 5 ? (
+        {step === 6 ? (
           <>
             <Title text={t("goalTitle") + "{}"} accent={t("goalWord")} />
             <Text style={styles.subtitle}>{t("goalSub")}</Text>
@@ -310,6 +339,21 @@ const useStyles = makeStyles((colors) => ({
   yesNoTextActive: { color: colors.onPrimary },
 
   unitRow: { alignItems: "center", marginBottom: 20 },
+
+  langList: { gap: 12, marginTop: 8 },
+  langRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  langRowActive: { borderColor: colors.primary, backgroundColor: colors.primaryTint },
+  langLabel: { flex: 1, fontSize: 16, fontWeight: "600", color: colors.charcoal },
+  langLabelActive: { color: colors.primary },
 
   footer: {
     flexDirection: "row",

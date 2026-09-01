@@ -64,6 +64,12 @@ function AppStack() {
         animation: "slide_from_right",
         statusBarHidden: true,
         navigationBarHidden: true,
+        // iOS: swiping back is how people leave a screen there, and with the
+        // header hidden there is no back chevron to fall back on. The
+        // full-screen variant means the gesture starts anywhere, not only in
+        // the few pixels at the left edge.
+        gestureEnabled: true,
+        fullScreenGestureEnabled: true,
       }}
     >
       <RootStack.Screen name="Main" component={MainTabs} />

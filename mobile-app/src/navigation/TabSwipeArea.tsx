@@ -16,8 +16,8 @@
  * `PanGestureHandler` calls back on the JS thread and needs nothing extra.
  */
 
-import { useRef, type ReactNode } from "react";
-import { View } from "react-native";
+import { useEffect, useRef, type ReactNode } from "react";
+import { Animated } from "react-native";
 import {
   PanGestureHandler,
   State,
@@ -27,16 +27,36 @@ import { useIsFocused, useNavigation } from "@react-navigation/native";
 
 import { TABS } from "./tabs";
 
-/** Horizontal travel that counts as a deliberate swipe rather than a stray drag. */
-const DISTANCE = 60;
+/**
+ * Horizontal travel that counts as a deliberate swipe rather than a stray drag.
+ * Raised from 60: at that distance an ordinary diagonal scroll kept tipping the
+ * screen over, so the tab felt like it changed at random.
+ */
+const DISTANCE = 90;
 /** …or a shorter drag thrown fast enough to read as a flick. */
-const VELOCITY = 500;
+const VELOCITY = 800;
+/** The incoming screen fades rather than appearing at once. */
+const FADE_MS = 160;
 
 export function TabSwipeArea({ index, children }: { index: number; children: ReactNode }) {
   const navigation = useNavigation<{ navigate: (name: string) => void }>();
   const isFocused = useIsFocused();
   // Guards against a single gesture firing twice as the handler settles.
   const handled = useRef(false);
+
+  // Without this a tab change is an instant swap, which reads as a jump. One
+  // short fade is enough to make it a transition; the bottom-tab navigator in
+  // this version has no built-in screen animation to lean on.
+  const fade = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    if (!isFocused) return;
+    fade.setValue(0);
+    Animated.timing(fade, {
+      toValue: 1,
+      duration: FADE_MS,
+      useNativeDriver: true,
+    }).start();
+  }, [isFocused, fade]);
 
   const onStateChange = (e: PanGestureHandlerStateChangeEvent) => {
     // Every tab visited so far keeps its own mounted handler, and the one that
@@ -54,7 +74,9 @@ export function TabSwipeArea({ index, children }: { index: number; children: Rea
     if (state !== State.END || handled.current) return;
 
     // A drag that is mostly vertical is a scroll someone started at an angle.
-    if (Math.abs(translationX) < Math.abs(translationY) * 1.5) return;
+    // The ratio is deliberately strict: at 1.5 a mostly-vertical flick still
+    // qualified, which is the other half of why the tabs felt twitchy.
+    if (Math.abs(translationX) < Math.abs(translationY) * 2.5) return;
 
     const far = Math.abs(translationX) > DISTANCE;
     const fast = Math.abs(velocityX) > VELOCITY;
@@ -75,9 +97,9 @@ export function TabSwipeArea({ index, children }: { index: number; children: Rea
       activeOffsetX={[-30, 30]}
       failOffsetY={[-25, 25]}
     >
-      <View style={{ flex: 1 }} collapsable={false}>
+      <Animated.View style={{ flex: 1, opacity: fade }} collapsable={false}>
         {children}
-      </View>
+      </Animated.View>
     </PanGestureHandler>
   );
 }
